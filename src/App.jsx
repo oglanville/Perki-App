@@ -164,25 +164,26 @@ function AuthScreen({ onAuth }) {
     setErr(""); setLoading(true);
     try {
       if (!SB_CONFIGURED) {
-        // Fallback: accept any credentials in dev mode
         onAuth({ id: "local-dev", name: name || "Dev User", email: email || "dev@local" });
         return;
       }
       if (mode === "signup") {
-        const { data, error } = await supabase.auth.signUp({
+        const { error } = await supabase.auth.signUp({
           email, password: pw,
           options: { data: { full_name: name } }
         });
         if (error) throw error;
-        if (data.user) onAuth({ id: data.user.id, name, email });
+        // onAuthStateChange will handle setting the user
       } else {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password: pw });
+        const { error } = await supabase.auth.signInWithPassword({ email, password: pw });
         if (error) throw error;
-        const profile = await supabase.from("profiles").select("full_name").eq("id", data.user.id).single();
-        onAuth({ id: data.user.id, name: profile.data?.full_name || email.split("@")[0], email });
+        // onAuthStateChange will handle setting the user
       }
-    } catch (e) { setErr(e.message || "Something went wrong."); }
-    finally { setLoading(false); }
+      // Don't setLoading(false) on success — component will unmount when user is set
+    } catch (e) {
+      setErr(e.message || "Something went wrong.");
+      setLoading(false);
+    }
   };
 
   return (
@@ -292,25 +293,30 @@ export default function PerikiApp() {
 
     let subscription;
     try {
-      const result = supabase.auth.onAuthStateChange(async (event, session) => {
+      const result = supabase.auth.onAuthStateChange((event, session) => {
         console.log("[Perki] Auth event:", event, session ? "has session" : "no session");
-        try {
-          if (session?.user) {
-            const { data: profile } = await supabase
-              .from("profiles")
-              .select("full_name")
-              .eq("id", session.user.id)
-              .single();
-            setUser({
-              id: session.user.id,
-              name: profile?.full_name || session.user.email?.split("@")[0] || "User",
-              email: session.user.email,
-            });
-          } else {
-            setUser(null);
-          }
-        } catch (err) {
-          console.warn("[Perki] Error in auth handler:", err);
+        if (session?.user) {
+          // Set user IMMEDIATELY with data we already have from the session
+          const meta = session.user.user_metadata || {};
+          const basicName = meta.full_name || session.user.email?.split("@")[0] || "User";
+          setUser({
+            id: session.user.id,
+            name: basicName,
+            email: session.user.email,
+          });
+          // Then try to load profile name in the background (non-blocking)
+          supabase
+            .from("profiles")
+            .select("full_name")
+            .eq("id", session.user.id)
+            .single()
+            .then(({ data }) => {
+              if (data?.full_name) {
+                setUser(prev => prev?.id === session.user.id ? { ...prev, name: data.full_name } : prev);
+              }
+            })
+            .catch(() => { /* profile query failed — that's fine, we already have a name */ });
+        } else {
           setUser(null);
         }
         resolve();
