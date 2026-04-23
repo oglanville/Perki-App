@@ -1,12 +1,23 @@
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
+// Accept multiple key names — Supabase docs use different names in different places
+const supabaseKey =
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+  import.meta.env.VITE_SUPABASE_ANON_KEY ||
+  import.meta.env.VITE_SUPABASE_KEY
 
 if (!supabaseUrl || !supabaseKey) {
   console.warn(
-    'Supabase credentials missing. Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY in .env.local'
+    '[Perki] Supabase credentials missing.',
+    '\n  VITE_SUPABASE_URL:', supabaseUrl ? '✓ set' : '✗ missing',
+    '\n  VITE_SUPABASE_PUBLISHABLE_KEY:', import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ? '✓ set' : '✗ missing',
+    '\n  VITE_SUPABASE_ANON_KEY:', import.meta.env.VITE_SUPABASE_ANON_KEY ? '✓ set' : '✗ missing',
+    '\n  VITE_SUPABASE_KEY:', import.meta.env.VITE_SUPABASE_KEY ? '✓ set' : '✗ missing',
+    '\nSet one of these in .env.local or Vercel environment variables.'
   )
 }
 
-export const supabase = createClient(supabaseUrl || '', supabaseKey || '')
+export const supabase = supabaseUrl && supabaseKey
+  ? createClient(supabaseUrl, supabaseKey)
+  : null

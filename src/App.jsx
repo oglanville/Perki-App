@@ -26,7 +26,7 @@ function getHighestTier(provider, tiers) {
 }
 
 // ─── Check if Supabase is configured ───
-const SB_CONFIGURED = !!(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
+const SB_CONFIGURED = !!supabase;
 
 // ─── PERK BRANDS (client-side icon config — not in DB) ───
 const PERK_BRANDS = {
@@ -271,28 +271,71 @@ export default function PerikiApp() {
   const [activeMemberships, setActiveMemberships] = useState([]);
   const [usedMap, setUsedMap] = useState({});    // { perk_id: true }
 
-  /* ─── 1. Auth listener ─── */
+  /* ─── 1. Auth listener (with timeout safety net) ─── */
   useEffect(() => {
-    if (!SB_CONFIGURED) { setLoading(false); return; }
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", session.user.id).single();
-        setUser({ id: session.user.id, name: profile?.full_name || session.user.email.split("@")[0], email: session.user.email });
-      } else {
-        setUser(null);
-      }
+    if (!SB_CONFIGURED) {
+      console.log("[Perki] Supabase not configured — offline mode");
       setLoading(false);
-    });
-    return () => subscription.unsubscribe();
+      return;
+    }
+
+    let resolved = false;
+    const resolve = () => { if (!resolved) { resolved = true; setLoading(false); } };
+
+    // Safety timeout: if auth doesn't respond in 5 seconds, stop loading anyway
+    const timeout = setTimeout(() => {
+      if (!resolved) {
+        console.warn("[Perki] Auth listener timed out after 5s — falling back to logged-out state");
+        resolve();
+      }
+    }, 5000);
+
+    let subscription;
+    try {
+      const result = supabase.auth.onAuthStateChange(async (event, session) => {
+        console.log("[Perki] Auth event:", event, session ? "has session" : "no session");
+        try {
+          if (session?.user) {
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("full_name")
+              .eq("id", session.user.id)
+              .single();
+            setUser({
+              id: session.user.id,
+              name: profile?.full_name || session.user.email?.split("@")[0] || "User",
+              email: session.user.email,
+            });
+          } else {
+            setUser(null);
+          }
+        } catch (err) {
+          console.warn("[Perki] Error in auth handler:", err);
+          setUser(null);
+        }
+        resolve();
+      });
+      subscription = result.data.subscription;
+    } catch (err) {
+      console.error("[Perki] Failed to set up auth listener:", err);
+      resolve();
+    }
+
+    return () => {
+      clearTimeout(timeout);
+      subscription?.unsubscribe();
+    };
   }, []);
 
   /* ─── 2. Load perks catalogue ─── */
   useEffect(() => {
     (async () => {
       if (!SB_CONFIGURED) { setAllPerks(FALLBACK_PERKS); return; }
-      const { data, error } = await supabase.from("perks").select("*").order("title");
-      if (error || !data?.length) { console.warn("Falling back to local perks:", error); setAllPerks(FALLBACK_PERKS); }
-      else setAllPerks(data);
+      try {
+        const { data, error } = await supabase.from("perks").select("*").order("title");
+        if (error || !data?.length) { console.warn("[Perki] Perks query issue, using fallback:", error?.message); setAllPerks(FALLBACK_PERKS); }
+        else { console.log("[Perki] Loaded", data.length, "perks from Supabase"); setAllPerks(data); }
+      } catch (err) { console.warn("[Perki] Perks fetch failed, using fallback:", err); setAllPerks(FALLBACK_PERKS); }
     })();
   }, []);
 
