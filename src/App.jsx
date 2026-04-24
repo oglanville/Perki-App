@@ -244,7 +244,7 @@ function PerkCalloutModal({perk,onToggle,onDismiss,onClose}){
     <div onClick={onClose} style={{position:"fixed",inset:0,zIndex:200,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
       <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:360,background:T.surface,borderRadius:16,overflow:"hidden",boxShadow:"0 20px 60px rgba(0,0,0,0.25)",position:"relative",fontFamily:"'DM Sans',sans-serif"}}>
         {/* Coloured header band */}
-        <div style={{background:b.gradient,padding:"20px 18px 16px",display:"flex",alignItems:"center",gap:12,position:"relative"}}>
+        <div style={{background:"#1E293B",padding:"20px 18px 16px",display:"flex",alignItems:"center",gap:12,position:"relative"}}>
           <button onClick={onClose} style={{position:"absolute",top:10,right:12,background:"rgba(0,0,0,0.3)",border:"none",color:"#fff",width:28,height:28,borderRadius:14,fontSize:16,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,backdropFilter:"blur(4px)"}}>✕</button>
           <div style={{fontSize:36}}>{b.emoji}</div>
           <div>
