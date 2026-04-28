@@ -7,10 +7,10 @@ const SB_CONFIGURED = !!supabase;
 /* ═══════════════ THEME ═══════════════ */
 const T={primary:"#0B3D91",accent:"#1E90FF",bg:"#F8F9FC",surface:"#FFFFFF",border:"#E2E8F0",textPrimary:"#0F172A",textSecondary:"#64748B",muted:"#94A3B8",success:"#10B981",warning:"#F59E0B",danger:"#EF4444",shadow:"0 1px 3px rgba(15,23,42,0.06),0 1px 2px rgba(15,23,42,0.04)"};
 const PROVIDERS={"OVO Energy":{color:"#00C86F",initials:"OV",bg:"#ECFDF5"},"Monzo":{color:"#FF5C5C",initials:"MZ",bg:"#FFF1F2"},"Revolut":{color:"#6C63FF",initials:"RV",bg:"#EEF2FF"},"American Express":{color:"#0077C8",initials:"AX",bg:"#EFF6FF"}};
-const CATEGORIES={cinema:{label:"Cinema",icon:"🎬"},supermarket:{label:"Supermarket",icon:"🛒"},airport:{label:"Airport",icon:"✈️"},insurance:{label:"Insurance",icon:"🛡️"},travel:{label:"Travel",icon:"🌍"},finance:{label:"Finance",icon:"💰"},retail:{label:"Retail",icon:"🛍️"},other:{label:"Other",icon:"📦"}};
+const CATEGORIES={cinema:{label:"Cinema",icon:"🎬"},supermarket:{label:"Supermarket",icon:"🛒"},airport:{label:"Airport",icon:"✈️"},insurance:{label:"Insurance",icon:"🛡️"},travel:{label:"Travel",icon:"🌍"},finance:{label:"Finance",icon:"💰"},retail:{label:"Retail",icon:"🛍️"}};
 const TABS=[{id:"home",label:"Home",icon:"🏠"},{id:"memberships",label:"Current",icon:"💳"},{id:"where",label:"Where",icon:"📍"},{id:"potential",label:"Potential",icon:"✨"},{id:"profile",label:"Profile",icon:"👤"}];
 
-function resetLabel(p){return{WEEKLY:"Weekly",MONTHLY:"Monthly",ANNUALLY:"Annually",NONE:"Always on"}[p]||p;}
+function resetLabel(p){return{WEEKLY:"Weekly",MONTHLY:"Monthly",ANNUALLY:"Yearly",YEARLY:"Yearly",NONE:"Always on"}[p]||p;}
 function alphaSort(a,b){return a.title.localeCompare(b.title);}
 
 /* ═══════════════ TIER HIERARCHY HELPERS (derived from tierPrices at runtime) ═══════════════ */
@@ -287,8 +287,8 @@ function HomeTab({perks,onToggle,onDismiss}){
   const countable=perks.filter(p=>!p.dismissed);
   const used=countable.filter(p=>p.used).length;
   const groups=useMemo(()=>{
-    if(groupBy==="category"){const g={};sorted.forEach(p=>{const c=CATEGORIES[p.category]?.label||"Other";(g[c]=g[c]||[]).push(p);});return g;}
-    const g={Weekly:[],Monthly:[],Annually:[],"Always On":[]};sorted.forEach(p=>{g[{WEEKLY:"Weekly",MONTHLY:"Monthly",ANNUALLY:"Annually",NONE:"Always On"}[p.reset_period]||"Always On"].push(p);});return g;
+    if(groupBy==="category"){const g={};sorted.forEach(p=>{const cat=CATEGORIES[p.category];if(!cat)return;(g[cat.label]=g[cat.label]||[]).push(p);});return g;}
+    const g={Weekly:[],Monthly:[],Yearly:[],"Always On":[]};sorted.forEach(p=>{g[{WEEKLY:"Weekly",MONTHLY:"Monthly",ANNUALLY:"Yearly",YEARLY:"Yearly",NONE:"Always On"}[p.reset_period]||"Always On"].push(p);});return g;
   },[sorted,groupBy]);
   return(
     <div onClick={()=>setSelected(null)}>
@@ -357,11 +357,15 @@ function MembershipsTab({perks,onToggle,onDismiss,activeMemberships,tierPrices})
     {providerGroups.map(pg=>{
       const pCfg=PROVIDERS[pg.provider]||{color:T.muted,bg:"#f1f5f9"};
       const provPerks=pg.tiers.flatMap(t=>t.perks);
+      /* Determine price to show: highest active tier's price (user is paying for it) */
+      const activeTierPrices=pg.tiers.map(tg=>tierPrices[`${pg.provider}|${tg.tier}`]).filter(Boolean);
+      const displayTp=activeTierPrices.length>0?activeTierPrices.reduce((a,b)=>(a.price??999)>=(b.price??999)?a:b):null;
+      const provPriceLabel=displayTp?(displayTp.price_label||(displayTp.price===0?"Free":displayTp.price!=null?`£${displayTp.price}/mo`:"")):"";
       return(
         <CollapsibleSection
           key={pg.provider}
           title={pg.provider}
-          count={provPerks.length}
+          subtitle={provPriceLabel?`${provPerks.length} perks · ${provPriceLabel}`:`${provPerks.length} perks`}
           badge={<ProviderBadge provider={pg.provider} size={28}/>}
           headerBg={pCfg.bg}
           headerBorder={`${pCfg.color}33`}
@@ -393,7 +397,7 @@ function MembershipsTab({perks,onToggle,onDismiss,activeMemberships,tierPrices})
 }
 
 /* ═══════════════ WHERE TO USE ═══════════════ */
-function WhereTab({perks,onToggle,onDismiss}){const[sel,setSel]=useState(null);const[sp,setSp]=useState(null);const catGroups=useMemo(()=>{const g={};perks.forEach(p=>{const c=p.category;if(!g[c])g[c]={perks:[],providers:new Set()};g[c].perks.push(p);g[c].providers.add(p.provider);});return g;},[perks]);return(<div onClick={()=>setSp(null)}><h1 style={{fontSize:22,fontWeight:800,color:T.textPrimary,margin:0,fontFamily:"'DM Sans',sans-serif"}}>Where to Use</h1><TabDesc>Find perks by category. Tap to expand matching perks.</TabDesc><div style={{display:"flex",flexDirection:"column",gap:10}}>{Object.entries(catGroups).map(([cat,data])=>{const info=CATEGORIES[cat]||CATEGORIES.other;const isSel=sel===cat;return(<div key={cat}><div onClick={()=>{setSel(isSel?null:cat);setSp(null);}} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 14px",borderRadius:12,cursor:"pointer",background:isSel?"#1E293B":T.surface,border:`1.5px solid ${isSel?"#1E293B":T.border}`,boxShadow:isSel?"none":T.shadow,color:isSel?"#fff":T.textPrimary}}><span style={{fontSize:24}}>{info.icon}</span><div style={{flex:1}}><div style={{fontSize:13,fontWeight:700,fontFamily:"'DM Sans',sans-serif"}}>{info.label}</div><div style={{fontSize:11,color:isSel?"#94A3B8":T.textSecondary,fontFamily:"'DM Sans',sans-serif"}}>{data.perks.length} perks</div></div><div style={{display:"flex",gap:3}}>{[...data.providers].map(prov=><ProviderBadge key={prov} provider={prov} size={20}/>)}</div><span style={{fontSize:14,color:isSel?"#94A3B8":T.muted,transform:isSel?"rotate(180deg)":"rotate(0)",display:"inline-block"}}>▾</span></div>{isSel&&(<div style={{margin:"6px 0",padding:"10px 12px",borderRadius:12,background:"#1E293B"}}><div style={{display:"flex",flexDirection:"column",gap:6}}>{data.perks.sort(alphaSort).map(p=>(<div key={p.perk_id}><div onClick={e=>{e.stopPropagation();setSp(sp===p.perk_id?null:p.perk_id);}} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 10px",borderRadius:10,background:p.used||p.dismissed?"rgba(255,255,255,0.05)":"rgba(255,255,255,0.08)",cursor:"pointer",opacity:p.used||p.dismissed?0.5:1,border:`1px solid ${sp===p.perk_id?T.accent:"rgba(255,255,255,0.1)"}`}}><div style={{position:"relative",flexShrink:0}}><PerkBrandIcon perk={p} size={28}/><ProviderOverlay provider={p.provider} size={12}/></div><div style={{flex:1,minWidth:0}}><div style={{fontSize:12,fontWeight:700,color:"#F1F5F9",fontFamily:"'DM Sans',sans-serif",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{p.title}</div><div style={{fontSize:10,color:"#94A3B8",fontFamily:"'DM Sans',sans-serif"}}>{p.membership} — {p.tier}</div></div>{p.dismissed&&<span style={{fontSize:9,color:"#F87171"}}>✗</span>}{p.used&&!p.dismissed&&<span style={{fontSize:9,color:"#6EE7B7"}}>✓</span>}</div>{sp===p.perk_id&&<div style={{margin:"4px 0"}}><PerkTooltip perk={p} onToggle={onToggle} onDismiss={onDismiss}/></div>}</div>))}</div></div>)}</div>);})}</div></div>);}
+function WhereTab({perks,onToggle,onDismiss}){const[sel,setSel]=useState(null);const[sp,setSp]=useState(null);const catGroups=useMemo(()=>{const g={};perks.forEach(p=>{const c=p.category;if(!c||!CATEGORIES[c])return;if(!g[c])g[c]={perks:[],providers:new Set()};g[c].perks.push(p);g[c].providers.add(p.provider);});return g;},[perks]);return(<div onClick={()=>setSp(null)}><h1 style={{fontSize:22,fontWeight:800,color:T.textPrimary,margin:0,fontFamily:"'DM Sans',sans-serif"}}>Where to Use</h1><TabDesc>Find perks by category. Tap to expand matching perks.</TabDesc><div style={{display:"flex",flexDirection:"column",gap:10}}>{Object.entries(catGroups).map(([cat,data])=>{const info=CATEGORIES[cat];if(!info)return null;const isSel=sel===cat;return(<div key={cat}><div onClick={()=>{setSel(isSel?null:cat);setSp(null);}} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 14px",borderRadius:12,cursor:"pointer",background:isSel?"#1E293B":T.surface,border:`1.5px solid ${isSel?"#1E293B":T.border}`,boxShadow:isSel?"none":T.shadow,color:isSel?"#fff":T.textPrimary}}><span style={{fontSize:24}}>{info.icon}</span><div style={{flex:1}}><div style={{fontSize:13,fontWeight:700,fontFamily:"'DM Sans',sans-serif"}}>{info.label}</div><div style={{fontSize:11,color:isSel?"#94A3B8":T.textSecondary,fontFamily:"'DM Sans',sans-serif"}}>{data.perks.length} perks</div></div><div style={{display:"flex",gap:3}}>{[...data.providers].map(prov=><ProviderBadge key={prov} provider={prov} size={20}/>)}</div><span style={{fontSize:14,color:isSel?"#94A3B8":T.muted,transform:isSel?"rotate(180deg)":"rotate(0)",display:"inline-block"}}>▾</span></div>{isSel&&(<div style={{margin:"6px 0",padding:"10px 12px",borderRadius:12,background:"#1E293B"}}><div style={{display:"flex",flexDirection:"column",gap:6}}>{data.perks.sort(alphaSort).map(p=>(<div key={p.perk_id}><div onClick={e=>{e.stopPropagation();setSp(sp===p.perk_id?null:p.perk_id);}} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 10px",borderRadius:10,background:p.used||p.dismissed?"rgba(255,255,255,0.05)":"rgba(255,255,255,0.08)",cursor:"pointer",opacity:p.used||p.dismissed?0.5:1,border:`1px solid ${sp===p.perk_id?T.accent:"rgba(255,255,255,0.1)"}`}}><div style={{position:"relative",flexShrink:0}}><PerkBrandIcon perk={p} size={28}/><ProviderOverlay provider={p.provider} size={12}/></div><div style={{flex:1,minWidth:0}}><div style={{fontSize:12,fontWeight:700,color:"#F1F5F9",fontFamily:"'DM Sans',sans-serif",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{p.title}</div><div style={{fontSize:10,color:"#94A3B8",fontFamily:"'DM Sans',sans-serif"}}>{p.membership} — {p.tier}</div></div>{p.dismissed&&<span style={{fontSize:9,color:"#F87171"}}>✗</span>}{p.used&&!p.dismissed&&<span style={{fontSize:9,color:"#6EE7B7"}}>✓</span>}</div>{sp===p.perk_id&&<div style={{margin:"4px 0"}}><PerkTooltip perk={p} onToggle={onToggle} onDismiss={onDismiss}/></div>}</div>))}</div></div>)}</div>);})}</div></div>);}
 
 /* ═══════════════ PROFILE (grouped by provider → tier, collapsible) ═══════════════ */
 function ProfileTab({perks,activeMemberships,onRemoveMembership,user,onLogout,onToggle,onDismiss,tierPrices}){
@@ -573,11 +577,16 @@ function PotentialTab({allPerks,activeMemberships,onAddMembership,userName,userI
     {providerGroups.map(pg=>{
       const pCfg=PROVIDERS[pg.provider]||{color:T.muted,bg:"#f1f5f9"};
       const totalPerks=pg.tiers.reduce((n,t)=>n+t.perks.length,0);
+      /* Price: show active tier's price, or lowest tier's price if none active */
+      const allTp=pg.tiers.map(tg=>({...tierPrices[`${pg.provider}|${tg.tier}`],tier:tg.tier})).filter(tp=>tp.price!=null);
+      const activeTp=allTp.filter(tp=>activeSet.has(`${pg.provider}|${tp.tier}`));
+      const displayTp=activeTp.length>0?activeTp.reduce((a,b)=>(a.price??999)>=(b.price??999)?a:b):allTp.length>0?allTp.reduce((a,b)=>(a.price??999)<=(b.price??999)?a:b):null;
+      const provPriceLabel=displayTp?(displayTp.price_label||(displayTp.price===0?"Free":displayTp.price!=null?`£${displayTp.price}/mo`:"")):"";
       return(
         <CollapsibleSection
           key={pg.provider}
           title={pg.provider}
-          count={totalPerks}
+          subtitle={provPriceLabel?`${totalPerks} perks · ${activeTp.length>0?"":"from "}${provPriceLabel}`:`${totalPerks} perks`}
           badge={<ProviderBadge provider={pg.provider} size={28}/>}
           headerBg={pCfg.bg}
           headerBorder={`${pCfg.color}33`}
