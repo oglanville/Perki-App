@@ -281,10 +281,36 @@ function AuthScreen({onAuth}){const[mode,setMode]=useState("login");const[email,
 }
 
 /* ═══════════════ HOME TAB ═══════════════ */
-function HomeTab({perks,onToggle,onDismiss,tierPrices}){
+function HomeTab({perks,onToggle,onDismiss,tierPrices,allPerks}){
   const[selected,setSelected]=useState(null);
   const[groupBy,setGroupBy]=useState("reset");
   const[showHelp,setShowHelp]=useState(false);
+  const[subTab,setSubTab]=useState("perks");
+
+  /* Identify "feature" titles: perks whose title appears in EVERY tier of their provider */
+  const featureTitles=useMemo(()=>{
+    /* Build full tier list per provider from allPerks */
+    const provTiers={};
+    allPerks.forEach(p=>{
+      if(!provTiers[p.provider])provTiers[p.provider]=new Set();
+      provTiers[p.provider].add(p.tier);
+    });
+    /* For each provider, find titles that appear in every tier */
+    const provTitleTiers={};
+    allPerks.forEach(p=>{
+      const k=`${p.provider}|${p.title}`;
+      if(!provTitleTiers[k])provTitleTiers[k]=new Set();
+      provTitleTiers[k].add(p.tier);
+    });
+    const feats=new Set();
+    Object.entries(provTitleTiers).forEach(([k,tiers])=>{
+      const prov=k.split("|")[0];
+      const allTierCount=provTiers[prov]?.size||0;
+      if(allTierCount>1&&tiers.size===allTierCount)feats.add(k);
+    });
+    return feats;
+  },[allPerks]);
+
   /* Dedup: for each provider, if same title exists in multiple tiers, keep only the highest tier version */
   const dedupedPerks=useMemo(()=>{
     const byKey={};
@@ -298,13 +324,20 @@ function HomeTab({perks,onToggle,onDismiss,tierPrices}){
     });
     return Object.values(byKey);
   },[perks,tierPrices]);
-  const sorted=useMemo(()=>[...dedupedPerks].sort(alphaSort),[dedupedPerks]);
-  const countable=dedupedPerks.filter(p=>!p.dismissed);
+
+  /* Split into features and regular perks */
+  const features=useMemo(()=>dedupedPerks.filter(p=>featureTitles.has(`${p.provider}|${p.title}`)).sort(alphaSort),[dedupedPerks,featureTitles]);
+  const regularPerks=useMemo(()=>dedupedPerks.filter(p=>!featureTitles.has(`${p.provider}|${p.title}`)).sort(alphaSort),[dedupedPerks,featureTitles]);
+
+  const displayPerks=subTab==="features"?features:regularPerks;
+  const countable=displayPerks.filter(p=>!p.dismissed);
   const used=countable.filter(p=>p.used).length;
+
   const groups=useMemo(()=>{
-    if(groupBy==="category"){const g={};sorted.forEach(p=>{const cat=CATEGORIES[p.category];if(!cat)return;(g[cat.label]=g[cat.label]||[]).push(p);});return g;}
-    const g={Weekly:[],Monthly:[],Annually:[],"Always On":[]};sorted.forEach(p=>{g[{WEEKLY:"Weekly",MONTHLY:"Monthly",ANNUALLY:"Annually",YEARLY:"Annually",NONE:"Always On"}[p.reset_period]||"Always On"].push(p);});return g;
-  },[sorted,groupBy]);
+    if(groupBy==="category"){const g={};displayPerks.forEach(p=>{const cat=CATEGORIES[p.category];if(!cat)return;(g[cat.label]=g[cat.label]||[]).push(p);});return g;}
+    const g={Weekly:[],Monthly:[],Annually:[],"Always On":[]};displayPerks.forEach(p=>{g[{WEEKLY:"Weekly",MONTHLY:"Monthly",ANNUALLY:"Annually",YEARLY:"Annually",NONE:"Always On"}[p.reset_period]||"Always On"].push(p);});return g;
+  },[displayPerks,groupBy]);
+
   return(
     <div onClick={()=>setSelected(null)}>
       {showHelp&&<HowToUseModal onClose={()=>setShowHelp(false)}/>}
@@ -313,7 +346,18 @@ function HomeTab({perks,onToggle,onDismiss,tierPrices}){
         <button onClick={e=>{e.stopPropagation();setShowHelp(true);}} style={{padding:"6px 12px",borderRadius:10,border:`1.5px solid ${T.border}`,background:T.surface,color:T.textSecondary,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",boxShadow:T.shadow}}>📖 How to use</button>
       </div>
       <TabDesc>Tap any perk to see details, mark it as used, or exclude it from your count.</TabDesc>
-      <p style={{fontSize:12,color:T.textSecondary,margin:"0 0 10px",fontFamily:"'DM Sans',sans-serif",fontWeight:600}}>Used {used} / Total {countable.length}{dedupedPerks.length!==countable.length&&<span style={{color:T.muted}}> ({dedupedPerks.length-countable.length} excluded)</span>}</p>
+
+      {/* Perks / Features sub-tabs */}
+      <div style={{display:"flex",gap:0,marginBottom:10,borderRadius:10,overflow:"hidden",border:`1.5px solid ${T.border}`}}>
+        {[{id:"perks",label:"Perks",count:regularPerks.length},{id:"features",label:"Features",count:features.length}].map(t=>(
+          <button key={t.id} onClick={()=>{setSubTab(t.id);setSelected(null);}} style={{flex:1,padding:"8px 0",border:"none",background:subTab===t.id?"#EFF6FF":T.surface,color:subTab===t.id?T.accent:T.textSecondary,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:5}}>
+            {t.label}
+            <span style={{fontSize:9,fontWeight:700,background:subTab===t.id?`${T.accent}22`:T.bg,color:subTab===t.id?T.accent:T.muted,padding:"1px 6px",borderRadius:8}}>{t.count}</span>
+          </button>
+        ))}
+      </div>
+
+      <p style={{fontSize:12,color:T.textSecondary,margin:"0 0 10px",fontFamily:"'DM Sans',sans-serif",fontWeight:600}}>Used {used} / Total {countable.length}{displayPerks.length!==countable.length&&<span style={{color:T.muted}}> ({displayPerks.length-countable.length} excluded)</span>}</p>
       <div style={{display:"flex",gap:8,marginBottom:12}}>
         {["reset","category"].map(g=>(<button key={g} onClick={()=>setGroupBy(g)} style={{padding:"6px 14px",borderRadius:20,border:`1.5px solid ${groupBy===g?T.accent:T.border}`,background:groupBy===g?"#EFF6FF":T.surface,color:groupBy===g?T.accent:T.textSecondary,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>{g==="reset"?"By Reset":"By Category"}</button>))}
       </div>
@@ -325,6 +369,7 @@ function HomeTab({perks,onToggle,onDismiss,tierPrices}){
           </div>
         </div>
       ))}
+      {displayPerks.length===0&&<p style={{textAlign:"center",color:T.muted,marginTop:30,fontSize:13,fontFamily:"'DM Sans',sans-serif"}}>{subTab==="features"?"No features found across your memberships.":"No perks to show."}</p>}
     </div>
   );
 }
@@ -424,7 +469,21 @@ function MembershipsTab({perks,onToggle,onDismiss,activeMemberships,tierPrices})
 }
 
 /* ═══════════════ WHERE TO USE ═══════════════ */
-function WhereTab({perks,onToggle,onDismiss}){const[sel,setSel]=useState(null);const[sp,setSp]=useState(null);const catGroups=useMemo(()=>{const g={};perks.forEach(p=>{const c=p.category;if(!c||!CATEGORIES[c])return;if(!g[c])g[c]={perks:[],providers:new Set()};g[c].perks.push(p);g[c].providers.add(p.provider);});return g;},[perks]);return(<div onClick={()=>setSp(null)}><h1 style={{fontSize:22,fontWeight:800,color:T.textPrimary,margin:0,fontFamily:"'DM Sans',sans-serif"}}>Where to Use</h1><TabDesc>Find perks by category. Tap to expand matching perks.</TabDesc><div style={{display:"flex",flexDirection:"column",gap:10}}>{Object.entries(catGroups).map(([cat,data])=>{const info=CATEGORIES[cat];if(!info)return null;const isSel=sel===cat;return(<div key={cat}><div onClick={()=>{setSel(isSel?null:cat);setSp(null);}} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 14px",borderRadius:12,cursor:"pointer",background:isSel?"#1E293B":T.surface,border:`1.5px solid ${isSel?"#1E293B":T.border}`,boxShadow:isSel?"none":T.shadow,color:isSel?"#fff":T.textPrimary}}><span style={{fontSize:24}}>{info.icon}</span><div style={{flex:1}}><div style={{fontSize:13,fontWeight:700,fontFamily:"'DM Sans',sans-serif"}}>{info.label}</div><div style={{fontSize:11,color:isSel?"#94A3B8":T.textSecondary,fontFamily:"'DM Sans',sans-serif"}}>{data.perks.length} perks</div></div><div style={{display:"flex",gap:3}}>{[...data.providers].map(prov=><ProviderBadge key={prov} provider={prov} size={20}/>)}</div><span style={{fontSize:14,color:isSel?"#94A3B8":T.muted,transform:isSel?"rotate(180deg)":"rotate(0)",display:"inline-block"}}>▾</span></div>{isSel&&(<div style={{margin:"6px 0",padding:"10px 12px",borderRadius:12,background:"#1E293B"}}><div style={{display:"flex",flexDirection:"column",gap:6}}>{data.perks.sort(alphaSort).map(p=>(<div key={p.perk_id}><div onClick={e=>{e.stopPropagation();setSp(sp===p.perk_id?null:p.perk_id);}} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 10px",borderRadius:10,background:p.used||p.dismissed?"rgba(255,255,255,0.05)":"rgba(255,255,255,0.08)",cursor:"pointer",opacity:p.used||p.dismissed?0.5:1,border:`1px solid ${sp===p.perk_id?T.accent:"rgba(255,255,255,0.1)"}`}}><div style={{position:"relative",flexShrink:0}}><PerkBrandIcon perk={p} size={28}/><ProviderOverlay provider={p.provider} size={12}/></div><div style={{flex:1,minWidth:0}}><div style={{fontSize:12,fontWeight:700,color:"#F1F5F9",fontFamily:"'DM Sans',sans-serif",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{p.title}</div><div style={{fontSize:10,color:"#94A3B8",fontFamily:"'DM Sans',sans-serif"}}>{p.membership} — {p.tier}</div></div>{p.dismissed&&<span style={{fontSize:9,color:"#F87171"}}>✗</span>}{p.used&&!p.dismissed&&<span style={{fontSize:9,color:"#6EE7B7"}}>✓</span>}</div>{sp===p.perk_id&&<div style={{margin:"4px 0"}}><PerkTooltip perk={p} onToggle={onToggle} onDismiss={onDismiss}/></div>}</div>))}</div></div>)}</div>);})}</div></div>);}
+function WhereTab({perks,onToggle,onDismiss,tierPrices}){const[sel,setSel]=useState(null);const[sp,setSp]=useState(null);
+  /* Dedup: for each provider, keep only highest-tier version of each title */
+  const dedupedPerks=useMemo(()=>{
+    const byKey={};
+    perks.forEach(p=>{
+      const key=`${p.provider}|${p.title}`;
+      if(!byKey[key]){byKey[key]=p;return;}
+      const order=getProviderTierOrder(p.provider,tierPrices);
+      const existIdx=order.indexOf(byKey[key].tier);
+      const newIdx=order.indexOf(p.tier);
+      if(newIdx>existIdx)byKey[key]=p;
+    });
+    return Object.values(byKey);
+  },[perks,tierPrices]);
+  const catGroups=useMemo(()=>{const g={};dedupedPerks.forEach(p=>{const c=p.category;if(!c||!CATEGORIES[c])return;if(!g[c])g[c]={perks:[],providers:new Set()};g[c].perks.push(p);g[c].providers.add(p.provider);});return g;},[dedupedPerks]);return(<div onClick={()=>setSp(null)}><h1 style={{fontSize:22,fontWeight:800,color:T.textPrimary,margin:0,fontFamily:"'DM Sans',sans-serif"}}>Where to Use</h1><TabDesc>Find perks by category. Tap to expand matching perks.</TabDesc><div style={{display:"flex",flexDirection:"column",gap:10}}>{Object.entries(catGroups).map(([cat,data])=>{const info=CATEGORIES[cat];if(!info)return null;const isSel=sel===cat;return(<div key={cat}><div onClick={()=>{setSel(isSel?null:cat);setSp(null);}} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 14px",borderRadius:12,cursor:"pointer",background:isSel?"#1E293B":T.surface,border:`1.5px solid ${isSel?"#1E293B":T.border}`,boxShadow:isSel?"none":T.shadow,color:isSel?"#fff":T.textPrimary}}><span style={{fontSize:24}}>{info.icon}</span><div style={{flex:1}}><div style={{fontSize:13,fontWeight:700,fontFamily:"'DM Sans',sans-serif"}}>{info.label}</div><div style={{fontSize:11,color:isSel?"#94A3B8":T.textSecondary,fontFamily:"'DM Sans',sans-serif"}}>{data.perks.length} perks</div></div><div style={{display:"flex",gap:3}}>{[...data.providers].map(prov=><ProviderBadge key={prov} provider={prov} size={20}/>)}</div><span style={{fontSize:14,color:isSel?"#94A3B8":T.muted,transform:isSel?"rotate(180deg)":"rotate(0)",display:"inline-block"}}>▾</span></div>{isSel&&(<div style={{margin:"6px 0",padding:"10px 12px",borderRadius:12,background:"#1E293B"}}><div style={{display:"flex",flexDirection:"column",gap:6}}>{data.perks.sort(alphaSort).map(p=>(<div key={p.perk_id}><div onClick={e=>{e.stopPropagation();setSp(sp===p.perk_id?null:p.perk_id);}} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 10px",borderRadius:10,background:p.used||p.dismissed?"rgba(255,255,255,0.05)":"rgba(255,255,255,0.08)",cursor:"pointer",opacity:p.used||p.dismissed?0.5:1,border:`1px solid ${sp===p.perk_id?T.accent:"rgba(255,255,255,0.1)"}`}}><div style={{position:"relative",flexShrink:0}}><PerkBrandIcon perk={p} size={28}/><ProviderOverlay provider={p.provider} size={12}/></div><div style={{flex:1,minWidth:0}}><div style={{fontSize:12,fontWeight:700,color:"#F1F5F9",fontFamily:"'DM Sans',sans-serif",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{p.title}</div><div style={{fontSize:10,color:"#94A3B8",fontFamily:"'DM Sans',sans-serif"}}>{p.membership} — {p.tier}</div></div>{p.dismissed&&<span style={{fontSize:9,color:"#F87171"}}>✗</span>}{p.used&&!p.dismissed&&<span style={{fontSize:9,color:"#6EE7B7"}}>✓</span>}</div>{sp===p.perk_id&&<div style={{margin:"4px 0"}}><PerkTooltip perk={p} onToggle={onToggle} onDismiss={onDismiss}/></div>}</div>))}</div></div>)}</div>);})}</div></div>);}
 
 /* ═══════════════ PROFILE (grouped by provider → tier, collapsible) ═══════════════ */
 function ProfileTab({perks,activeMemberships,onRemoveMembership,user,onLogout,onToggle,onDismiss,tierPrices}){
@@ -436,15 +495,17 @@ function ProfileTab({perks,activeMemberships,onRemoveMembership,user,onLogout,on
   const used=countable.filter(p=>p.used).length;
   const willNotUseCount=perks.filter(p=>p.dismissed).length;
 
-  /* Cost summary — derive prices exclusively from perks.price */
+  /* Cost summary — only highest-priced tier per provider, from perks.price */
   const costBreakdown=useMemo(()=>{
-    const items=[];
+    const byProv={};
     activeMemberships.forEach(m=>{
       const perkWithPrice=perks.find(p=>p.provider===m.provider&&p.tier===m.tier&&p.price!=null);
       const price=perkWithPrice?.price??0;
-      items.push({provider:m.provider,tier:m.tier,price});
+      if(!byProv[m.provider]||price>byProv[m.provider].price){
+        byProv[m.provider]={provider:m.provider,tier:m.tier,price};
+      }
     });
-    return items;
+    return Object.values(byProv);
   },[activeMemberships,perks]);
   const totalMonthlyCost=useMemo(()=>costBreakdown.reduce((sum,i)=>sum+i.price,0),[costBreakdown]);
 
@@ -497,7 +558,7 @@ function ProfileTab({perks,activeMemberships,onRemoveMembership,user,onLogout,on
           <span style={{fontSize:18}}>💷</span>
           <div>
             <div style={{fontSize:13,fontWeight:700,color:T.textPrimary,fontFamily:"'DM Sans',sans-serif"}}>Monthly Cost</div>
-            <div style={{fontSize:10,color:T.textSecondary,fontFamily:"'DM Sans',sans-serif"}}>{costBreakdown.length} active membership{costBreakdown.length!==1?"s":""}</div>
+            <div style={{fontSize:10,color:T.textSecondary,fontFamily:"'DM Sans',sans-serif"}}>{costBreakdown.length} provider{costBreakdown.length!==1?"s":""}</div>
           </div>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:8}}>
@@ -882,9 +943,9 @@ export default function PerikiApp(){
         <div style={{fontSize:11,color:T.textSecondary,fontWeight:600,background:"#F1F5F9",padding:"3px 10px",borderRadius:20}}>Used {usedCount} / Total {countable.length}</div>
       </div>
       <div style={{flex:1,padding:"12px 16px 100px",overflowY:"auto"}}>
-        {tab==="home"&&<HomeTab perks={userPerks} onToggle={toggleUsed} onDismiss={toggleDismissed} tierPrices={tierPrices}/>}
+        {tab==="home"&&<HomeTab perks={userPerks} onToggle={toggleUsed} onDismiss={toggleDismissed} tierPrices={tierPrices} allPerks={allPerks}/>}
         {tab==="memberships"&&<MembershipsTab perks={userPerks} onToggle={toggleUsed} onDismiss={toggleDismissed} activeMemberships={displayMemberships} tierPrices={tierPrices}/>}
-        {tab==="where"&&<WhereTab perks={userPerks} onToggle={toggleUsed} onDismiss={toggleDismissed}/>}
+        {tab==="where"&&<WhereTab perks={userPerks} onToggle={toggleUsed} onDismiss={toggleDismissed} tierPrices={tierPrices}/>}
         {tab==="potential"&&<PotentialTab allPerks={allPerks} activeMemberships={activeMemberships} onAddMembership={addMembership} userName={user.name} userId={user.id} tierPrices={tierPrices}/>}
         {tab==="profile"&&<ProfileTab perks={userPerks} activeMemberships={displayMemberships} onRemoveMembership={removeMembership} user={user} onLogout={handleLogout} onToggle={toggleUsed} onDismiss={toggleDismissed} tierPrices={tierPrices}/>}
       </div>
