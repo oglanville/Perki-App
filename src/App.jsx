@@ -13,6 +13,12 @@ const TABS=[{id:"home",label:"Home",icon:"🏠"},{id:"memberships",label:"Curren
 function resetLabel(p){return{WEEKLY:"Weekly",MONTHLY:"Monthly",ANNUALLY:"Annually",YEARLY:"Annually",NONE:"Always on"}[p]||p;}
 function alphaSort(a,b){return a.title.localeCompare(b.title);}
 
+/** Extract group name from perk title — text before the first dash/em-dash, trimmed. */
+function getPerkGroupName(title){
+  const m=title.match(/^(.+?)\s*[\u2013\u2014\-–—]\s*/);
+  return m?m[1].trim():title;
+}
+
 /* ═══════════════ TIER HIERARCHY HELPERS (derived from tierPrices at runtime) ═══════════════ */
 
 /**
@@ -283,7 +289,6 @@ function AuthScreen({onAuth}){const[mode,setMode]=useState("login");const[email,
 /* ═══════════════ HOME TAB ═══════════════ */
 function HomeTab({perks,onToggle,onDismiss,tierPrices}){
   const[selected,setSelected]=useState(null);
-  const[groupBy,setGroupBy]=useState("reset");
   const[showHelp,setShowHelp]=useState(false);
   /* Dedup: for each provider, if same title exists in multiple tiers, keep only the highest tier version */
   const dedupedPerks=useMemo(()=>{
@@ -301,10 +306,15 @@ function HomeTab({perks,onToggle,onDismiss,tierPrices}){
   const sorted=useMemo(()=>[...dedupedPerks].sort(alphaSort),[dedupedPerks]);
   const countable=dedupedPerks.filter(p=>!p.dismissed);
   const used=countable.filter(p=>p.used).length;
+  /* Group by text before the hyphen/dash in the perk name */
   const groups=useMemo(()=>{
-    if(groupBy==="category"){const g={};sorted.forEach(p=>{const cat=CATEGORIES[p.category];if(!cat)return;(g[cat.label]=g[cat.label]||[]).push(p);});return g;}
-    const g={Weekly:[],Monthly:[],Annually:[],"Always On":[]};sorted.forEach(p=>{g[{WEEKLY:"Weekly",MONTHLY:"Monthly",ANNUALLY:"Annually",YEARLY:"Annually",NONE:"Always On"}[p.reset_period]||"Always On"].push(p);});return g;
-  },[sorted,groupBy]);
+    const g={};
+    sorted.forEach(p=>{
+      const name=getPerkGroupName(p.title);
+      (g[name]=g[name]||[]).push(p);
+    });
+    return Object.entries(g).sort((a,b)=>a[0].localeCompare(b[0]));
+  },[sorted]);
   return(
     <div onClick={()=>setSelected(null)}>
       {showHelp&&<HowToUseModal onClose={()=>setShowHelp(false)}/>}
@@ -313,11 +323,8 @@ function HomeTab({perks,onToggle,onDismiss,tierPrices}){
         <button onClick={e=>{e.stopPropagation();setShowHelp(true);}} style={{padding:"6px 12px",borderRadius:10,border:`1.5px solid ${T.border}`,background:T.surface,color:T.textSecondary,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",boxShadow:T.shadow}}>📖 How to use</button>
       </div>
       <TabDesc>Tap any perk to see details, mark it as used, or exclude it from your count.</TabDesc>
-      <p style={{fontSize:12,color:T.textSecondary,margin:"0 0 10px",fontFamily:"'DM Sans',sans-serif",fontWeight:600}}>Used {used} / Total {countable.length}{perks.length!==countable.length&&<span style={{color:T.muted}}> ({perks.length-countable.length} excluded)</span>}</p>
-      <div style={{display:"flex",gap:8,marginBottom:12}}>
-        {["reset","category"].map(g=>(<button key={g} onClick={()=>setGroupBy(g)} style={{padding:"6px 14px",borderRadius:20,border:`1.5px solid ${groupBy===g?T.accent:T.border}`,background:groupBy===g?"#EFF6FF":T.surface,color:groupBy===g?T.accent:T.textSecondary,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>{g==="reset"?"By Reset":"By Category"}</button>))}
-      </div>
-      {Object.entries(groups).map(([name,items])=>items.length>0&&(
+      <p style={{fontSize:12,color:T.textSecondary,margin:"0 0 10px",fontFamily:"'DM Sans',sans-serif",fontWeight:600}}>Used {used} / Total {countable.length}{dedupedPerks.length!==countable.length&&<span style={{color:T.muted}}> ({dedupedPerks.length-countable.length} excluded)</span>}</p>
+      {groups.map(([name,items])=>(
         <div key={name}>
           <SectionHeader count={items.length}>{name}</SectionHeader>
           <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:6}}>
@@ -372,7 +379,13 @@ function MembershipsTab({perks,onToggle,onDismiss,activeMemberships,tierPrices})
 
     {providerGroups.map(pg=>{
       const pCfg=PROVIDERS[pg.provider]||{color:T.muted,bg:"#f1f5f9"};
-      const provPerks=pg.tiers.flatMap(t=>t.perks);
+      const allTierPerks=pg.tiers.flatMap(t=>t.perks);
+      const tierOrder=pg.tiers.map(t=>t.tier);
+      /* Compute deduped total across all tiers for provider subtitle */
+      const dedupedTotal=allTierPerks.filter(p=>{
+        const higherTiers=tierOrder.slice(tierOrder.indexOf(p.tier)+1);
+        return !higherTiers.some(ht=>allTierPerks.some(hp=>hp.tier===ht&&hp.title===p.title));
+      }).length;
       /* Derive tier price from perk.price — all perks in a tier share the same price */
       const tierPriceEntries=pg.tiers.map(tg=>{const p=tg.perks.find(pk=>pk.price!=null);return p?{tier:tg.tier,price:p.price}:null;}).filter(Boolean);
       /* Show highest active tier's price (that's what the user pays) */
@@ -382,7 +395,7 @@ function MembershipsTab({perks,onToggle,onDismiss,activeMemberships,tierPrices})
         <CollapsibleSection
           key={pg.provider}
           title={pg.provider}
-          subtitle={provPriceLabel?`${provPerks.length} perks · ${provPriceLabel}`:`${provPerks.length} perks`}
+          subtitle={provPriceLabel?`${dedupedTotal} perks · ${provPriceLabel}`:`${dedupedTotal} perks`}
           badge={<ProviderBadge provider={pg.provider} size={28}/>}
           headerBg={pCfg.bg}
           headerBorder={`${pCfg.color}33`}
@@ -398,6 +411,15 @@ function MembershipsTab({perks,onToggle,onDismiss,activeMemberships,tierPrices})
               const higherTiers = tierOrder.slice(tierOrder.indexOf(tg.tier) + 1);
               return !higherTiers.some(ht => allTierPerks.some(hp => hp.tier === ht && hp.title === p.title));
             });
+            /* Hide tiers with 0 perks after dedup */
+            if(dedupedPerks.length===0) return null;
+            /* Sub-group perks by text before the hyphen */
+            const perkGroups={};
+            dedupedPerks.forEach(p=>{
+              const gn=getPerkGroupName(p.title);
+              (perkGroups[gn]=perkGroups[gn]||[]).push(p);
+            });
+            const sortedGroups=Object.entries(perkGroups).sort((a,b)=>a[0].localeCompare(b[0]));
             return(
               <CollapsibleSection
                 key={tg.tier}
@@ -408,8 +430,19 @@ function MembershipsTab({perks,onToggle,onDismiss,activeMemberships,tierPrices})
                 isOpen={openTier[pg.provider]===tg.tier}
                 onToggle={()=>setOpenTier(prev=>({...prev,[pg.provider]:prev[pg.provider]===tg.tier?null:tg.tier}))}
               >
-                <div style={{display:"flex",flexDirection:"column",gap:5}}>
-                  {dedupedPerks.map(p=><PerkTile key={p.perk_id} perk={p} onToggle={onToggle} onDismiss={onDismiss} selected={selected} onSelect={setSelected}/>)}
+                <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                  {sortedGroups.map(([groupName,groupPerks])=>(
+                    <div key={groupName}>
+                      {sortedGroups.length>1&&<div style={{fontSize:11,fontWeight:700,color:T.textSecondary,fontFamily:"'DM Sans',sans-serif",margin:"4px 0 3px",display:"flex",alignItems:"center",gap:6}}>
+                        <span style={{width:4,height:4,borderRadius:2,background:T.muted}}/>
+                        {groupName}
+                        <span style={{fontSize:9,fontWeight:600,color:T.muted,background:"#F1F5F9",padding:"1px 5px",borderRadius:8}}>{groupPerks.length}</span>
+                      </div>}
+                      <div style={{display:"flex",flexDirection:"column",gap:5}}>
+                        {groupPerks.map(p=><PerkTile key={p.perk_id} perk={p} onToggle={onToggle} onDismiss={onDismiss} selected={selected} onSelect={setSelected}/>)}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </CollapsibleSection>
             );
@@ -434,16 +467,24 @@ function ProfileTab({perks,activeMemberships,onRemoveMembership,user,onLogout,on
   const used=countable.filter(p=>p.used).length;
   const willNotUseCount=perks.filter(p=>p.dismissed).length;
 
-  /* Cost summary — derive prices exclusively from perks.price */
+  /* Cost summary — only highest tier per provider, prices from perks.price */
   const costBreakdown=useMemo(()=>{
-    const items=[];
+    /* Group memberships by provider, find highest tier for each */
+    const byProv={};
     activeMemberships.forEach(m=>{
-      const perkWithPrice=perks.find(p=>p.provider===m.provider&&p.tier===m.tier&&p.price!=null);
+      (byProv[m.provider]=byProv[m.provider]||[]).push(m);
+    });
+    const items=[];
+    Object.entries(byProv).forEach(([prov,ms])=>{
+      const highest=getHighestTier(prov,ms.map(m=>m.tier),tierPrices);
+      const tier=highest[0]||ms[0]?.tier;
+      if(!tier)return;
+      const perkWithPrice=perks.find(p=>p.provider===prov&&p.tier===tier&&p.price!=null);
       const price=perkWithPrice?.price??0;
-      items.push({provider:m.provider,tier:m.tier,price});
+      items.push({provider:prov,tier,price});
     });
     return items;
-  },[activeMemberships,perks]);
+  },[activeMemberships,perks,tierPrices]);
   const totalMonthlyCost=useMemo(()=>costBreakdown.reduce((sum,i)=>sum+i.price,0),[costBreakdown]);
 
   /* Group memberships by provider, sort tiers by price */
@@ -495,7 +536,7 @@ function ProfileTab({perks,activeMemberships,onRemoveMembership,user,onLogout,on
           <span style={{fontSize:18}}>💷</span>
           <div>
             <div style={{fontSize:13,fontWeight:700,color:T.textPrimary,fontFamily:"'DM Sans',sans-serif"}}>Monthly Cost</div>
-            <div style={{fontSize:10,color:T.textSecondary,fontFamily:"'DM Sans',sans-serif"}}>{costBreakdown.length} active membership{costBreakdown.length!==1?"s":""}</div>
+            <div style={{fontSize:10,color:T.textSecondary,fontFamily:"'DM Sans',sans-serif"}}>{costBreakdown.length} provider{costBreakdown.length!==1?"s":""}</div>
           </div>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:8}}>
