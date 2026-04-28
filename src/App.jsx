@@ -86,12 +86,14 @@ function TabDesc({children}){return <p style={{fontSize:12,color:T.textSecondary
 function Spinner(){return <div style={{display:"flex",justifyContent:"center",alignItems:"center",padding:40}}><div style={{width:32,height:32,border:`3px solid ${T.border}`,borderTopColor:T.accent,borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/><style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style></div>;}
 
 /* ── Collapsible Section ── */
-function CollapsibleSection({ title, subtitle, count, badge, defaultOpen = false, headerBg, headerBorder, headerExtra, children }) {
-  const [open, setOpen] = useState(defaultOpen);
+function CollapsibleSection({ title, subtitle, count, badge, defaultOpen = false, headerBg, headerBorder, headerExtra, children, isOpen: controlledOpen, onToggle: controlledToggle }) {
+  const [internalOpen, setInternalOpen] = useState(defaultOpen);
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const toggle = controlledToggle || (() => setInternalOpen(o => !o));
   return (
     <div style={{ marginBottom: 8 }}>
       <div
-        onClick={() => setOpen(!open)}
+        onClick={() => toggle()}
         style={{
           display: "flex", alignItems: "center", gap: 8, padding: "9px 12px",
           borderRadius: 12, cursor: "pointer",
@@ -237,18 +239,18 @@ function PerkSquareTile({perk,onToggle,onDismiss,selected,onSelect}){
   return(
     <div style={{position:"relative"}}>
       <div onClick={e=>{e.stopPropagation();onSelect(isSel?null:perk.perk_id);}} style={{
-        width:"100%",aspectRatio:"1",borderRadius:14,overflow:"hidden",cursor:"pointer",
+        width:"100%",aspectRatio:"1",borderRadius:10,overflow:"hidden",cursor:"pointer",
         background:b.gradient,position:"relative",transition:"all 0.15s",
         opacity:isDimmed?0.45:1,
         border:`2px solid ${isSel?T.accent:"transparent"}`,
         boxShadow:isSel?"0 0 0 2px rgba(30,144,255,0.3)":isDimmed?"none":"0 2px 8px rgba(0,0,0,0.1)",
       }}>
-        <div style={{position:"absolute",top:6,right:6,width:22,height:22,borderRadius:8,background:pCfg.color,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:800,border:"1.5px solid rgba(255,255,255,0.4)",fontFamily:"'DM Sans',sans-serif",boxShadow:"0 1px 3px rgba(0,0,0,0.2)",zIndex:2}}>{pCfg.initials}</div>
-        {perk.dismissed&&<div style={{position:"absolute",top:6,left:6,fontSize:10,background:"rgba(0,0,0,0.5)",color:"#F87171",padding:"1px 6px",borderRadius:6,fontWeight:700,fontFamily:"'DM Sans',sans-serif",zIndex:2}}>✗</div>}
-        {perk.used&&!perk.dismissed&&<div style={{position:"absolute",top:6,left:6,fontSize:10,background:"rgba(0,0,0,0.5)",color:"#6EE7B7",padding:"1px 6px",borderRadius:6,fontWeight:700,fontFamily:"'DM Sans',sans-serif",zIndex:2}}>✓</div>}
-        <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"60%",fontSize:36,filter:isDimmed?"grayscale(0.5)":"none"}}>{b.emoji}</div>
-        <div style={{position:"absolute",bottom:0,left:0,right:0,background:"rgba(0,0,0,0.55)",backdropFilter:"blur(4px)",padding:"6px 8px"}}>
-          <div style={{fontSize:10,fontWeight:700,color:"#fff",fontFamily:"'DM Sans',sans-serif",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",lineHeight:1.3}}>{perk.title}</div>
+        <div style={{position:"absolute",top:3,right:3,width:16,height:16,borderRadius:5,background:pCfg.color,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:6,fontWeight:800,border:"1px solid rgba(255,255,255,0.4)",fontFamily:"'DM Sans',sans-serif",boxShadow:"0 1px 3px rgba(0,0,0,0.2)",zIndex:2}}>{pCfg.initials}</div>
+        {perk.dismissed&&<div style={{position:"absolute",top:3,left:3,fontSize:7,background:"rgba(0,0,0,0.5)",color:"#F87171",padding:"1px 4px",borderRadius:4,fontWeight:700,fontFamily:"'DM Sans',sans-serif",zIndex:2}}>✗</div>}
+        {perk.used&&!perk.dismissed&&<div style={{position:"absolute",top:3,left:3,fontSize:7,background:"rgba(0,0,0,0.5)",color:"#6EE7B7",padding:"1px 4px",borderRadius:4,fontWeight:700,fontFamily:"'DM Sans',sans-serif",zIndex:2}}>✓</div>}
+        <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"60%",fontSize:22,filter:isDimmed?"grayscale(0.5)":"none"}}>{b.emoji}</div>
+        <div style={{position:"absolute",bottom:0,left:0,right:0,background:"rgba(0,0,0,0.55)",backdropFilter:"blur(4px)",padding:"3px 4px"}}>
+          <div style={{fontSize:7,fontWeight:700,color:"#fff",fontFamily:"'DM Sans',sans-serif",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",lineHeight:1.3}}>{perk.title}</div>
         </div>
       </div>
       {isSel&&<PerkCalloutModal perk={perk} onToggle={onToggle} onDismiss={onDismiss} onClose={()=>onSelect(null)}/>}
@@ -279,12 +281,25 @@ function AuthScreen({onAuth}){const[mode,setMode]=useState("login");const[email,
 }
 
 /* ═══════════════ HOME TAB ═══════════════ */
-function HomeTab({perks,onToggle,onDismiss}){
+function HomeTab({perks,onToggle,onDismiss,tierPrices}){
   const[selected,setSelected]=useState(null);
   const[groupBy,setGroupBy]=useState("reset");
   const[showHelp,setShowHelp]=useState(false);
-  const sorted=useMemo(()=>[...perks].sort(alphaSort),[perks]);
-  const countable=perks.filter(p=>!p.dismissed);
+  /* Dedup: for each provider, if same title exists in multiple tiers, keep only the highest tier version */
+  const dedupedPerks=useMemo(()=>{
+    const byKey={};
+    perks.forEach(p=>{
+      const key=`${p.provider}|${p.title}`;
+      if(!byKey[key]){byKey[key]=p;return;}
+      const existingOrder=getProviderTierOrder(p.provider,tierPrices);
+      const existIdx=existingOrder.indexOf(byKey[key].tier);
+      const newIdx=existingOrder.indexOf(p.tier);
+      if(newIdx>existIdx)byKey[key]=p;
+    });
+    return Object.values(byKey);
+  },[perks,tierPrices]);
+  const sorted=useMemo(()=>[...dedupedPerks].sort(alphaSort),[dedupedPerks]);
+  const countable=dedupedPerks.filter(p=>!p.dismissed);
   const used=countable.filter(p=>p.used).length;
   const groups=useMemo(()=>{
     if(groupBy==="category"){const g={};sorted.forEach(p=>{const cat=CATEGORIES[p.category];if(!cat)return;(g[cat.label]=g[cat.label]||[]).push(p);});return g;}
@@ -305,7 +320,7 @@ function HomeTab({perks,onToggle,onDismiss}){
       {Object.entries(groups).map(([name,items])=>items.length>0&&(
         <div key={name}>
           <SectionHeader count={items.length}>{name}</SectionHeader>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:6}}>
             {items.map(p=><PerkSquareTile key={p.perk_id} perk={p} onToggle={onToggle} onDismiss={onDismiss} selected={selected} onSelect={setSelected}/>)}
           </div>
         </div>
@@ -318,6 +333,7 @@ function HomeTab({perks,onToggle,onDismiss}){
 function MembershipsTab({perks,onToggle,onDismiss,activeMemberships,tierPrices}){
   const[selected,setSelected]=useState(null);
   const[search,setSearch]=useState("");
+  const[openTier,setOpenTier]=useState({});
 
   const filtered=useMemo(()=>{
     let r=[...perks];
@@ -375,17 +391,25 @@ function MembershipsTab({perks,onToggle,onDismiss,activeMemberships,tierPrices})
           {pg.tiers.map(tg=>{
             const tierPrice=tg.perks.find(pk=>pk.price!=null)?.price;
             const priceLabel=tierPrice!=null?(tierPrice===0?"Free":`£${tierPrice}/mo`):"";
+            /* Dedup: hide perks from lower tiers if same title exists in a higher tier */
+            const allTierPerks = pg.tiers.flatMap(t => t.perks);
+            const tierOrder = pg.tiers.map(t => t.tier);
+            const dedupedPerks = tg.perks.filter(p => {
+              const higherTiers = tierOrder.slice(tierOrder.indexOf(tg.tier) + 1);
+              return !higherTiers.some(ht => allTierPerks.some(hp => hp.tier === ht && hp.title === p.title));
+            });
             return(
               <CollapsibleSection
                 key={tg.tier}
                 title={tg.tier}
-                subtitle={priceLabel?`${tg.perks.length} perks · ${priceLabel}`:`${tg.perks.length} perks`}
+                subtitle={priceLabel?`${dedupedPerks.length} perks · ${priceLabel}`:`${dedupedPerks.length} perks`}
                 headerBg="transparent"
                 headerBorder={T.border}
-                defaultOpen={true}
+                isOpen={openTier[pg.provider]===tg.tier}
+                onToggle={()=>setOpenTier(prev=>({...prev,[pg.provider]:prev[pg.provider]===tg.tier?null:tg.tier}))}
               >
                 <div style={{display:"flex",flexDirection:"column",gap:5}}>
-                  {tg.perks.map(p=><PerkTile key={p.perk_id} perk={p} onToggle={onToggle} onDismiss={onDismiss} selected={selected} onSelect={setSelected}/>)}
+                  {dedupedPerks.map(p=><PerkTile key={p.perk_id} perk={p} onToggle={onToggle} onDismiss={onDismiss} selected={selected} onSelect={setSelected}/>)}
                 </div>
               </CollapsibleSection>
             );
@@ -404,10 +428,23 @@ function WhereTab({perks,onToggle,onDismiss}){const[sel,setSel]=useState(null);c
 function ProfileTab({perks,activeMemberships,onRemoveMembership,user,onLogout,onToggle,onDismiss,tierPrices}){
   const[selectedPerk,setSelectedPerk]=useState(null);
   const[profilePic,setProfilePic]=useState(null);
+  const[costOpen,setCostOpen]=useState(false);
   const fileRef=useRef(null);
   const countable=perks.filter(p=>!p.dismissed);
   const used=countable.filter(p=>p.used).length;
   const willNotUseCount=perks.filter(p=>p.dismissed).length;
+
+  /* Cost summary — derive prices exclusively from perks.price */
+  const costBreakdown=useMemo(()=>{
+    const items=[];
+    activeMemberships.forEach(m=>{
+      const perkWithPrice=perks.find(p=>p.provider===m.provider&&p.tier===m.tier&&p.price!=null);
+      const price=perkWithPrice?.price??0;
+      items.push({provider:m.provider,tier:m.tier,price});
+    });
+    return items;
+  },[activeMemberships,perks]);
+  const totalMonthlyCost=useMemo(()=>costBreakdown.reduce((sum,i)=>sum+i.price,0),[costBreakdown]);
 
   /* Group memberships by provider, sort tiers by price */
   const providerGroups=useMemo(()=>{
@@ -450,6 +487,49 @@ function ProfileTab({perks,activeMemberships,onRemoveMembership,user,onLogout,on
       <div style={{padding:14,borderRadius:12,textAlign:"center",background:"#FEF2F2",border:"1.5px solid #FECACA"}}><div style={{fontSize:26,fontWeight:800,color:T.danger,fontFamily:"'DM Sans',sans-serif"}}>{willNotUseCount}</div><div style={{fontSize:10,color:"#991B1B",fontWeight:600,fontFamily:"'DM Sans',sans-serif"}}>Will Not Use</div></div>
     </div>
     <p style={{fontSize:12,color:T.textSecondary,margin:"0 0 6px",fontFamily:"'DM Sans',sans-serif",fontWeight:600}}>Used {used} / Total {countable.length}{perks.length!==countable.length&&<span style={{color:T.muted}}> ({perks.length-countable.length} excluded)</span>}</p>
+
+    {/* Cost Summary */}
+    <div style={{marginBottom:14,background:T.surface,borderRadius:12,border:`1px solid ${T.border}`,boxShadow:T.shadow,overflow:"hidden"}}>
+      <div onClick={()=>setCostOpen(!costOpen)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 14px",cursor:"pointer"}}>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <span style={{fontSize:18}}>💷</span>
+          <div>
+            <div style={{fontSize:13,fontWeight:700,color:T.textPrimary,fontFamily:"'DM Sans',sans-serif"}}>Monthly Cost</div>
+            <div style={{fontSize:10,color:T.textSecondary,fontFamily:"'DM Sans',sans-serif"}}>{costBreakdown.length} active membership{costBreakdown.length!==1?"s":""}</div>
+          </div>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <span style={{fontSize:20,fontWeight:800,color:T.primary,fontFamily:"'DM Sans',sans-serif"}}>{totalMonthlyCost===0?"Free":`£${totalMonthlyCost.toFixed(2)}`}</span>
+          <span style={{fontSize:14,color:T.muted,transform:costOpen?"rotate(180deg)":"rotate(0deg)",display:"inline-block",transition:"transform 0.2s"}}>▾</span>
+        </div>
+      </div>
+      {costOpen&&(
+        <div style={{borderTop:`1px solid ${T.border}`,padding:"10px 14px"}}>
+          {costBreakdown.length===0&&<p style={{fontSize:11,color:T.muted,fontFamily:"'DM Sans',sans-serif",margin:0}}>No active memberships.</p>}
+          {costBreakdown.map((item,i)=>{
+            const pCfg=PROVIDERS[item.provider]||{color:T.muted,bg:"#f1f5f9"};
+            return(
+              <div key={`${item.provider}-${item.tier}`} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 0",borderBottom:i<costBreakdown.length-1?`1px solid ${T.border}`:"none"}}>
+                <div style={{display:"flex",alignItems:"center",gap:8}}>
+                  <ProviderBadge provider={item.provider} size={22}/>
+                  <div>
+                    <div style={{fontSize:12,fontWeight:700,color:T.textPrimary,fontFamily:"'DM Sans',sans-serif"}}>{item.provider}</div>
+                    <div style={{fontSize:10,color:pCfg.color||T.textSecondary,fontWeight:600,fontFamily:"'DM Sans',sans-serif"}}>{item.tier}</div>
+                  </div>
+                </div>
+                <span style={{fontSize:13,fontWeight:700,color:item.price===0?T.success:T.textPrimary,fontFamily:"'DM Sans',sans-serif"}}>{item.price===0?"Free":`£${item.price.toFixed(2)}/mo`}</span>
+              </div>
+            );
+          })}
+          {costBreakdown.length>0&&(
+            <div style={{display:"flex",justifyContent:"space-between",paddingTop:10,marginTop:4,borderTop:`2px solid ${T.primary}22`}}>
+              <span style={{fontSize:12,fontWeight:800,color:T.textPrimary,fontFamily:"'DM Sans',sans-serif"}}>Total</span>
+              <span style={{fontSize:14,fontWeight:800,color:T.primary,fontFamily:"'DM Sans',sans-serif"}}>{totalMonthlyCost===0?"Free":`£${totalMonthlyCost.toFixed(2)}/mo`}</span>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
 
     <SectionHeader count={activeMemberships.length}>Active Memberships</SectionHeader>
 
@@ -527,6 +607,7 @@ function PotentialTab({allPerks,activeMemberships,onAddMembership,userName,userI
   const[reqName,setReqName]=useState(userName||"");
   const[reqText,setReqText]=useState("");
   const[reqSent,setReqSent]=useState(false);
+  const[openTier,setOpenTier]=useState({});
 
   /* Set of active provider|tier keys */
   const activeSet=useMemo(()=>{
@@ -607,7 +688,8 @@ function PotentialTab({allPerks,activeMemberships,onAddMembership,userName,userI
                 subtitle={<>{tg.perks.length} perks{priceLabel&&<span style={{marginLeft:6,fontWeight:700,color:pCfg.color||T.accent}}> · {priceLabel}</span>}</>}
                 headerBg={isActive?"#F0FDF4":"transparent"}
                 headerBorder={isActive?"#BBF7D0":T.border}
-                defaultOpen={false}
+                isOpen={openTier[pg.provider]===tg.tier}
+                onToggle={()=>setOpenTier(prev=>({...prev,[pg.provider]:prev[pg.provider]===tg.tier?null:tg.tier}))}
                 headerExtra={
                   <>
                     {isActive&&<span style={{fontSize:9,fontWeight:700,color:"#065F46",background:"#D1FAE5",padding:"2px 7px",borderRadius:10,fontFamily:"'DM Sans',sans-serif"}}>Already Active</span>}
@@ -798,7 +880,7 @@ export default function PerikiApp(){
         <div style={{fontSize:11,color:T.textSecondary,fontWeight:600,background:"#F1F5F9",padding:"3px 10px",borderRadius:20}}>Used {usedCount} / Total {countable.length}</div>
       </div>
       <div style={{flex:1,padding:"12px 16px 100px",overflowY:"auto"}}>
-        {tab==="home"&&<HomeTab perks={userPerks} onToggle={toggleUsed} onDismiss={toggleDismissed}/>}
+        {tab==="home"&&<HomeTab perks={userPerks} onToggle={toggleUsed} onDismiss={toggleDismissed} tierPrices={tierPrices}/>}
         {tab==="memberships"&&<MembershipsTab perks={userPerks} onToggle={toggleUsed} onDismiss={toggleDismissed} activeMemberships={displayMemberships} tierPrices={tierPrices}/>}
         {tab==="where"&&<WhereTab perks={userPerks} onToggle={toggleUsed} onDismiss={toggleDismissed}/>}
         {tab==="potential"&&<PotentialTab allPerks={allPerks} activeMemberships={activeMemberships} onAddMembership={addMembership} userName={user.name} userId={user.id} tierPrices={tierPrices}/>}
