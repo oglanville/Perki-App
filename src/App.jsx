@@ -10,7 +10,7 @@ const PROVIDERS={"OVO Energy":{color:"#00C86F",initials:"OV",bg:"#ECFDF5"},"Monz
 const CATEGORIES={cinema:{label:"Cinema",icon:"🎬"},supermarket:{label:"Supermarket",icon:"🛒"},airport:{label:"Airport",icon:"✈️"},insurance:{label:"Insurance",icon:"🛡️"},travel:{label:"Travel",icon:"🌍"},finance:{label:"Finance",icon:"💰"},retail:{label:"Retail",icon:"🛍️"}};
 const TABS=[{id:"home",label:"Home",icon:"🏠"},{id:"memberships",label:"Current",icon:"💳"},{id:"where",label:"Where",icon:"📍"},{id:"potential",label:"Potential",icon:"✨"},{id:"profile",label:"Profile",icon:"👤"}];
 
-function resetLabel(p){return{WEEKLY:"Weekly",MONTHLY:"Monthly",ANNUALLY:"Yearly",YEARLY:"Yearly",NONE:"Always on"}[p]||p;}
+function resetLabel(p){return{WEEKLY:"Weekly",MONTHLY:"Monthly",ANNUALLY:"Annually",YEARLY:"Annually",NONE:"Always on"}[p]||p;}
 function alphaSort(a,b){return a.title.localeCompare(b.title);}
 
 /* ═══════════════ TIER HIERARCHY HELPERS (derived from tierPrices at runtime) ═══════════════ */
@@ -288,7 +288,7 @@ function HomeTab({perks,onToggle,onDismiss}){
   const used=countable.filter(p=>p.used).length;
   const groups=useMemo(()=>{
     if(groupBy==="category"){const g={};sorted.forEach(p=>{const cat=CATEGORIES[p.category];if(!cat)return;(g[cat.label]=g[cat.label]||[]).push(p);});return g;}
-    const g={Weekly:[],Monthly:[],Yearly:[],"Always On":[]};sorted.forEach(p=>{g[{WEEKLY:"Weekly",MONTHLY:"Monthly",ANNUALLY:"Yearly",YEARLY:"Yearly",NONE:"Always On"}[p.reset_period]||"Always On"].push(p);});return g;
+    const g={Weekly:[],Monthly:[],Annually:[],"Always On":[]};sorted.forEach(p=>{g[{WEEKLY:"Weekly",MONTHLY:"Monthly",ANNUALLY:"Annually",YEARLY:"Annually",NONE:"Always On"}[p.reset_period]||"Always On"].push(p);});return g;
   },[sorted,groupBy]);
   return(
     <div onClick={()=>setSelected(null)}>
@@ -337,13 +337,13 @@ function MembershipsTab({perks,onToggle,onDismiss,activeMemberships,tierPrices})
     return providers.map(prov=>{
       const tierMap=byProv[prov];
       const tiers=Object.keys(tierMap).sort((a,b)=>{
-        const pa=tierPrices[`${prov}|${a}`]?.price??999;
-        const pb=tierPrices[`${prov}|${b}`]?.price??999;
+        const pa=tierMap[a].find(pk=>pk.price!=null)?.price??999;
+        const pb=tierMap[b].find(pk=>pk.price!=null)?.price??999;
         return pa-pb;
       });
       return { provider:prov, tiers:tiers.map(t=>({ tier:t, perks:tierMap[t] })) };
     });
-  },[filtered,tierPrices]);
+  },[filtered]);
 
   const countable=filtered.filter(p=>!p.dismissed);
   const used=countable.filter(p=>p.used).length;
@@ -357,10 +357,11 @@ function MembershipsTab({perks,onToggle,onDismiss,activeMemberships,tierPrices})
     {providerGroups.map(pg=>{
       const pCfg=PROVIDERS[pg.provider]||{color:T.muted,bg:"#f1f5f9"};
       const provPerks=pg.tiers.flatMap(t=>t.perks);
-      /* Determine price to show: highest active tier's price (user is paying for it) */
-      const activeTierPrices=pg.tiers.map(tg=>tierPrices[`${pg.provider}|${tg.tier}`]).filter(Boolean);
-      const displayTp=activeTierPrices.length>0?activeTierPrices.reduce((a,b)=>(a.price??999)>=(b.price??999)?a:b):null;
-      const provPriceLabel=displayTp?(displayTp.price_label||(displayTp.price===0?"Free":displayTp.price!=null?`£${displayTp.price}/mo`:"")):"";
+      /* Derive tier price from perk.price — all perks in a tier share the same price */
+      const tierPriceEntries=pg.tiers.map(tg=>{const p=tg.perks.find(pk=>pk.price!=null);return p?{tier:tg.tier,price:p.price}:null;}).filter(Boolean);
+      /* Show highest active tier's price (that's what the user pays) */
+      const displayEntry=tierPriceEntries.length>0?tierPriceEntries.reduce((a,b)=>a.price>=b.price?a:b):null;
+      const provPriceLabel=displayEntry?(displayEntry.price===0?"Free":`£${displayEntry.price}/mo`):"";
       return(
         <CollapsibleSection
           key={pg.provider}
@@ -372,8 +373,8 @@ function MembershipsTab({perks,onToggle,onDismiss,activeMemberships,tierPrices})
           defaultOpen={providerGroups.length<=3}
         >
           {pg.tiers.map(tg=>{
-            const tp=tierPrices[`${pg.provider}|${tg.tier}`];
-            const priceLabel=tp?.price_label||(tp?.price===0?"Free":tp?.price!=null?`£${tp.price}`:"");
+            const tierPrice=tg.perks.find(pk=>pk.price!=null)?.price;
+            const priceLabel=tierPrice!=null?(tierPrice===0?"Free":`£${tierPrice}/mo`):"";
             return(
               <CollapsibleSection
                 key={tg.tier}
@@ -418,13 +419,13 @@ function ProfileTab({perks,activeMemberships,onRemoveMembership,user,onLogout,on
     const providers=Object.keys(byProv).sort();
     return providers.map(prov=>{
       const ms=byProv[prov].sort((a,b)=>{
-        const pa=tierPrices[`${prov}|${a.tier}`]?.price??999;
-        const pb=tierPrices[`${prov}|${b.tier}`]?.price??999;
+        const pa=perks.find(p=>p.provider===prov&&p.tier===a.tier&&p.price!=null)?.price??999;
+        const pb=perks.find(p=>p.provider===prov&&p.tier===b.tier&&p.price!=null)?.price??999;
         return pa-pb;
       });
       return { provider:prov, memberships:ms };
     });
-  },[activeMemberships,tierPrices]);
+  },[activeMemberships,perks]);
 
   const handlePic=e=>{const f=e.target.files?.[0];if(f){const r=new FileReader();r.onload=ev=>setProfilePic(ev.target.result);r.readAsDataURL(f);}};
 
@@ -466,10 +467,10 @@ function ProfileTab({perks,activeMemberships,onRemoveMembership,user,onLogout,on
         >
           {pg.memberships.map(m=>{
             const key=`${m.provider}|${m.tier}`;
-            const tp=tierPrices[key];
-            const priceLabel=tp?.price_label||(tp?.price===0?"Free":tp?.price!=null?`£${tp.price}`:"");
             const effectiveTiers=getEffectiveTiers(m.provider,m.tier,tierPrices);
             const allP=perks.filter(p=>p.provider===m.provider&&effectiveTiers.includes(p.tier)).sort(alphaSort);
+            const tierPrice=allP.find(p=>p.tier===m.tier&&p.price!=null)?.price;
+            const priceLabel=tierPrice!=null?(tierPrice===0?"Free":`£${tierPrice}/mo`):"";
             const activePerks=allP.filter(p=>p.tier===m.tier);
             const inheritedPerks=allP.filter(p=>p.tier!==m.tier);
             const cnt=allP.filter(p=>!p.dismissed);
@@ -553,13 +554,13 @@ function PotentialTab({allPerks,activeMemberships,onAddMembership,userName,userI
     return providers.map(prov=>{
       const tierMap=byProv[prov];
       const tiers=Object.keys(tierMap).sort((a,b)=>{
-        const pa=tierPrices[`${prov}|${a}`]?.price??999;
-        const pb=tierPrices[`${prov}|${b}`]?.price??999;
+        const pa=tierMap[a].perks.find(pk=>pk.price!=null)?.price??999;
+        const pb=tierMap[b].perks.find(pk=>pk.price!=null)?.price??999;
         return pa-pb;
       });
       return { provider:prov, tiers:tiers.map(t=>({ tier:t, perks:tierMap[t].perks, membership:tierMap[t].membership })) };
     });
-  },[filtered,tierPrices]);
+  },[filtered]);
 
   const submitReq=async()=>{if(!reqText.trim())return;if(SB_CONFIGURED&&userId)await supabase.from("membership_requests").insert({user_id:userId,requester_name:reqName,description:reqText});setReqSent(true);};
 
@@ -577,16 +578,18 @@ function PotentialTab({allPerks,activeMemberships,onAddMembership,userName,userI
     {providerGroups.map(pg=>{
       const pCfg=PROVIDERS[pg.provider]||{color:T.muted,bg:"#f1f5f9"};
       const totalPerks=pg.tiers.reduce((n,t)=>n+t.perks.length,0);
-      /* Price: show active tier's price, or lowest tier's price if none active */
-      const allTp=pg.tiers.map(tg=>({...tierPrices[`${pg.provider}|${tg.tier}`],tier:tg.tier})).filter(tp=>tp.price!=null);
-      const activeTp=allTp.filter(tp=>activeSet.has(`${pg.provider}|${tp.tier}`));
-      const displayTp=activeTp.length>0?activeTp.reduce((a,b)=>(a.price??999)>=(b.price??999)?a:b):allTp.length>0?allTp.reduce((a,b)=>(a.price??999)<=(b.price??999)?a:b):null;
-      const provPriceLabel=displayTp?(displayTp.price_label||(displayTp.price===0?"Free":displayTp.price!=null?`£${displayTp.price}/mo`:"")):"";
+      /* Derive tier prices from perk.price */
+      const allTierPrices=pg.tiers.map(tg=>{const p=tg.perks.find(pk=>pk.price!=null);return p?{tier:tg.tier,price:p.price}:null;}).filter(Boolean);
+      const activeTierPrices=allTierPrices.filter(tp=>activeSet.has(`${pg.provider}|${tp.tier}`));
+      /* Show active tier's price, or lowest if none active */
+      const displayEntry=activeTierPrices.length>0?activeTierPrices.reduce((a,b)=>a.price>=b.price?a:b):allTierPrices.length>0?allTierPrices.reduce((a,b)=>a.price<=b.price?a:b):null;
+      const hasActive=activeTierPrices.length>0;
+      const provPriceLabel=displayEntry?(displayEntry.price===0?"Free":`£${displayEntry.price}/mo`):"";
       return(
         <CollapsibleSection
           key={pg.provider}
           title={pg.provider}
-          subtitle={provPriceLabel?`${totalPerks} perks · ${activeTp.length>0?"":"from "}${provPriceLabel}`:`${totalPerks} perks`}
+          subtitle={provPriceLabel?`${totalPerks} perks · ${hasActive?"":"from "}${provPriceLabel}`:`${totalPerks} perks`}
           badge={<ProviderBadge provider={pg.provider} size={28}/>}
           headerBg={pCfg.bg}
           headerBorder={`${pCfg.color}33`}
@@ -595,8 +598,8 @@ function PotentialTab({allPerks,activeMemberships,onAddMembership,userName,userI
           {pg.tiers.map(tg=>{
             const tierKey=`${pg.provider}|${tg.tier}`;
             const isActive=activeSet.has(tierKey);
-            const tp=tierPrices[tierKey];
-            const priceLabel=tp?.price_label||(tp?.price===0?"Free":tp?.price!=null?`£${tp.price}`:"");
+            const tierPrice=tg.perks.find(pk=>pk.price!=null)?.price;
+            const priceLabel=tierPrice!=null?(tierPrice===0?"Free":`£${tierPrice}/mo`):"";
             return(
               <CollapsibleSection
                 key={tg.tier}
