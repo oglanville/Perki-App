@@ -592,13 +592,10 @@ function ProfileTab({perks,activeMemberships,onRemoveMembership,user,onLogout,on
         >
           {pg.memberships.map(m=>{
             const key=`${m.provider}|${m.tier}`;
-            const effectiveTiers=getEffectiveTiers(m.provider,m.tier,tierPrices);
-            const allP=perks.filter(p=>p.provider===m.provider&&effectiveTiers.includes(p.tier)).sort(alphaSort);
-            const tierPrice=allP.find(p=>p.tier===m.tier&&p.price!=null)?.price;
+            const tierPerks=perks.filter(p=>p.provider===m.provider&&p.tier===m.tier).sort(alphaSort);
+            const tierPrice=tierPerks.find(p=>p.price!=null)?.price;
             const priceLabel=tierPrice!=null?(tierPrice===0?"Free":`£${tierPrice}/mo`):"";
-            const activePerks=allP.filter(p=>p.tier===m.tier);
-            const inheritedPerks=allP.filter(p=>p.tier!==m.tier);
-            const cnt=allP.filter(p=>!p.dismissed);
+            const cnt=tierPerks.filter(p=>!p.dismissed);
             const mUsed=cnt.filter(p=>p.used).length;
 
             return(
@@ -613,27 +610,11 @@ function ProfileTab({perks,activeMemberships,onRemoveMembership,user,onLogout,on
                   <button onClick={e=>{e.stopPropagation();onRemoveMembership(m.provider,m.tier);}} style={{padding:"4px 9px",borderRadius:8,border:"1.5px solid #FECACA",background:"#FEF2F2",color:"#DC2626",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>Remove</button>
                 }
               >
-                {activePerks.length>0&&(
-                  <>
-                    <div style={{fontSize:10,fontWeight:800,color:T.success,textTransform:"uppercase",letterSpacing:"0.5px",margin:"6px 0 4px",fontFamily:"'DM Sans',sans-serif",display:"flex",alignItems:"center",gap:5}}>
-                      <span style={{width:5,height:5,borderRadius:3,background:T.success}}/>Active Perks <span style={{fontSize:9,fontWeight:700,background:"#D1FAE5",color:"#065F46",padding:"1px 5px",borderRadius:8}}>{activePerks.length}</span>
-                    </div>
-                    <div style={{display:"flex",flexDirection:"column",gap:4}}>
-                      {activePerks.map(p=><PerkTile key={p.perk_id} perk={p} onToggle={onToggle} onDismiss={onDismiss} selected={selectedPerk} onSelect={setSelectedPerk}/>)}
-                    </div>
-                  </>
-                )}
-                {activePerks.length===0&&<p style={{fontSize:11,color:T.muted,fontStyle:"italic",fontFamily:"'DM Sans',sans-serif"}}>No perks at this tier.</p>}
-                {inheritedPerks.length>0&&(
-                  <>
-                    <div style={{fontSize:10,fontWeight:800,color:T.muted,textTransform:"uppercase",letterSpacing:"0.5px",margin:"10px 0 4px",fontFamily:"'DM Sans',sans-serif",display:"flex",alignItems:"center",gap:5}}>
-                      <span style={{width:5,height:5,borderRadius:3,background:T.muted}}/>Inherited <span style={{fontSize:9,fontWeight:700,background:"#F1F5F9",color:T.textSecondary,padding:"1px 5px",borderRadius:8}}>{inheritedPerks.length}</span>
-                    </div>
-                    <div style={{display:"flex",flexDirection:"column",gap:4}}>
-                      {inheritedPerks.map(p=><PerkTile key={p.perk_id} perk={p} onToggle={onToggle} onDismiss={onDismiss} selected={selectedPerk} onSelect={setSelectedPerk}/>)}
-                    </div>
-                  </>
-                )}
+                {tierPerks.length>0?(
+                  <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                    {tierPerks.map(p=><PerkTile key={p.perk_id} perk={p} onToggle={onToggle} onDismiss={onDismiss} selected={selectedPerk} onSelect={setSelectedPerk}/>)}
+                  </div>
+                ):<p style={{fontSize:11,color:T.muted,fontStyle:"italic",fontFamily:"'DM Sans',sans-serif"}}>No perks at this tier.</p>}
               </CollapsibleSection>
             );
           })}
@@ -845,6 +826,13 @@ export default function PerikiApp(){
     return r;
   },[activeMemberships,tierPrices]);
 
+  /* Perks filtered to only the highest selected tier per provider (for totals & profile) */
+  const highestTierPerks=useMemo(()=>{
+    const highestTiers=new Set();
+    displayMemberships.forEach(m=>highestTiers.add(`${m.provider}|${m.tier}`));
+    return userPerks.filter(p=>highestTiers.has(`${p.provider}|${p.tier}`));
+  },[userPerks,displayMemberships]);
+
   /* Toggle used */
   const toggleUsed=useCallback(async(perkId)=>{
     const newVal=!usedMap[perkId];
@@ -913,7 +901,7 @@ export default function PerikiApp(){
   /* Render */
   if(loading)return<div style={{maxWidth:420,margin:"0 auto",minHeight:"100vh",background:T.bg,display:"flex",alignItems:"center",justifyContent:"center"}}><Spinner/></div>;
   if(!user)return<AuthScreen onAuth={setUser}/>;
-  const countable=userPerks.filter(p=>!p.dismissed);
+  const countable=highestTierPerks.filter(p=>!p.dismissed);
   const usedCount=countable.filter(p=>p.used).length;
 
   return(
@@ -929,7 +917,7 @@ export default function PerikiApp(){
         {tab==="memberships"&&<MembershipsTab perks={userPerks} onToggle={toggleUsed} onDismiss={toggleDismissed} activeMemberships={displayMemberships} tierPrices={tierPrices}/>}
         {tab==="where"&&<WhereTab perks={userPerks} onToggle={toggleUsed} onDismiss={toggleDismissed} tierPrices={tierPrices}/>}
         {tab==="potential"&&<PotentialTab allPerks={allPerks} activeMemberships={activeMemberships} onAddMembership={addMembership} userName={user.name} userId={user.id} tierPrices={tierPrices}/>}
-        {tab==="profile"&&<ProfileTab perks={userPerks} activeMemberships={displayMemberships} onRemoveMembership={removeMembership} user={user} onLogout={handleLogout} onToggle={toggleUsed} onDismiss={toggleDismissed} tierPrices={tierPrices}/>}
+        {tab==="profile"&&<ProfileTab perks={highestTierPerks} activeMemberships={displayMemberships} onRemoveMembership={removeMembership} user={user} onLogout={handleLogout} onToggle={toggleUsed} onDismiss={toggleDismissed} tierPrices={tierPrices}/>}
       </div>
       <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:420,background:`linear-gradient(180deg,transparent 0%,${T.bg} 24%)`,padding:"8px 10px 12px",zIndex:100}}>
         <div style={{display:"flex",justifyContent:"space-around",background:"rgba(255,255,255,0.94)",backdropFilter:"blur(14px)",borderRadius:18,padding:"4px 2px",border:`1px solid ${T.border}`,boxShadow:"0 -2px 12px rgba(15,23,42,0.06)"}}>
