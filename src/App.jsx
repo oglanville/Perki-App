@@ -310,11 +310,12 @@ function HomeTab({perks,onToggle,onDismiss,tierPrices,allPerks}){
     return Object.values(byKey);
   },[perks,tierPrices]);
 
-  /* Split into features and regular perks using the feature column */
+  /* Split into features, competitions, and regular perks using the feature column */
   const features=useMemo(()=>dedupedPerks.filter(p=>p.feature==='feature').sort(alphaSort),[dedupedPerks]);
-  const regularPerks=useMemo(()=>dedupedPerks.filter(p=>p.feature!=='feature').sort(alphaSort),[dedupedPerks]);
+  const competitions=useMemo(()=>dedupedPerks.filter(p=>p.feature==='competition').sort(alphaSort),[dedupedPerks]);
+  const regularPerks=useMemo(()=>dedupedPerks.filter(p=>p.feature!=='feature'&&p.feature!=='competition').sort(alphaSort),[dedupedPerks]);
 
-  const displayPerks=subTab==="features"?features:regularPerks;
+  const displayPerks=subTab==="features"?features:subTab==="competitions"?competitions:regularPerks;
   const countable=displayPerks.filter(p=>!p.dismissed);
   const used=countable.filter(p=>p.used).length;
 
@@ -334,7 +335,7 @@ function HomeTab({perks,onToggle,onDismiss,tierPrices,allPerks}){
 
       {/* Perks / Features sub-tabs */}
       <div style={{display:"flex",gap:0,marginBottom:10,borderRadius:10,overflow:"hidden",border:`1.5px solid ${T.border}`}}>
-        {[{id:"perks",label:"Perks",count:regularPerks.length},{id:"features",label:"Features",count:features.length}].map(t=>(
+        {[{id:"perks",label:"Perks",count:regularPerks.length},{id:"features",label:"Features",count:features.length},{id:"competitions",label:"Competitions",count:competitions.length}].map(t=>(
           <button key={t.id} onClick={()=>{setSubTab(t.id);setSelected(null);}} style={{flex:1,padding:"8px 0",border:"none",background:subTab===t.id?"#EFF6FF":T.surface,color:subTab===t.id?T.accent:T.textSecondary,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:5}}>
             {t.label}
             <span style={{fontSize:9,fontWeight:700,background:subTab===t.id?`${T.accent}22`:T.bg,color:subTab===t.id?T.accent:T.muted,padding:"1px 6px",borderRadius:8}}>{t.count}</span>
@@ -354,7 +355,7 @@ function HomeTab({perks,onToggle,onDismiss,tierPrices,allPerks}){
           </div>
         </div>
       ))}
-      {displayPerks.length===0&&<p style={{textAlign:"center",color:T.muted,marginTop:30,fontSize:13,fontFamily:"'DM Sans',sans-serif"}}>{subTab==="features"?"No features found across your memberships.":"No perks to show."}</p>}
+      {displayPerks.length===0&&<p style={{textAlign:"center",color:T.muted,marginTop:30,fontSize:13,fontFamily:"'DM Sans',sans-serif"}}>{subTab==="features"?"No features found across your memberships.":subTab==="competitions"?"No competitions found across your memberships.":"No perks to show."}</p>}
     </div>
   );
 }
