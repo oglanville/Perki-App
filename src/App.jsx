@@ -59,6 +59,18 @@ function isHierarchicalProvider(provider, tierPrices) {
   return getProviderTierOrder(provider, tierPrices).length > 1;
 }
 
+/**
+ * Compare two perks to see if `candidate` is from a higher tier than `existing`.
+ * Falls back to comparing perk.price when tierPrices has no data for the provider.
+ */
+function isHigherTier(candidate, existing, tierPrices) {
+  const order = getProviderTierOrder(candidate.provider, tierPrices);
+  const existIdx = order.indexOf(existing.tier);
+  const newIdx = order.indexOf(candidate.tier);
+  if (existIdx >= 0 || newIdx >= 0) return newIdx > existIdx;
+  return (candidate.price ?? 0) > (existing.price ?? 0);
+}
+
 /*
  * getPerkBrand(perk) — resolve icon data for any perk.
  * Uses fields from the Supabase perk row, falling back to provider color.
@@ -293,10 +305,7 @@ function HomeTab({perks,onToggle,onDismiss,tierPrices,allPerks}){
     perks.forEach(p=>{
       const key=`${p.provider}|${p.titlegroup||p.title}`;
       if(!byKey[key]){byKey[key]=p;return;}
-      const existingOrder=getProviderTierOrder(p.provider,tierPrices);
-      const existIdx=existingOrder.indexOf(byKey[key].tier);
-      const newIdx=existingOrder.indexOf(p.tier);
-      if(newIdx>existIdx)byKey[key]=p;
+      if(isHigherTier(p,byKey[key],tierPrices))byKey[key]=p;
     });
     return Object.values(byKey);
   },[perks,tierPrices]);
@@ -452,10 +461,7 @@ function WhereTab({perks,onToggle,onDismiss,tierPrices}){const[sel,setSel]=useSt
     perks.forEach(p=>{
       const key=`${p.provider}|${p.titlegroup||p.title}`;
       if(!byKey[key]){byKey[key]=p;return;}
-      const order=getProviderTierOrder(p.provider,tierPrices);
-      const existIdx=order.indexOf(byKey[key].tier);
-      const newIdx=order.indexOf(p.tier);
-      if(newIdx>existIdx)byKey[key]=p;
+      if(isHigherTier(p,byKey[key],tierPrices))byKey[key]=p;
     });
     return Object.values(byKey);
   },[perks,tierPrices]);
