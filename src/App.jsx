@@ -287,35 +287,11 @@ function HomeTab({perks,onToggle,onDismiss,tierPrices,allPerks}){
   const[showHelp,setShowHelp]=useState(false);
   const[subTab,setSubTab]=useState("perks");
 
-  /* Identify "feature" titles: perks whose title appears in EVERY tier of their provider */
-  const featureTitles=useMemo(()=>{
-    /* Build full tier list per provider from allPerks */
-    const provTiers={};
-    allPerks.forEach(p=>{
-      if(!provTiers[p.provider])provTiers[p.provider]=new Set();
-      provTiers[p.provider].add(p.tier);
-    });
-    /* For each provider, find titles that appear in every tier */
-    const provTitleTiers={};
-    allPerks.forEach(p=>{
-      const k=`${p.provider}|${p.title}`;
-      if(!provTitleTiers[k])provTitleTiers[k]=new Set();
-      provTitleTiers[k].add(p.tier);
-    });
-    const feats=new Set();
-    Object.entries(provTitleTiers).forEach(([k,tiers])=>{
-      const prov=k.split("|")[0];
-      const allTierCount=provTiers[prov]?.size||0;
-      if(allTierCount>1&&tiers.size===allTierCount)feats.add(k);
-    });
-    return feats;
-  },[allPerks]);
-
-  /* Dedup: for each provider, if same title exists in multiple tiers, keep only the highest tier version */
+  /* Dedup: for each provider, if same titlegroup exists in multiple tiers, keep only the highest tier version */
   const dedupedPerks=useMemo(()=>{
     const byKey={};
     perks.forEach(p=>{
-      const key=`${p.provider}|${p.title}`;
+      const key=`${p.provider}|${p.titlegroup||p.title}`;
       if(!byKey[key]){byKey[key]=p;return;}
       const existingOrder=getProviderTierOrder(p.provider,tierPrices);
       const existIdx=existingOrder.indexOf(byKey[key].tier);
@@ -325,9 +301,9 @@ function HomeTab({perks,onToggle,onDismiss,tierPrices,allPerks}){
     return Object.values(byKey);
   },[perks,tierPrices]);
 
-  /* Split into features and regular perks */
-  const features=useMemo(()=>dedupedPerks.filter(p=>featureTitles.has(`${p.provider}|${p.title}`)).sort(alphaSort),[dedupedPerks,featureTitles]);
-  const regularPerks=useMemo(()=>dedupedPerks.filter(p=>!featureTitles.has(`${p.provider}|${p.title}`)).sort(alphaSort),[dedupedPerks,featureTitles]);
+  /* Split into features and regular perks using the feature column */
+  const features=useMemo(()=>dedupedPerks.filter(p=>p.feature==='feature').sort(alphaSort),[dedupedPerks]);
+  const regularPerks=useMemo(()=>dedupedPerks.filter(p=>p.feature!=='feature').sort(alphaSort),[dedupedPerks]);
 
   const displayPerks=subTab==="features"?features:regularPerks;
   const countable=displayPerks.filter(p=>!p.dismissed);
@@ -436,12 +412,12 @@ function MembershipsTab({perks,onToggle,onDismiss,activeMemberships,tierPrices})
           {pg.tiers.map(tg=>{
             const tierPrice=tg.perks.find(pk=>pk.price!=null)?.price;
             const priceLabel=tierPrice!=null?(tierPrice===0?"Free":`£${tierPrice}/mo`):"";
-            /* Dedup: hide perks from lower tiers if same title exists in a higher tier */
+            /* Dedup: hide perks from lower tiers if same titlegroup exists in a higher tier */
             const allTierPerks = pg.tiers.flatMap(t => t.perks);
             const tierOrder = pg.tiers.map(t => t.tier);
             const dedupedPerks = tg.perks.filter(p => {
               const higherTiers = tierOrder.slice(tierOrder.indexOf(tg.tier) + 1);
-              return !higherTiers.some(ht => allTierPerks.some(hp => hp.tier === ht && hp.title === p.title));
+              return !higherTiers.some(ht => allTierPerks.some(hp => hp.tier === ht && (hp.titlegroup||hp.title) === (p.titlegroup||p.title)));
             });
             /* Hide tiers with 0 perks after dedup */
             if(dedupedPerks.length===0) return null;
@@ -470,11 +446,11 @@ function MembershipsTab({perks,onToggle,onDismiss,activeMemberships,tierPrices})
 
 /* ═══════════════ WHERE TO USE ═══════════════ */
 function WhereTab({perks,onToggle,onDismiss,tierPrices}){const[sel,setSel]=useState(null);const[sp,setSp]=useState(null);
-  /* Dedup: for each provider, keep only highest-tier version of each title */
+  /* Dedup: for each provider, keep only highest-tier version of each titlegroup */
   const dedupedPerks=useMemo(()=>{
     const byKey={};
     perks.forEach(p=>{
-      const key=`${p.provider}|${p.title}`;
+      const key=`${p.provider}|${p.titlegroup||p.title}`;
       if(!byKey[key]){byKey[key]=p;return;}
       const order=getProviderTierOrder(p.provider,tierPrices);
       const existIdx=order.indexOf(byKey[key].tier);
