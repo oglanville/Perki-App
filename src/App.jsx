@@ -7,11 +7,45 @@ const SB_CONFIGURED = !!supabase;
 /* ═══════════════ THEME ═══════════════ */
 const T={primary:"#0B3D91",accent:"#1E90FF",bg:"#F8F9FC",surface:"#FFFFFF",border:"#E2E8F0",textPrimary:"#0F172A",textSecondary:"#64748B",muted:"#94A3B8",success:"#10B981",warning:"#F59E0B",danger:"#EF4444",shadow:"0 1px 3px rgba(15,23,42,0.06),0 1px 2px rgba(15,23,42,0.04)"};
 const PROVIDERS={"OVO Energy":{color:"#00C86F",initials:"OV",bg:"#ECFDF5"},"Monzo":{color:"#FF5C5C",initials:"MZ",bg:"#FFF1F2"},"Revolut":{color:"#6C63FF",initials:"RV",bg:"#EEF2FF"},"American Express":{color:"#0077C8",initials:"AX",bg:"#EFF6FF"}};
-const CATEGORIES={Banking:{label:"Banking",icon:"🏦"},Protection:{label:"Protection",icon:"🛡️"},Savings:{label:"Savings",icon:"💰"},Credit:{label:"Credit",icon:"📊"},Tools:{label:"Tools",icon:"🔧"},Security:{label:"Security",icon:"🔒"},Budgeting:{label:"Budgeting",icon:"📋"},Travel:{label:"Travel",icon:"🌍"},Investments:{label:"Investments",icon:"📈"},Lifestyle:{label:"Lifestyle",icon:"✨"},Entertainment:{label:"Entertainment",icon:"🎬"},Insurance:{label:"Insurance",icon:"🛡️"},Rewards:{label:"Rewards",icon:"🎁"},Family:{label:"Family",icon:"👨‍👩‍👧"},Currency:{label:"Currency",icon:"💱"},Card:{label:"Card",icon:"💳"},Transfers:{label:"Transfers",icon:"🔄"},Wellness:{label:"Wellness",icon:"🧘"},Fitness:{label:"Fitness",icon:"💪"},Creativity:{label:"Creativity",icon:"🎨"},Productivity:{label:"Productivity",icon:"⚡"},News:{label:"News",icon:"📰"},Workspace:{label:"Workspace",icon:"🖥️"},Education:{label:"Education",icon:"📚"}};
+const CATEGORIES={Banking:{label:"Banking",icon:"🏦"},Protection:{label:"Protection",icon:"🛡️"},Savings:{label:"Savings",icon:"💰"},Credit:{label:"Credit",icon:"📊"},Tools:{label:"Tools",icon:"🔧"},Security:{label:"Security",icon:"🔒"},Budgeting:{label:"Budgeting",icon:"📋"},Travel:{label:"Travel",icon:"🌍"},Investments:{label:"Investments",icon:"📈"},Lifestyle:{label:"Lifestyle",icon:"✨"},Entertainment:{label:"Entertainment",icon:"🎬"},Insurance:{label:"Insurance",icon:"🛡️"},Rewards:{label:"Rewards",icon:"🎁"},Family:{label:"Family",icon:"👨‍👩‍👧"},Currency:{label:"Currency",icon:"💱"},Card:{label:"Card",icon:"💳"},Transfers:{label:"Transfers",icon:"🔄"},Wellness:{label:"Wellness",icon:"🧘"},Fitness:{label:"Fitness",icon:"💪"},Creativity:{label:"Creativity",icon:"🎨"},Productivity:{label:"Productivity",icon:"⚡"},News:{label:"News",icon:"📰"},Workspace:{label:"Workspace",icon:"🖥️"},Education:{label:"Education",icon:"📚"},Sports:{label:"Sports",icon:"⚽"},Streaming:{label:"Streaming",icon:"📺"},Hardware:{label:"Hardware",icon:"🖥️"},Broadband:{label:"Broadband",icon:"📡"},Automotive:{label:"Automotive",icon:"🚗"},Food:{label:"Food",icon:"🍔"},Shopping:{label:"Shopping",icon:"🛒"}};
 const TABS=[{id:"home",label:"Home",icon:"🏠"},{id:"memberships",label:"Current",icon:"💳"},{id:"where",label:"Where",icon:"📍"},{id:"potential",label:"Potential",icon:"✨"},{id:"profile",label:"Profile",icon:"👤"}];
 
 function resetLabel(p){return{WEEKLY:"Weekly",MONTHLY:"Monthly",ANNUALLY:"Annually",YEARLY:"Annually",NONE:"Always on"}[p]||p;}
 function alphaSort(a,b){return a.title.localeCompare(b.title);}
+
+/* Feature-type ordering: feature=0, perk(default)=1, competition=2, discount=3 */
+const FEATURE_ORDER={feature:0,perk:1,competition:2,discount:3};
+function featureThenAlpha(a,b){
+  const fa=FEATURE_ORDER[a.feature]??1;
+  const fb=FEATURE_ORDER[b.feature]??1;
+  if(fa!==fb)return fa-fb;
+  return a.title.localeCompare(b.title);
+}
+
+/* Group items by closing-date buckets using next_reset_date */
+function groupByClosingDate(items){
+  const now=new Date();
+  const buckets={"Closes in 1 week":[],"Closes in 2 weeks":[],"Closes in 3 weeks":[],"Closes in 4 weeks":[],"No close date":[]};
+  items.forEach(p=>{
+    if(!p.next_reset_date){buckets["No close date"].push(p);return;}
+    const d=new Date(p.next_reset_date);
+    const diffMs=d-now;
+    const diffDays=diffMs/(1000*60*60*24);
+    if(diffDays<=7)buckets["Closes in 1 week"].push(p);
+    else if(diffDays<=14)buckets["Closes in 2 weeks"].push(p);
+    else if(diffDays<=21)buckets["Closes in 3 weeks"].push(p);
+    else if(diffDays<=28)buckets["Closes in 4 weeks"].push(p);
+    else buckets["No close date"].push(p);
+  });
+  // Sort within each bucket by date ascending
+  Object.values(buckets).forEach(arr=>arr.sort((a,b)=>{
+    if(!a.next_reset_date&&!b.next_reset_date)return a.title.localeCompare(b.title);
+    if(!a.next_reset_date)return 1;
+    if(!b.next_reset_date)return -1;
+    return new Date(a.next_reset_date)-new Date(b.next_reset_date);
+  }));
+  return buckets;
+}
 
 /* ═══════════════ TIER HIERARCHY HELPERS (derived from tierPrices at runtime) ═══════════════ */
 
@@ -310,19 +344,23 @@ function HomeTab({perks,onToggle,onDismiss,tierPrices,allPerks}){
     return Object.values(byKey);
   },[perks,tierPrices]);
 
-  /* Split into features, competitions, and regular perks using the feature column */
+  /* Split into features, competitions, discounts, and regular perks using the feature column */
   const features=useMemo(()=>dedupedPerks.filter(p=>p.feature==='feature').sort(alphaSort),[dedupedPerks]);
   const competitions=useMemo(()=>dedupedPerks.filter(p=>p.feature==='competition').sort(alphaSort),[dedupedPerks]);
-  const regularPerks=useMemo(()=>dedupedPerks.filter(p=>p.feature!=='feature'&&p.feature!=='competition').sort(alphaSort),[dedupedPerks]);
+  const discounts=useMemo(()=>dedupedPerks.filter(p=>p.feature==='discount').sort(alphaSort),[dedupedPerks]);
+  const regularPerks=useMemo(()=>dedupedPerks.filter(p=>p.feature!=='feature'&&p.feature!=='competition'&&p.feature!=='discount').sort(alphaSort),[dedupedPerks]);
 
-  const displayPerks=subTab==="features"?features:subTab==="competitions"?competitions:regularPerks;
+  const displayPerks=subTab==="features"?features:subTab==="competitions"?competitions:subTab==="discounts"?discounts:regularPerks;
   const countable=displayPerks.filter(p=>!p.dismissed);
   const used=countable.filter(p=>p.used).length;
 
+  /* For competitions & discounts: group by closing date; for perks & features: group by reset/category */
+  const useClosingDate=subTab==="competitions"||subTab==="discounts";
   const groups=useMemo(()=>{
+    if(useClosingDate)return groupByClosingDate(displayPerks);
     if(groupBy==="category"){const g={};displayPerks.forEach(p=>{const cat=CATEGORIES[p.category];if(!cat)return;(g[cat.label]=g[cat.label]||[]).push(p);});return g;}
     const g={Weekly:[],Monthly:[],Annually:[],"Always On":[]};displayPerks.forEach(p=>{g[{WEEKLY:"Weekly",MONTHLY:"Monthly",ANNUALLY:"Annually",YEARLY:"Annually",NONE:"Always On"}[p.reset_period]||"Always On"].push(p);});return g;
-  },[displayPerks,groupBy]);
+  },[displayPerks,groupBy,useClosingDate]);
 
   return(
     <div onClick={()=>setSelected(null)}>
@@ -333,10 +371,10 @@ function HomeTab({perks,onToggle,onDismiss,tierPrices,allPerks}){
       </div>
       <TabDesc>Tap any perk to see details, mark it as used, or exclude it from your count.</TabDesc>
 
-      {/* Perks / Features sub-tabs */}
+      {/* Perks / Features / Competitions / Discounts sub-tabs */}
       <div style={{display:"flex",gap:0,marginBottom:10,borderRadius:10,overflow:"hidden",border:`1.5px solid ${T.border}`}}>
-        {[{id:"perks",label:"Perks",count:regularPerks.length},{id:"features",label:"Features",count:features.length},{id:"competitions",label:"Competitions",count:competitions.length}].map(t=>(
-          <button key={t.id} onClick={()=>{setSubTab(t.id);setSelected(null);}} style={{flex:1,padding:"8px 0",border:"none",background:subTab===t.id?"#EFF6FF":T.surface,color:subTab===t.id?T.accent:T.textSecondary,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:5}}>
+        {[{id:"perks",label:"Perks",count:regularPerks.length},{id:"features",label:"Features",count:features.length},{id:"competitions",label:"Competitions",count:competitions.length},{id:"discounts",label:"Discounts",count:discounts.length}].map(t=>(
+          <button key={t.id} onClick={()=>{setSubTab(t.id);setSelected(null);}} style={{flex:1,padding:"8px 0",border:"none",background:subTab===t.id?"#EFF6FF":T.surface,color:subTab===t.id?T.accent:T.textSecondary,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
             {t.label}
             <span style={{fontSize:9,fontWeight:700,background:subTab===t.id?`${T.accent}22`:T.bg,color:subTab===t.id?T.accent:T.muted,padding:"1px 6px",borderRadius:8}}>{t.count}</span>
           </button>
@@ -344,9 +382,9 @@ function HomeTab({perks,onToggle,onDismiss,tierPrices,allPerks}){
       </div>
 
       <p style={{fontSize:12,color:T.textSecondary,margin:"0 0 10px",fontFamily:"'DM Sans',sans-serif",fontWeight:600}}>Used {used} / Total {countable.length}{displayPerks.length!==countable.length&&<span style={{color:T.muted}}> ({displayPerks.length-countable.length} excluded)</span>}</p>
-      <div style={{display:"flex",gap:8,marginBottom:12}}>
+      {!useClosingDate&&<div style={{display:"flex",gap:8,marginBottom:12}}>
         {["reset","category"].map(g=>(<button key={g} onClick={()=>setGroupBy(g)} style={{padding:"6px 14px",borderRadius:20,border:`1.5px solid ${groupBy===g?T.accent:T.border}`,background:groupBy===g?"#EFF6FF":T.surface,color:groupBy===g?T.accent:T.textSecondary,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>{g==="reset"?"By Reset":"By Category"}</button>))}
-      </div>
+      </div>}
       {Object.entries(groups).map(([name,items])=>items.length>0&&(
         <div key={name}>
           <SectionHeader count={items.length}>{name}</SectionHeader>
@@ -355,7 +393,7 @@ function HomeTab({perks,onToggle,onDismiss,tierPrices,allPerks}){
           </div>
         </div>
       ))}
-      {displayPerks.length===0&&<p style={{textAlign:"center",color:T.muted,marginTop:30,fontSize:13,fontFamily:"'DM Sans',sans-serif"}}>{subTab==="features"?"No features found across your memberships.":subTab==="competitions"?"No competitions found across your memberships.":"No perks to show."}</p>}
+      {displayPerks.length===0&&<p style={{textAlign:"center",color:T.muted,marginTop:30,fontSize:13,fontFamily:"'DM Sans',sans-serif"}}>{subTab==="features"?"No features found across your memberships.":subTab==="competitions"?"No competitions found across your memberships.":subTab==="discounts"?"No discounts found across your memberships.":"No perks to show."}</p>}
     </div>
   );
 }
@@ -369,7 +407,7 @@ function MembershipsTab({perks,onToggle,onDismiss,activeMemberships,tierPrices})
   const filtered=useMemo(()=>{
     let r=[...perks];
     if(search.trim()){const q=search.toLowerCase();r=r.filter(p=>p.title.toLowerCase().includes(q)||p.provider.toLowerCase().includes(q)||p.tier.toLowerCase().includes(q));}
-    return r.sort(alphaSort);
+    return r.sort(featureThenAlpha);
   },[perks,search]);
 
   /* Group by provider → tier, sorted by price */
@@ -593,7 +631,7 @@ function ProfileTab({perks,activeMemberships,onRemoveMembership,user,onLogout,on
         >
           {pg.memberships.map(m=>{
             const key=`${m.provider}|${m.tier}`;
-            const tierPerks=perks.filter(p=>p.provider===m.provider&&p.tier===m.tier).sort(alphaSort);
+            const tierPerks=perks.filter(p=>p.provider===m.provider&&p.tier===m.tier).sort(featureThenAlpha);
             const tierPrice=tierPerks.find(p=>p.price!=null)?.price;
             const priceLabel=tierPrice!=null?(tierPrice===0?"Free":`£${tierPrice}/mo`):"";
             const cnt=tierPerks.filter(p=>!p.dismissed);
@@ -647,7 +685,7 @@ function PotentialTab({allPerks,activeMemberships,onAddMembership,userName,userI
   const filtered=useMemo(()=>{
     let r=[...allPerks];
     if(search.trim()){const q=search.toLowerCase();r=r.filter(p=>p.title.toLowerCase().includes(q)||p.provider.toLowerCase().includes(q)||p.tier.toLowerCase().includes(q));}
-    return r.sort(alphaSort);
+    return r.sort(featureThenAlpha);
   },[search,allPerks]);
 
   /* Group by provider → tier, sorted by price */
