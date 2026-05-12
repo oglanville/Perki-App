@@ -30,13 +30,7 @@ interface Perk {
   reset_period: "NONE" | "WEEKLY" | "MONTHLY" | "ANNUALLY" | "YEARLY";
   next_reset_date: string | null;
   description: string | null;
-}
-
-interface TierRow {
-  provider: string;
-  tier: string;
   price: number | null;
-  sort_order: number | null;
 }
 
 interface UserMembership {
@@ -57,12 +51,19 @@ interface UserProfile {
 
 type TierPriceMap = Record<string, { price: number; sort_order: number }>;
 
-function buildTierPriceMap(tiers: TierRow[]): TierPriceMap {
+/**
+ * Build the tier price map from the perks table.
+ * Groups perks by provider|tier and takes the price from the first perk
+ * that has one — mirrors how App.jsx derives tier prices at runtime.
+ */
+function buildTierPriceMap(perks: Perk[]): TierPriceMap {
   const m: TierPriceMap = {};
-  for (const r of tiers) {
-    m[`${r.provider}|${r.tier}`] = {
-      price: r.price ?? 999,
-      sort_order: r.sort_order ?? r.price ?? 999,
+  for (const p of perks) {
+    const key = `${p.provider}|${p.tier}`;
+    if (m[key]) continue;
+    m[key] = {
+      price: p.price ?? 999,
+      sort_order: p.price ?? 999,
     };
   }
   return m;
@@ -547,14 +548,8 @@ Deno.serve(async (req: Request) => {
 
     if (perksErr) throw new Error(`Failed to load perks: ${perksErr.message}`);
 
-    // 2. Load tier pricing hierarchy
-    const { data: tiersData, error: tiersErr } = await supabase
-      .from("tiers")
-      .select("provider,tier,price,sort_order")
-      .order("price");
-
-    if (tiersErr) throw new Error(`Failed to load tiers: ${tiersErr.message}`);
-    const tierPrices = buildTierPriceMap(tiersData ?? []);
+    // 2. Derive tier pricing hierarchy from the perks table
+    const tierPrices = buildTierPriceMap((allPerks as Perk[]) ?? []);
 
     // 3. Load all users with active memberships
     //    We join user_memberships with auth.users via profiles to get emails.
