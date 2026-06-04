@@ -7,7 +7,7 @@ import Perks from "./pages/Perks";
 import Pricing from "./pages/Pricing";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
-import LegacyApp from "./LegacyApp";
+import AppShell from "./app/AppShell";
 import { PerkDrawerProvider } from "./ui/PerkDrawer";
 
 function MarketingLayout({ children }) {
@@ -42,7 +42,7 @@ export default function App() {
         <Route path="/app/account" element={<Profile />} />
 
         {/* Existing authenticated app — preserved */}
-        <Route path="/app/*" element={<LegacyApp />} />
+        <Route path="/app/*" element={<AppShell />} />
 
         <Route path="*" element={<MarketingLayout><Home /></MarketingLayout>} />
       </Routes>

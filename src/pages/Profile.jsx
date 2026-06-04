@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { AlertCircle, CalendarDays, CreditCard, CheckCircle2, ThumbsUp, LogIn, Trash2, Plus, LayoutGrid, Sparkles, ChevronDown } from "lucide-react";
-import { GlassCard, BottomTabs } from "../ui/components";
+import { GlassCard, TopNav } from "../ui/components";
 import { PerkList, MembershipRow, ConfirmModal, SearchBar } from "../ui/perkui";
 import { supabase } from "../lib/supabase";
 import {
@@ -108,9 +108,9 @@ export default function Profile() {
 
   const Sub = ({ title, type, active }) => {
     const list = ofType(type, active);
-    const [open, setOpen] = React.useState(true);
+    const [open, setOpen] = React.useState(false);
     return (
-      <div className={`rounded-card border-2 ${active ? "border-gold/40 bg-gold/[0.04]" : "border-snow/15 bg-snow/[0.02]"} p-4 mb-4 shadow-md`}>
+      <div className={`rounded-card border-2 ${active ? "border-gold/40 bg-gold/[0.04]" : "border-snow/15 bg-snow/[0.02]"} p-3 sm:p-4 mb-3 shadow-md`}>
         <button
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
@@ -125,8 +125,9 @@ export default function Profile() {
   };
 
   return (
-    <div className="min-h-screen bg-ink text-snow pb-28 sm:pb-12">
-      <main className="max-w-content mx-auto px-4 pt-8">
+    <div className="min-h-screen bg-ink text-snow pb-16 overflow-x-hidden">
+      <TopNav />
+      <main className="max-w-content mx-auto px-4 pt-24">
         <h1 className="text-3xl font-bold tracking-tight mb-6">Profile</h1>
         {status === "loading" && <Skeleton />}
         {status === "error" && (
@@ -206,7 +207,6 @@ export default function Profile() {
 
       <ConfirmModal open={!!confirm} onClose={() => setConfirm(null)} title={confirm?.title || ""} message={confirm?.message || ""} confirmLabel={confirm?.label || "Confirm"} busy={busy}
         onConfirm={() => confirm?.type === "remove" ? applyRemove(confirm.provider, confirm.membership) : applyChange(confirm.provider, confirm.membership, confirm.tier)} />
-      <BottomTabs />
     </div>
   );
 }

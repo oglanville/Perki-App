@@ -84,6 +84,7 @@ export function TopNav() {
   const links = [
     { to: "/how-it-works", label: "How it works" },
     { to: "/perks", label: "Marketplace" },
+    { to: "/app", label: "App" },
   ];
   return (
     <header className="fixed top-3 inset-x-3 z-20 max-w-content mx-auto">
