@@ -125,7 +125,6 @@ function PerkBrandIcon({perk,size=32}){
   return(<div style={{width:size,height:size,borderRadius:size*0.24,background:`linear-gradient(135deg,${b.color}15,${b.color}25)`,border:`1.5px solid ${b.color}30`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:size*0.36,fontWeight:800,color:b.color,flexShrink:0,fontFamily:"'Work Sans',sans-serif",letterSpacing:"-0.3px"}}>{b.initials}</div>);
 }
 function ProviderOverlay({provider,size=15,style={}}){const p=PROVIDERS[provider]||{color:T.muted,initials:"??"};return(<div style={{position:"absolute",top:-2,right:-2,width:size,height:size,borderRadius:size*0.35,background:p.color,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:size*0.48,fontWeight:800,border:"1.5px solid #fff",fontFamily:"'Work Sans',sans-serif",boxShadow:"0 1px 2px rgba(0,0,0,0.1)",...style}}>{p.initials}</div>);}
-function ProviderBadge({provider,size=30}){const p=PROVIDERS[provider]||{color:T.muted,initials:"??",bg:"#f1f5f9"};return(<div style={{width:size,height:size,borderRadius:size*0.28,background:p.bg,border:`1.5px solid ${p.color}33`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:size*0.42,fontWeight:800,color:p.color,flexShrink:0,fontFamily:"'Work Sans',sans-serif"}}>{p.initials}</div>);}
 function Dropdown({value,onChange,options,placeholder,disabled}){return(<select value={value} onChange={e=>onChange(e.target.value)} disabled={disabled} style={{flex:1,padding:"9px 12px",borderRadius:10,border:`1.5px solid ${T.border}`,background:T.surface,color:value?T.textPrimary:T.muted,fontSize:13,fontFamily:"'Work Sans',sans-serif",fontWeight:600,appearance:"none",backgroundImage:`url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2394A3B8'/%3E%3C/svg%3E")`,backgroundRepeat:"no-repeat",backgroundPosition:"right 12px center",opacity:disabled?0.5:1}}><option value="">{placeholder}</option>{options.map(o=><option key={o} value={o}>{o}</option>)}</select>);}
 function SectionHeader({children,count}){return(<div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,marginTop:16}}><span style={{fontSize:14,fontWeight:800,color:T.textPrimary,fontFamily:"'Work Sans',sans-serif"}}>{children}</span>{count!=null&&(<span style={{fontSize:10,background:"#F7ECD4",color:T.accent,padding:"1px 7px",borderRadius:10,fontWeight:700,fontFamily:"'Work Sans',sans-serif"}}>{count}</span>)}</div>);}
 function TabDesc({children}){return <p style={{fontSize:12,color:T.textSecondary,margin:"0 0 14px",lineHeight:1.5,fontFamily:"'Work Sans',sans-serif"}}>{children}</p>;}
@@ -175,7 +174,7 @@ function PerkSheet({perk,mode="owned",onToggle,onDismiss,onClose}){
         <style>{`@keyframes perkiSheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}`}</style>
         <div style={{width:38,height:4,borderRadius:2,background:T.border,margin:"0 auto 14px"}}/>
         <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:12}}>
-          <div style={{position:"relative",flexShrink:0}}><PerkBrandIcon perk={perk} size={42}/><ProviderOverlay provider={perk.provider} size={16}/></div>
+          <AppBrandLogo provider={perk.provider} size={44}/>
           <div style={{flex:1,minWidth:0}}>
             <div style={{fontSize:16,fontWeight:800,color:T.textPrimary,fontFamily:"'Outfit',sans-serif",lineHeight:1.2}}>{perk.title}</div>
             <div style={{fontSize:11,fontWeight:600,color:pCfg.color||T.textSecondary,marginTop:2,fontFamily:"'Work Sans',sans-serif"}}>{perk.membership} — {perk.tier}</div>
@@ -208,104 +207,62 @@ function PerkSheet({perk,mode="owned",onToggle,onDismiss,onClose}){
   );
 }
 
-/* ── PerkTooltip ── */
-function PerkTooltip({perk, onToggle, onDismiss}) {
-  const pCfg=PROVIDERS[perk.provider]||{color:T.accent};
-  return (
-    <div onClick={e=>e.stopPropagation()} style={{padding:"14px 14px 14px 18px",borderRadius:12,background:T.surface,color:T.textPrimary,fontSize:12,lineHeight:1.5,fontFamily:"'Work Sans',sans-serif",boxShadow:"0 2px 10px rgba(15,23,42,0.08)",zIndex:10,border:`1px solid ${T.border}`,borderLeft:`4px solid ${pCfg.color||T.accent}`,position:"relative"}}>
-      <div style={{fontSize:13,fontWeight:700,marginBottom:4,color:T.textPrimary}}>{perk.title}</div>
-      <div style={{marginBottom:8,color:T.textSecondary}}>{perk.description}</div>
-      <div style={{display:"flex",gap:12,flexWrap:"wrap",marginBottom:10,fontSize:11,color:T.muted}}>
-        <span>📅 {perk.next_reset_date?`Renews ${perk.next_reset_date}`:"No renewal date"}</span>
-        <span>🔄 {resetLabel(perk.reset_period)}</span>
-      </div>
-      <div style={{display:"flex",flexDirection:"column",gap:8}}>
-        <label style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer",fontSize:12,fontWeight:600,color:T.textPrimary}}>
-          <input type="checkbox" checked={!!perk.used} onChange={()=>onToggle(perk.perk_id)} disabled={!!perk.dismissed} style={{width:17,height:17,accentColor:T.success,cursor:"pointer"}}/>
-          {perk.used?"Marked as used":"Mark as used"}
-        </label>
-        <label style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer",fontSize:12,fontWeight:600,color:perk.dismissed?T.danger:T.muted}}>
-          <input type="checkbox" checked={!!perk.dismissed} onChange={()=>onDismiss(perk.perk_id)} style={{width:17,height:17,accentColor:T.danger,cursor:"pointer"}}/>
-          Will not use (exclude from count)
-        </label>
-      </div>
-    </div>
-  );
+/* ── AppBrandLogo — real provider logos (Simple Icons CDN) with initials fallback (Phase 3) ── */
+const PROVIDER_SLUGS={"Monzo":"monzo","Revolut":"revolut","OVO Energy":"ovoenergy","OVO":"ovoenergy","American Express":"americanexpress","Amex":"americanexpress","Sky TV":"sky","Sky":"sky","O2":"o2","Lidl":"lidl"};
+function AppBrandLogo({provider,size=28}){
+  const[failed,setFailed]=useState(false);
+  const slug=PROVIDER_SLUGS[provider];
+  const pCfg=PROVIDERS[provider]||{};
+  const initials=pCfg.initials||(provider||"?").slice(0,2).toUpperCase();
+  const tint=pCfg.color||T.muted;
+  if(!slug||failed){
+    return(<div style={{width:size,height:size,borderRadius:size*0.28,background:`${tint}1A`,border:`1.5px solid ${tint}33`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:size*0.4,fontWeight:800,color:tint,flexShrink:0,fontFamily:"'Work Sans',sans-serif"}}>{initials}</div>);
+  }
+  return(<div style={{width:size,height:size,borderRadius:size*0.28,background:"#fff",border:`1px solid ${T.border}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,overflow:"hidden"}}><img src={`https://cdn.simpleicons.org/${slug}`} alt={`${provider} logo`} onError={()=>setFailed(true)} style={{width:"62%",height:"62%",objectFit:"contain"}} loading="lazy"/></div>);
+}
+function FeatureChip({feature}){
+  const label={feature:"Feature",competition:"Competition",discount:"Discount"}[feature]||"Perk";
+  return <span style={{fontSize:9,fontWeight:600,color:T.textSecondary,background:T.bg,border:`1px solid ${T.border}`,padding:"2px 8px",borderRadius:10,flexShrink:0,fontFamily:"'Work Sans',sans-serif"}}>{label}</span>;
 }
 
-/* ── PerkTile ── */
+/* ── PerkTile (brand row, Phase 3) ── */
 function PerkTile({perk,onToggle,onDismiss,selected,onSelect}){
-  const pCfg=PROVIDERS[perk.provider]||{};
-  const isDimmed = perk.used || perk.dismissed;
+  const isDimmed=perk.used||perk.dismissed;
+  const isSel=perk.perk_id===selected;
+  const catEmoji=(CATEGORIES[perk.category]||{}).icon;
   return(
     <div style={{position:"relative"}}>
-      <div onClick={e=>{e.stopPropagation();onSelect(perk.perk_id===selected?null:perk.perk_id);}} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 12px",borderRadius:12,background:isDimmed?"#F1F5F9":T.surface,border:`1px solid ${perk.perk_id===selected?T.accent:T.border}`,opacity:isDimmed?0.5:1,cursor:"pointer",transition:"all 0.15s",boxShadow:isDimmed?"none":T.shadow}}>
-        <div style={{position:"relative",flexShrink:0}}><PerkBrandIcon perk={perk} size={32}/><ProviderOverlay provider={perk.provider} size={14}/></div>
+      <div onClick={e=>{e.stopPropagation();onSelect(isSel?null:perk.perk_id);}} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 12px",borderRadius:12,background:isDimmed?T.bg:T.surface,border:`1px solid ${isSel?T.primary:T.border}`,opacity:isDimmed?0.55:1,cursor:"pointer",transition:"all 0.15s",boxShadow:isDimmed?"none":T.shadow}}>
+        <AppBrandLogo provider={perk.provider} size={30}/>
+        {catEmoji&&<span style={{fontSize:15,flexShrink:0}}>{catEmoji}</span>}
         <div style={{flex:1,minWidth:0}}>
-          <div style={{fontSize:13,fontWeight:700,color:T.textPrimary,fontFamily:"'Work Sans',sans-serif",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{perk.title}</div>
-          <div style={{fontSize:10,color:pCfg.color||T.textSecondary,fontWeight:600,fontFamily:"'Work Sans',sans-serif"}}>{perk.membership} — {perk.tier}</div>
+          <div style={{fontSize:13,fontWeight:600,color:T.textPrimary,fontFamily:"'Work Sans',sans-serif",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{perk.title}</div>
+          <div style={{fontSize:10,color:T.textSecondary,fontWeight:500,fontFamily:"'Work Sans',sans-serif",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{perk.provider} · {perk.tier}</div>
         </div>
-        {perk.dismissed&&<span style={{fontSize:9,fontWeight:700,color:"#DC2626",background:"#FEE2E2",padding:"2px 7px",borderRadius:10,flexShrink:0,fontFamily:"'Work Sans',sans-serif"}}>✗</span>}
-        {perk.used&&!perk.dismissed&&<span style={{fontSize:9,fontWeight:700,color:"#B07C1A",background:"#F7ECD4",padding:"2px 7px",borderRadius:10,flexShrink:0,fontFamily:"'Work Sans',sans-serif"}}>✓</span>}
+        {perk.dismissed?<span style={{fontSize:9,fontWeight:700,color:T.danger,background:"#F6E9E5",padding:"2px 7px",borderRadius:10,flexShrink:0,fontFamily:"'Work Sans',sans-serif"}}>Set aside</span>:perk.used?<span style={{fontSize:9,fontWeight:700,color:"#B07C1A",background:"#F7ECD4",padding:"2px 7px",borderRadius:10,flexShrink:0,fontFamily:"'Work Sans',sans-serif"}}>Used</span>:<FeatureChip feature={perk.feature}/>}
       </div>
-      {perk.perk_id===selected&&<PerkSheet perk={perk} mode="owned" onToggle={onToggle} onDismiss={onDismiss} onClose={()=>onSelect(null)}/>}
+      {isSel&&<PerkSheet perk={perk} mode="owned" onToggle={onToggle} onDismiss={onDismiss} onClose={()=>onSelect(null)}/>}
     </div>
   );
 }
 
-/* ── PotentialPerkTile ── */
+/* ── PotentialPerkTile (brand marketplace row, Phase 3) ── */
 function PotentialPerkTile({perk,selected,onSelect}){
-  const pCfg=PROVIDERS[perk.provider]||{};
+  const isSel=perk.perk_id===selected;
   const url=perk.url;
-  const perkCallout = perk.perk_id===selected;
+  const catEmoji=(CATEGORIES[perk.category]||{}).icon;
   return(
     <div style={{position:"relative"}}>
-      <div onClick={e=>{e.stopPropagation();onSelect(perk.perk_id===selected?null:perk.perk_id);}} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 12px",borderRadius:12,background:T.surface,border:`1px solid ${perkCallout?T.accent:T.border}`,cursor:"pointer",transition:"all 0.15s",boxShadow:T.shadow}}>
-        <div style={{position:"relative",flexShrink:0}}><PerkBrandIcon perk={perk} size={32}/><ProviderOverlay provider={perk.provider} size={14}/></div>
+      <div onClick={e=>{e.stopPropagation();onSelect(isSel?null:perk.perk_id);}} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 12px",borderRadius:12,background:T.surface,border:`1px solid ${isSel?T.primary:T.border}`,cursor:"pointer",transition:"all 0.15s",boxShadow:T.shadow}}>
+        <AppBrandLogo provider={perk.provider} size={30}/>
+        {catEmoji&&<span style={{fontSize:15,flexShrink:0}}>{catEmoji}</span>}
         <div style={{flex:1,minWidth:0}}>
-          <div style={{fontSize:13,fontWeight:700,color:T.textPrimary,fontFamily:"'Work Sans',sans-serif",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{perk.title}</div>
-          <div style={{fontSize:10,color:pCfg.color||T.textSecondary,fontWeight:600,fontFamily:"'Work Sans',sans-serif"}}>{perk.membership} — {perk.tier}</div>
+          <div style={{fontSize:13,fontWeight:600,color:T.textPrimary,fontFamily:"'Work Sans',sans-serif",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{perk.title}</div>
+          <div style={{fontSize:10,color:T.textSecondary,fontWeight:500,fontFamily:"'Work Sans',sans-serif"}}>{perk.provider} · {perk.tier}</div>
         </div>
-        {url&&<a href={url} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} style={{fontSize:10,fontWeight:700,color:T.accent,textDecoration:"none",background:"#F7ECD4",padding:"3px 8px",borderRadius:8,flexShrink:0,fontFamily:"'Work Sans',sans-serif",border:`1px solid ${T.accent}33`}}>Visit ↗</a>}
+        {url?<a href={url} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} style={{fontSize:10,fontWeight:700,color:T.primary,textDecoration:"none",background:"#F7ECD4",padding:"4px 9px",borderRadius:8,flexShrink:0,fontFamily:"'Work Sans',sans-serif"}}>Visit ↗</a>:<FeatureChip feature={perk.feature}/>}
       </div>
-      {perkCallout&&<PerkSheet perk={perk} mode="marketplace" onClose={()=>onSelect(null)}/>}
-    </div>
-  );
-}
-
-/* ── PerkCalloutModal ── */
-function PerkCalloutModal({perk,onToggle,onDismiss,onClose}){
-  const pCfg=PROVIDERS[perk.provider]||{color:T.accent};
-  const b=getPerkBrand(perk);
-  return(
-    <div onClick={onClose} style={{position:"fixed",inset:0,zIndex:200,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
-      <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:360,background:T.surface,borderRadius:16,overflow:"hidden",boxShadow:"0 20px 60px rgba(0,0,0,0.25)",position:"relative",fontFamily:"'Work Sans',sans-serif"}}>
-        <div style={{background:"#2B2A6E",padding:"20px 18px 16px",display:"flex",alignItems:"center",gap:12,position:"relative"}}>
-          <button onClick={onClose} style={{position:"absolute",top:10,right:12,background:"rgba(0,0,0,0.3)",border:"none",color:"#fff",width:28,height:28,borderRadius:14,fontSize:16,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,backdropFilter:"blur(4px)"}}>✕</button>
-          <div style={{fontSize:36}}>{b.emoji}</div>
-          <div>
-            <div style={{fontSize:15,fontWeight:800,color:"#fff"}}>{perk.title}</div>
-            <div style={{fontSize:11,fontWeight:600,color:"rgba(255,255,255,0.8)",marginTop:2}}>{perk.membership} — {perk.tier}</div>
-          </div>
-        </div>
-        <div style={{padding:"16px 18px 18px",borderLeft:`4px solid ${pCfg.color||T.accent}`}}>
-          <div style={{fontSize:12,lineHeight:1.6,color:T.textSecondary,marginBottom:12}}>{perk.description}</div>
-          <div style={{display:"flex",gap:12,flexWrap:"wrap",marginBottom:14,fontSize:11,color:T.muted}}>
-            <span>📅 {perk.next_reset_date?`Renews ${perk.next_reset_date}`:"No renewal date"}</span>
-            <span>🔄 {resetLabel(perk.reset_period)}</span>
-          </div>
-          <div style={{display:"flex",flexDirection:"column",gap:10}}>
-            <label style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer",fontSize:13,fontWeight:600,color:T.textPrimary}}>
-              <input type="checkbox" checked={!!perk.used} onChange={()=>onToggle(perk.perk_id)} disabled={!!perk.dismissed} style={{width:18,height:18,accentColor:T.success,cursor:"pointer"}}/>
-              {perk.used?"Marked as used":"Mark as used"}
-            </label>
-            <label style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer",fontSize:13,fontWeight:600,color:perk.dismissed?T.danger:T.muted}}>
-              <input type="checkbox" checked={!!perk.dismissed} onChange={()=>onDismiss(perk.perk_id)} style={{width:18,height:18,accentColor:T.danger,cursor:"pointer"}}/>
-              Will not use (exclude from count)
-            </label>
-          </div>
-        </div>
-      </div>
+      {isSel&&<PerkSheet perk={perk} mode="marketplace" onClose={()=>onSelect(null)}/>}
     </div>
   );
 }
@@ -486,7 +443,7 @@ function MembershipsTab({perks,onToggle,onDismiss,activeMemberships,tierPrices})
           key={pg.provider}
           title={pg.provider}
           subtitle={provPriceLabel?`${provPerks.length} perks · ${provPriceLabel}`:`${provPerks.length} perks`}
-          badge={<ProviderBadge provider={pg.provider} size={28}/>}
+          badge={<AppBrandLogo provider={pg.provider} size={28}/>}
           headerBg={pCfg.bg}
           headerBorder={`${pCfg.color}33`}
           defaultOpen={providerGroups.length<=3}
@@ -538,7 +495,7 @@ function WhereTab({perks,onToggle,onDismiss,tierPrices}){const[sel,setSel]=useSt
     });
     return Object.values(byKey);
   },[perks,tierPrices]);
-  const catGroups=useMemo(()=>{const g={};dedupedPerks.forEach(p=>{const c=p.category;if(!c||!CATEGORIES[c])return;if(!g[c])g[c]={perks:[],providers:new Set()};g[c].perks.push(p);g[c].providers.add(p.provider);});return g;},[dedupedPerks]);return(<div onClick={()=>setSp(null)}><h1 style={{fontSize:22,fontWeight:800,color:T.textPrimary,margin:0,fontFamily:"'Outfit',sans-serif"}}>Where to Use</h1><TabDesc>Find perks by category. Tap to expand matching perks.</TabDesc><div style={{display:"flex",flexDirection:"column",gap:10}}>{Object.entries(catGroups).map(([cat,data])=>{const info=CATEGORIES[cat];if(!info)return null;const isSel=sel===cat;return(<div key={cat}><div onClick={()=>{setSel(isSel?null:cat);setSp(null);}} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 14px",borderRadius:12,cursor:"pointer",background:isSel?"#2B2A6E":T.surface,border:`1.5px solid ${isSel?"#2B2A6E":T.border}`,boxShadow:isSel?"none":T.shadow,color:isSel?"#fff":T.textPrimary}}><span style={{fontSize:24}}>{info.icon}</span><div style={{flex:1}}><div style={{fontSize:13,fontWeight:700,fontFamily:"'Work Sans',sans-serif"}}>{info.label}</div><div style={{fontSize:11,color:isSel?"#94A3B8":T.textSecondary,fontFamily:"'Work Sans',sans-serif"}}>{data.perks.length} perks</div></div><div style={{display:"flex",gap:3}}>{[...data.providers].map(prov=><ProviderBadge key={prov} provider={prov} size={20}/>)}</div><span style={{fontSize:14,color:isSel?"#94A3B8":T.muted,transform:isSel?"rotate(180deg)":"rotate(0)",display:"inline-block"}}>▾</span></div>{isSel&&(<div style={{margin:"6px 0",padding:"10px 12px",borderRadius:12,background:"#2B2A6E"}}><div style={{display:"flex",flexDirection:"column",gap:6}}>{data.perks.sort(alphaSort).map(p=>(<div key={p.perk_id}><div onClick={e=>{e.stopPropagation();setSp(sp===p.perk_id?null:p.perk_id);}} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 10px",borderRadius:10,background:p.used||p.dismissed?"rgba(255,255,255,0.05)":"rgba(255,255,255,0.08)",cursor:"pointer",opacity:p.used||p.dismissed?0.5:1,border:`1px solid ${sp===p.perk_id?T.accent:"rgba(255,255,255,0.1)"}`}}><div style={{position:"relative",flexShrink:0}}><PerkBrandIcon perk={p} size={28}/><ProviderOverlay provider={p.provider} size={12}/></div><div style={{flex:1,minWidth:0}}><div style={{fontSize:12,fontWeight:700,color:"#F1F5F9",fontFamily:"'Work Sans',sans-serif",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{p.title}</div><div style={{fontSize:10,color:"#94A3B8",fontFamily:"'Work Sans',sans-serif"}}>{p.membership} — {p.tier}</div></div>{p.dismissed&&<span style={{fontSize:9,color:"#F87171"}}>✗</span>}{p.used&&!p.dismissed&&<span style={{fontSize:9,color:"#E0A93B"}}>✓</span>}</div>{sp===p.perk_id&&<PerkSheet perk={p} mode="owned" onToggle={onToggle} onDismiss={onDismiss} onClose={()=>setSp(null)}/>}</div>))}</div></div>)}</div>);})}</div></div>);}
+  const catGroups=useMemo(()=>{const g={};dedupedPerks.forEach(p=>{const c=p.category;if(!c||!CATEGORIES[c])return;if(!g[c])g[c]={perks:[],providers:new Set()};g[c].perks.push(p);g[c].providers.add(p.provider);});return g;},[dedupedPerks]);return(<div onClick={()=>setSp(null)}><h1 style={{fontSize:22,fontWeight:800,color:T.textPrimary,margin:0,fontFamily:"'Outfit',sans-serif"}}>Where to Use</h1><TabDesc>Find perks by category. Tap to expand matching perks.</TabDesc><div style={{display:"flex",flexDirection:"column",gap:10}}>{Object.entries(catGroups).map(([cat,data])=>{const info=CATEGORIES[cat];if(!info)return null;const isSel=sel===cat;return(<div key={cat}><div onClick={()=>{setSel(isSel?null:cat);setSp(null);}} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 14px",borderRadius:12,cursor:"pointer",background:isSel?"#2B2A6E":T.surface,border:`1.5px solid ${isSel?"#2B2A6E":T.border}`,boxShadow:isSel?"none":T.shadow,color:isSel?"#fff":T.textPrimary}}><span style={{fontSize:24}}>{info.icon}</span><div style={{flex:1}}><div style={{fontSize:13,fontWeight:700,fontFamily:"'Work Sans',sans-serif"}}>{info.label}</div><div style={{fontSize:11,color:isSel?"#94A3B8":T.textSecondary,fontFamily:"'Work Sans',sans-serif"}}>{data.perks.length} perks</div></div><div style={{display:"flex",gap:3}}>{[...data.providers].map(prov=><AppBrandLogo key={prov} provider={prov} size={20}/>)}</div><span style={{fontSize:14,color:isSel?"#94A3B8":T.muted,transform:isSel?"rotate(180deg)":"rotate(0)",display:"inline-block"}}>▾</span></div>{isSel&&(<div style={{margin:"6px 0",padding:"10px 12px",borderRadius:12,background:"#2B2A6E"}}><div style={{display:"flex",flexDirection:"column",gap:6}}>{data.perks.sort(alphaSort).map(p=>(<div key={p.perk_id}><div onClick={e=>{e.stopPropagation();setSp(sp===p.perk_id?null:p.perk_id);}} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 10px",borderRadius:10,background:p.used||p.dismissed?"rgba(255,255,255,0.05)":"rgba(255,255,255,0.08)",cursor:"pointer",opacity:p.used||p.dismissed?0.5:1,border:`1px solid ${sp===p.perk_id?T.accent:"rgba(255,255,255,0.1)"}`}}><div style={{position:"relative",flexShrink:0}}><PerkBrandIcon perk={p} size={28}/><ProviderOverlay provider={p.provider} size={12}/></div><div style={{flex:1,minWidth:0}}><div style={{fontSize:12,fontWeight:700,color:"#F1F5F9",fontFamily:"'Work Sans',sans-serif",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{p.title}</div><div style={{fontSize:10,color:"#94A3B8",fontFamily:"'Work Sans',sans-serif"}}>{p.membership} — {p.tier}</div></div>{p.dismissed&&<span style={{fontSize:9,color:"#F87171"}}>✗</span>}{p.used&&!p.dismissed&&<span style={{fontSize:9,color:"#E0A93B"}}>✓</span>}</div>{sp===p.perk_id&&<PerkSheet perk={p} mode="owned" onToggle={onToggle} onDismiss={onDismiss} onClose={()=>setSp(null)}/>}</div>))}</div></div>)}</div>);})}</div></div>);}
 
 /* ═══════════════ PROFILE (grouped by provider → tier, collapsible) ═══════════════ */
 function ProfileTab({perks,activeMemberships,onRemoveMembership,user,onLogout,onToggle,onDismiss,tierPrices}){
@@ -631,7 +588,7 @@ function ProfileTab({perks,activeMemberships,onRemoveMembership,user,onLogout,on
             return(
               <div key={`${item.provider}-${item.tier}`} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 0",borderBottom:i<costBreakdown.length-1?`1px solid ${T.border}`:"none"}}>
                 <div style={{display:"flex",alignItems:"center",gap:8}}>
-                  <ProviderBadge provider={item.provider} size={22}/>
+                  <AppBrandLogo provider={item.provider} size={22}/>
                   <div>
                     <div style={{fontSize:12,fontWeight:700,color:T.textPrimary,fontFamily:"'Work Sans',sans-serif"}}>{item.provider}</div>
                     <div style={{fontSize:10,color:pCfg.color||T.textSecondary,fontWeight:600,fontFamily:"'Work Sans',sans-serif"}}>{item.tier}</div>
@@ -671,7 +628,7 @@ function ProfileTab({perks,activeMemberships,onRemoveMembership,user,onLogout,on
           key={pg.provider}
           title={pg.provider}
           count={pg.memberships.length + " tier" + (pg.memberships.length!==1?"s":"")}
-          badge={<ProviderBadge provider={pg.provider} size={28}/>}
+          badge={<AppBrandLogo provider={pg.provider} size={28}/>}
           headerBg={pCfg.bg}
           headerBorder={`${pCfg.color}33`}
           defaultOpen={false}
@@ -783,7 +740,7 @@ function PotentialTab({allPerks,activeMemberships,onAddMembership,userName,userI
           key={pg.provider}
           title={pg.provider}
           subtitle={provPriceLabel?`${totalPerks} perks · ${hasActive?"":"from "}${provPriceLabel}`:`${totalPerks} perks`}
-          badge={<ProviderBadge provider={pg.provider} size={28}/>}
+          badge={<AppBrandLogo provider={pg.provider} size={28}/>}
           headerBg={pCfg.bg}
           headerBorder={`${pCfg.color}33`}
           defaultOpen={providerGroups.length<=3}
@@ -831,7 +788,7 @@ export default function PerikiApp(){
   const[activeMemberships,setActiveMemberships]=useState([]);
   const[usedMap,setUsedMap]=useState({});
   const[dismissedMap,setDismissedMap]=useState({});
-  const[tierPrices,setTierPrices]=useState({});
+  const tierPrices=useMemo(()=>{const m={};allPerks.forEach(p=>{if(p.price!=null){const k=`${p.provider}|${p.tier}`;if(!(k in m))m[k]={price:p.price,price_label:p.price===0?"Free":`£${p.price}`,sort_order:p.price};}});return m;},[allPerks]);
 
   /* Auth listener */
   useEffect(()=>{
@@ -854,24 +811,6 @@ export default function PerikiApp(){
     }catch(e){console.error("[Perki] Perks fetch error:",e);setAllPerks([]);}
   })();},[]);
 
-  /* Load tier prices from Supabase — price column is the single source of truth */
-  useEffect(()=>{(async()=>{
-    if(!SB_CONFIGURED)return;
-    try{
-      const{data,error}=await supabase.from("tiers").select("provider,tier,price,price_label,sort_order").order("price");
-      if(!error&&data?.length){
-        const m={};
-        data.forEach(r=>{
-          m[`${r.provider}|${r.tier}`]={
-            price: r.price ?? 999,
-            price_label: r.price_label || (r.price === 0 ? "Free" : r.price != null ? `£${r.price}` : ""),
-            sort_order: r.sort_order ?? r.price ?? 999,
-          };
-        });
-        setTierPrices(m);
-      }
-    }catch(e){console.error("[Perki] Tiers fetch error:",e);}
-  })();},[]);
 
   /* Load user data */
   useEffect(()=>{

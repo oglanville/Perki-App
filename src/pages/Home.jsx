@@ -52,6 +52,7 @@ export default function Home() {
             Perki finds every benefit hidden in your subscriptions and memberships — and puts them in one place.
           </p>
           <div className="mt-8 flex flex-col items-center lg:items-start gap-2">
+            <Button to="/how-it-works" variant="secondary" className="w-full sm:w-auto !px-8 !py-3.5 !min-h-[52px]">How it works</Button>
             <Button to="/perks" className="w-full sm:w-auto !px-8 !py-3.5 !min-h-[52px]">See my perks <ArrowRight className="w-5 h-5" /></Button>
             <span className="text-sm text-muted">No card · 2-minute setup</span>
           </div>
