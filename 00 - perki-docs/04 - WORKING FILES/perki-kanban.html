@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Perki — Rolling To-Do Board</title>
+<style>
+  :root{
+    --bg:#0f1622; --card:#1a2433; --ink:#e8edf4; --muted:#9fb0c4;
+    --today:#ff6f61; --week:#f5a623; --month:#2fb6a8; --horizon:#7c8aa5; --done:#3ecf8e;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    background:var(--bg);color:var(--ink);padding:28px;line-height:1.45}
+  header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+  h1{font-size:24px;letter-spacing:.3px}
+  .north{color:var(--muted);font-size:13px;margin:4px 0 22px}
+  .board{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;align-items:start}
+  .col{background:rgba(255,255,255,.02);border-radius:14px;padding:14px;border-top:4px solid}
+  .col.today{border-color:var(--today)}.col.week{border-color:var(--week)}
+  .col.month{border-color:var(--month)}.col.horizon{border-color:var(--horizon)}
+  .col h2{font-size:13px;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center}
+  .col .sub{font-size:11px;color:var(--muted);margin-bottom:12px;min-height:28px}
+  .count{font-size:11px;background:rgba(255,255,255,.08);border-radius:20px;padding:2px 9px;color:var(--muted)}
+  .card{background:var(--card);border-radius:10px;padding:12px;margin-bottom:10px;box-shadow:0 1px 2px rgba(0,0,0,.3);display:flex;gap:10px;transition:opacity .2s}
+  .card .body{flex:1}
+  .card .t{font-weight:600;font-size:14px;margin-bottom:5px}
+  .card .syn{font-size:12px;color:var(--muted);margin-bottom:8px}
+  .card ul{list-style:none;font-size:12px}
+  .card li{padding:3px 0 3px 16px;position:relative;color:#cdd8e6}
+  .card li::before{content:"›";position:absolute;left:2px;color:var(--muted)}
+  .tag{display:inline-block;font-size:10px;font-weight:600;border-radius:5px;padding:2px 7px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
+  .tag.prio{background:rgba(255,111,97,.18);color:var(--today)}
+  .chk{appearance:none;-webkit-appearance:none;min-width:20px;height:20px;margin-top:2px;border:2px solid var(--muted);border-radius:6px;cursor:pointer;position:relative;transition:.15s;background:transparent}
+  .chk:hover{border-color:var(--done)}.chk:checked{background:var(--done);border-color:var(--done)}
+  .chk:checked::after{content:"✓";position:absolute;color:#0f1622;font-size:14px;font-weight:800;left:3px;top:-1px}
+  .card.done{opacity:.5}.card.done .t{text-decoration:line-through;text-decoration-color:var(--done)}
+
+  /* Done today — daily highlight */
+  .donebox{margin-top:26px;background:rgba(62,207,142,.06);border:1px solid rgba(62,207,142,.25);border-radius:14px;padding:16px 18px}
+  .donebox h2{font-size:14px;color:var(--done);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+  .donebox ul{list-style:none;columns:2;column-gap:28px}
+  .donebox li{font-size:13px;padding:5px 0 5px 22px;position:relative;break-inside:avoid}
+  .donebox li::before{content:"✓";position:absolute;left:0;color:var(--done);font-weight:800}
+
+  /* Progress timeline — ongoing completed log */
+  .timeline{margin-top:18px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:18px 20px}
+  .timeline h2{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px}
+  .tl{list-style:none;position:relative;margin-left:8px}
+  .tl::before{content:"";position:absolute;left:5px;top:4px;bottom:4px;width:2px;background:rgba(62,207,142,.3)}
+  .tl li{position:relative;padding:0 0 18px 26px}
+  .tl li:last-child{padding-bottom:0}
+  .tl li::before{content:"";position:absolute;left:0;top:3px;width:12px;height:12px;border-radius:50%;background:var(--done);box-shadow:0 0 0 3px rgba(62,207,142,.18)}
+  .tl .date{font-size:11px;color:var(--done);font-weight:700;letter-spacing:.4px;text-transform:uppercase}
+  .tl .ttl{font-weight:600;font-size:14px;margin:2px 0 3px}
+  .tl .desc{font-size:12.5px;color:var(--muted)}
+
+  footer{margin-top:24px;color:var(--muted);font-size:12px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px}
+  @media(max-width:900px){.board{grid-template-columns:1fr 1fr}.donebox ul{columns:1}}
+  @media(max-width:560px){.board{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+  <header>
+    <h1>🚀 Perki — Rolling To-Do</h1>
+    <span class="north">North star: website foundation is built — now make it unmistakably <em>Perki</em>, then pitch it.</span>
+  </header>
+  <div class="board">
+
+    <section class="col today" data-horizon="Today">
+      <h2>☀️ Today <span class="count"></span></h2>
+      <div class="sub">Brand and deck are done. Tie off the loose ends.</div>
+      <div class="card" data-id="a1"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">🛒 Ingest O2 + Lidl</div>
+        <span class="tag prio">Top priority</span>
+        <div class="syn">Add the two providers so the catalogue and deck reflect full coverage.</div>
+        <ul><li>Add O2 + Lidl rows to Perks_Rows.xlsx (awaiting source data)</li><li>Run the validation checklist → ingestion scripts</li></ul>
+      </div></div>
+      <div class="card" data-id="a2"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">📄 Deck polish</div>
+        <div class="syn">Make the deck send-ready.</div>
+        <ul><li>Export a PDF for sharing</li><li>Install Outfit + Work Sans so type renders exactly</li><li>Swap illustrative stats for Perki-specific numbers</li></ul>
+      </div></div>
+      <div class="card" data-id="e1"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">🔁 Sort out renewal logic</div>
+        <div class="syn">Make perk reset and renewal dates compute correctly across the app.</div>
+      </div></div>
+      <div class="card" data-id="e2"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">🗂️ Collapse Active/Inactive by default</div>
+        <div class="syn">On the Profile tab, both sections start collapsed on first load.</div>
+      </div></div>
+    </section>
+
+    <section class="col week" data-horizon="This Week">
+      <h2>📅 This Week <span class="count"></span></h2>
+      <div class="sub">Strengthen the MVP and get it in front of people.</div>
+      <div class="card" data-id="b1"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">🎨 Re-skin the legacy /app</div>
+        <div class="syn">The old blue dashboard still needs the eggshell brand.</div>
+        <ul><li>Port the legacy app to the design-system tokens</li><li>Retire or fold it into the new pages</li></ul>
+      </div></div>
+      <div class="card" data-id="c1"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">📧 Build the email blast</div>
+        <div class="syn">The "never miss" channel — weekly or daily perk reminders.</div>
+        <ul><li>Templated digest of active and resetting perks</li><li>Deep-link straight into the provider</li></ul>
+      </div></div>
+      <div class="card" data-id="f1"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">🤝 Seek founder advice (weekly)</div>
+        <span class="tag prio" style="background:rgba(47,182,168,.18);color:#2fb6a8">Weekly</span>
+        <div class="syn">Message each contact once a week for input.</div>
+        <ul><li>Tori Prew (HUUR)</li><li>Tom Standen (Sylvi)</li><li>George Gazzard (Solskin)</li></ul>
+      </div></div>
+      <div class="card" data-id="f2"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">🖼️ Add screenshots to the deck</div>
+        <div class="syn">Drop real website and app examples into the pitch deck.</div>
+      </div></div>
+      <div class="card" data-id="f3"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">🟢 Fix the OVO logo</div>
+        <div class="syn">The OVO brand mark is wrong; correct it in the catalogue/app.</div>
+      </div></div>
+    </section>
+
+    <section class="col month" data-horizon="This Month">
+      <h2>🗓️ This Month <span class="count"></span></h2>
+      <div class="sub">Turn the core loop into something sticky.</div>
+      <div class="card" data-id="g1"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">🚪 Build out the onboarding process</div>
+        <div class="syn">A clean first-run flow that gets people to their perks fast.</div>
+      </div></div>
+      <div class="card" data-id="b2"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">📚 Deepen the catalogue</div>
+        <div class="syn">Add as many brands and tiers as possible to strengthen the MVP.</div>
+        <ul><li>Expand beyond the current four providers</li><li>Keep ingestion manual and accurate</li></ul>
+      </div></div>
+      <div class="card" data-id="b3"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">🧪 Test with friends</div>
+        <div class="syn">Real users on the website, app, and email blast.</div>
+        <ul><li>Share the live site and app</li><li>Run a first email blast and gather reactions</li></ul>
+      </div></div>
+      <div class="card" data-id="c2"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">🔍 Validate UX vs the brand</div>
+        <div class="syn">Pressure-test Marketplace + Profile against the finalised identity.</div>
+        <ul><li>Log any drift and fix</li></ul>
+      </div></div>
+    </section>
+
+    <section class="col horizon" data-horizon="On the Horizon">
+      <h2>🔭 On the Horizon <span class="count"></span></h2>
+      <div class="sub">The monetisation and partnership layer.</div>
+      <div class="card" data-id="d1"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">🔌 Partner portal + API</div>
+        <div class="syn">Let companies integrate their perks directly.</div>
+      </div></div>
+      <div class="card" data-id="d2"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">💸 Placement revenue</div>
+        <div class="syn">Natural ranking, boosted-on-search, and pay-to-rank slots.</div>
+      </div></div>
+      <div class="card" data-id="d3"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">🎬 Product demo flow</div>
+        <div class="syn">A crisp walkthrough for prospects and investors.</div>
+      </div></div>
+    </section>
+
+  </div>
+
+  <!-- DONE TODAY — daily highlight -->
+  <section class="donebox">
+    <h2>✅ Done today — 4 Jun 2026 · brand + deck</h2>
+    <ul>
+      <li>Brand identity locked — essence, three adjectives, one-liner</li>
+      <li>Logo locked — flat indigo coin + gold P, with vector assets</li>
+      <li>Design system v2 — eggshell/indigo/gold, Outfit + Work Sans</li>
+      <li>Brand voice guidelines written and signed off</li>
+      <li>App re-skinned to the new light/eggshell brand (build green)</li>
+      <li>Investor pitch deck built and refined to v3, with positioning + revenue diagrams</li>
+    </ul>
+  </section>
+
+  <!-- PROGRESS TIMELINE — ongoing completed log -->
+  <section class="timeline">
+    <h2>🧭 Progress timeline</h2>
+    <ul class="tl">
+      <li>
+        <div class="date">4 Jun 2026</div>
+        <div class="ttl">Pitch deck v3 (precise edits)</div>
+        <div class="desc">Product slide now names features, perks, discounts and competitions in one place. Marketplace copy trimmed and framed as a public library anyone can search. Re-inserted the positioning 2x2 (single→every provider, cancel→use-what-you-own) right after Product. Fixed the revenue diagram: deep-link label moved between both gold arrows, Box 2 formatting cleaned.</div>
+      </li>
+      <li>
+        <div class="date">4 Jun 2026</div>
+        <div class="ttl">Pitch deck v2 (feedback applied)</div>
+        <div class="desc">Rebuilt the deck from Ollie's brief: de-AI'd every line (em dashes gone), split the experience into Marketplace + Profile, retitled the product slide, embedded the new member/non-member revenue diagram, reworked roadmap and team, and fixed the How-it-works alignment. QA'd by render.</div>
+      </li>
+      <li>
+        <div class="date">4 Jun 2026</div>
+        <div class="ttl">Investor pitch deck (v1)</div>
+        <div class="desc">Built a 14-slide investor deck on the new brand (eggshell/indigo/gold, coin motif, value-first voice): problem, why-now with real UK subscription stats, the insight, product, how it works, the two surfaces, competition, market, business model, what's built, roadmap, team, and a vision close (no funding ask). Saved to 05 - OUTPUTS/Perki-Pitch-Deck.pptx.</div>
+      </li>
+      <li>
+        <div class="date">3 Jun 2026</div>
+        <div class="ttl">App re-skin → eggshell brand</div>
+        <div class="desc">Re-skinned the website + app from the dark slate theme to the light/eggshell design system: remapped Tailwind tokens, switched to Outfit + Work Sans, converted the glass surface to a light card, fixed gold-on-light contrast (deep gold for small text, indigo for secondary actions), and dropped the real coin logo into the nav. Build verified. (Legacy /app keeps its own theme — separate job.)</div>
+      </li>
+      <li>
+        <div class="date">3 Jun 2026</div>
+        <div class="ttl">Brand: voice guidelines</div>
+        <div class="desc">Generated Perki's brand voice via the Brand Voice skill: one-line voice, five attributes, a We Are / We Are Not table, a tone-by-context matrix, vocabulary, mechanics (British English, sentence case, no hype), and worked rewrites. Saved to 06 - BRAND/perki-brand-voice-guidelines.md.</div>
+      </li>
+      <li>
+        <div class="date">3 Jun 2026</div>
+        <div class="ttl">Brand: design system v2</div>
+        <div class="desc">Ran UI UX Pro Max against the locked direction and built the light/eggshell system: brand-locked palette (indigo = action, gold = value accent), Outfit + Work Sans typography, spacing/shadow tokens and component specs. Captured in 06 - BRAND/perki-design-system.md.</div>
+      </li>
+      <li>
+        <div class="date">3 Jun 2026</div>
+        <div class="ttl">Brand: logo locked</div>
+        <div class="desc">Set Perki's visual direction — eggshell ground, indigo "vault" coin, gold P. Locked the flat primary mark as vector assets (icon + horizontal lockup) with a logo spec. Brand essence, adjectives and one-liner signed off.</div>
+      </li>
+      <li>
+        <div class="date">3 Jun 2026</div>
+        <div class="ttl">Website build complete</div>
+        <div class="desc">Shipped the full Perki website in a day: UX overhaul on the premium fintech design system, new site structure (router, marketing pages, app shell, nav), Marketplace + Profile tab logic (tier filtering, dedupe, active/inactive), slide-out panels with live Supabase write-backs, brand/navigation/layout behaviours, and fixes to the Perks/Marketplace + Profile flows (live pricing, monthly cost, mark-as-used).</div>
+      </li>
+      <li>
+        <div class="date">2 Jun 2026</div>
+        <div class="ttl">Data foundation &amp; validation</div>
+        <div class="desc">Profiled and repaired the perks source file, built reviewable Supabase ingestion scripts, ran the perks audit + factual validation (Monzo/Revolut pricing confirmed), and stood up the rolling to-do system.</div>
+      </li>
+    </ul>
+  </section>
+
+  <footer>
+    <p>🤝 <b>Need from you:</b> O2 + Lidl source data · install Outfit + Work Sans fonts · friends to test the app + email blast.</p>
+    <p style="margin-top:6px">🧭 Guardrails: manual ingestion only, no scraping · accuracy over speed · brand gates deck work · auto-send is OFF (manual pulls only).</p>
+    <p style="margin-top:6px;opacity:.6">Last updated 2026-06-04 (rev 2) · mirrors daily-todo.md · tick cards to dim them (saved in your browser)</p>
+  </footer>
+
+<script>
+  const KEY='perki-todo-done-v4';
+  const saved=JSON.parse(localStorage.getItem(KEY)||'{}');
+  function colCounts(){document.querySelectorAll('.col').forEach(col=>{const cards=[...col.querySelectorAll('.card')];col.querySelector('.count').textContent=cards.filter(c=>!c.classList.contains('done')).length;});}
+  document.querySelectorAll('.card').forEach(card=>{const id=card.dataset.id;const chk=card.querySelector('.chk');
+    if(saved[id]){card.classList.add('done');chk.checked=true;}
+    chk.addEventListener('change',e=>{const on=e.target.checked;card.classList.toggle('done',on);if(on)saved[id]=true;else delete saved[id];localStorage.setItem(KEY,JSON.stringify(saved));colCounts();});});
+  colCounts();
+</script>
+</body>
+</html>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           

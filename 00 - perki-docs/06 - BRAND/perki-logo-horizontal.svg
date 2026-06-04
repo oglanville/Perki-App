@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 300" width="900" height="300" role="img" aria-label="Perki logo">
+  <title>Perki horizontal logo</title>
+  <g transform="translate(30,22) scale(0.5)">
+    <rect x="36" y="36" width="440" height="440" rx="128" fill="#2B2A6E"/>
+    <g fill="none" stroke="#E0A93B" stroke-width="56" stroke-linecap="round">
+      <path d="M211 150 V374"/>
+      <path d="M239 154 A62 62 0 0 1 239 278"/>
+    </g>
+  </g>
+  <text x="320" y="200" font-family="'IBM Plex Sans', system-ui, sans-serif" font-size="150" font-weight="600" letter-spacing="1" fill="#2B2A6E">Perki</text>
+</svg>

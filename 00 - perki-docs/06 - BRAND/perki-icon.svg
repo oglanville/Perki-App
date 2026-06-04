@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Perki icon">
+  <title>Perki icon</title>
+  <rect x="36" y="36" width="440" height="440" rx="128" fill="#2B2A6E"/>
+  <g fill="none" stroke="#E0A93B" stroke-width="56" stroke-linecap="round">
+    <path d="M211 150 V374"/>
+    <path d="M239 154 A62 62 0 0 1 239 278"/>
+  </g>
+</svg>

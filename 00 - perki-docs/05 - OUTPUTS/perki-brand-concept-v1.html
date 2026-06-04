@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Perki — Brand Concept v1</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --eggshell:#F3EDE1; --eggshell-2:#EFE8D9;
+    --indigo:#2C2A6B;        /* deep blue-purple — the P / headlines */
+    --indigo-ink:#1E1C44;    /* darkest text */
+    --violet:#6D5BD0;        /* digital accent for interactive states */
+    --gold:#D9A441; --gold-hi:#F2CE72; --gold-lo:#B07E27;
+    --muted:#6A6580;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'IBM Plex Sans',system-ui,sans-serif;background:var(--eggshell);color:var(--indigo-ink);
+    line-height:1.5;padding:40px 28px 64px}
+  .wrap{max-width:1040px;margin:0 auto}
+  h1,h2,h3,.display{font-family:'Outfit',sans-serif}
+  .kicker{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--gold-lo);font-weight:600}
+  h1{font-size:40px;font-weight:800;color:var(--indigo);letter-spacing:-.5px;margin:6px 0 4px}
+  .lede{color:var(--muted);max-width:62ch}
+  section{margin-top:48px}
+  h2{font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:18px}
+
+  /* Hero mark */
+  .hero{display:flex;gap:40px;align-items:center;flex-wrap:wrap;margin-top:28px;
+    background:var(--eggshell-2);border-radius:24px;padding:40px;border:1px solid rgba(44,42,107,.08)}
+  .token{position:relative;width:200px;height:200px;flex:none}
+  .lockups{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;margin-top:8px}
+  .lockup{background:#fff;border:1px solid rgba(44,42,107,.1);border-radius:16px;padding:26px;display:flex;
+    flex-direction:column;align-items:center;gap:14px;justify-content:center;min-height:150px}
+  .lockup.dark{background:var(--indigo)}
+  .lockup .cap{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+  .lockup.dark .cap{color:#9C98C9}
+  .wordmark{font-family:'Outfit',sans-serif;font-weight:800;font-size:30px;color:var(--indigo);letter-spacing:-.5px}
+  .wordmark.on-dark{color:var(--eggshell)}
+  .row{display:flex;align-items:center;gap:12px}
+
+  /* palette */
+  .pal{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+  .sw{border-radius:14px;overflow:hidden;border:1px solid rgba(44,42,107,.1);background:#fff}
+  .chip{height:84px}
+  .sw .meta{padding:10px 12px}
+  .sw .nm{font-weight:600;font-size:14px}
+  .sw .hx{font-family:'IBM Plex Sans';font-size:12px;color:var(--muted)}
+  .sw .role{font-size:11px;color:var(--muted);margin-top:2px}
+
+  /* type */
+  .type{background:#fff;border:1px solid rgba(44,42,107,.1);border-radius:16px;padding:28px}
+  .spec{font-family:'Outfit';font-weight:800;font-size:46px;color:var(--indigo);letter-spacing:-1px;line-height:1.05}
+  .spec small{display:block;font-family:'IBM Plex Sans';font-weight:400;font-size:14px;color:var(--muted);letter-spacing:0;margin-top:10px}
+  .bodyspec{margin-top:20px;border-top:1px solid rgba(44,42,107,.08);padding-top:18px;max-width:60ch}
+
+  .notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+  .note{background:#fff;border:1px solid rgba(44,42,107,.1);border-radius:14px;padding:18px}
+  .note h3{font-size:15px;color:var(--indigo);margin-bottom:6px}
+  .note p{font-size:13px;color:var(--muted)}
+  .foot{margin-top:48px;color:var(--muted);font-size:12px;border-top:1px solid rgba(44,42,107,.1);padding-top:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">Perki · Brand concept v1</div>
+  <h1>The value you're already paying for — surfaced.</h1>
+  <p class="lede">A first visual exploration of your direction: an eggshell canvas, a deep blue-purple “P”, and a gold, gently 3D token behind it — the “earned value” made tangible.</p>
+
+  <!-- HERO MARK -->
+  <section>
+    <h2>The mark</h2>
+    <div class="hero">
+      <div class="token">
+        <svg viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="Perki gold token with indigo P">
+          <defs>
+            <radialGradient id="g" cx="38%" cy="32%" r="75%">
+              <stop offset="0%" stop-color="#F2CE72"/>
+              <stop offset="55%" stop-color="#D9A441"/>
+              <stop offset="100%" stop-color="#B07E27"/>
+            </radialGradient>
+            <pattern id="guil" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+              <path d="M0 0 H14 M0 7 H14" stroke="#FFFFFF" stroke-opacity="0.10" stroke-width="1"/>
+            </pattern>
+            <linearGradient id="bevel" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#FFFFFF" stop-opacity=".55"/>
+              <stop offset="22%" stop-color="#FFFFFF" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <rect x="14" y="14" width="172" height="172" rx="44" fill="#9A6E20"/>
+          <rect x="12" y="10" width="176" height="176" rx="44" fill="url(#g)"/>
+          <rect x="12" y="10" width="176" height="176" rx="44" fill="url(#guil)"/>
+          <rect x="12" y="10" width="176" height="176" rx="44" fill="url(#bevel)"/>
+          <rect x="12" y="10" width="176" height="176" rx="44" fill="none" stroke="#FBE4A6" stroke-opacity=".7" stroke-width="1.5"/>
+          <text x="100" y="100" text-anchor="middle" dominant-baseline="central"
+            font-family="Outfit, sans-serif" font-weight="800" font-size="118" fill="#2C2A6B">P</text>
+        </svg>
+      </div>
+      <div style="flex:1;min-width:240px">
+        <div class="row" style="margin-bottom:10px">
+          <span class="wordmark">Perki</span>
+        </div>
+        <p style="color:var(--muted);max-width:46ch">A geometric “P” in deep indigo, set on a softly bevelled gold token with a fine guilloché texture — a quiet nod to coins, membership cards and earned value, without feeling heavy or literal.</p>
+      </div>
+    </div>
+
+    <div class="lockups">
+      <div class="lockup">
+        <svg viewBox="0 0 64 64" width="56" height="56" aria-hidden="true"><defs><radialGradient id="g2" cx="38%" cy="32%" r="75%"><stop offset="0%" stop-color="#F2CE72"/><stop offset="55%" stop-color="#D9A441"/><stop offset="100%" stop-color="#B07E27"/></radialGradient></defs><rect x="4" y="4" width="56" height="56" rx="16" fill="url(#g2)"/><text x="32" y="33" text-anchor="middle" dominant-baseline="central" font-family="Outfit" font-weight="800" font-size="38" fill="#2C2A6B">P</text></svg>
+        <span class="wordmark" style="font-size:24px">Perki</span>
+        <span class="cap">Primary lockup</span>
+      </div>
+      <div class="lockup">
+        <svg viewBox="0 0 64 64" width="56" height="56" aria-hidden="true"><rect x="4" y="4" width="56" height="56" rx="16" fill="#2C2A6B"/><text x="32" y="33" text-anchor="middle" dominant-baseline="central" font-family="Outfit" font-weight="800" font-size="38" fill="#F3EDE1">P</text></svg>
+        <span class="cap">App icon · mono indigo</span>
+      </div>
+      <div class="lockup dark">
+        <span class="wordmark on-dark" style="font-size:26px">Perki</span>
+        <span class="cap">Reversed · on indigo</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- PALETTE -->
+  <section>
+    <h2>Palette</h2>
+    <div class="pal">
+      <div class="sw"><div class="chip" style="background:#F3EDE1"></div><div class="meta"><div class="nm">Eggshell</div><div class="hx">#F3EDE1</div><div class="role">Primary background</div></div></div>
+      <div class="sw"><div class="chip" style="background:#2C2A6B"></div><div class="meta"><div class="nm">Indigo</div><div class="hx">#2C2A6B</div><div class="role">The mark · headlines · text</div></div></div>
+      <div class="sw"><div class="chip" style="background:linear-gradient(135deg,#F2CE72,#D9A441 55%,#B07E27)"></div><div class="meta"><div class="nm">Gold</div><div class="hx">#D9A441</div><div class="role">Hero · value · the token</div></div></div>
+      <div class="sw"><div class="chip" style="background:#6D5BD0"></div><div class="meta"><div class="nm">Violet</div><div class="hx">#6D5BD0</div><div class="role">Digital accent · actions</div></div></div>
+      <div class="sw"><div class="chip" style="background:#1E1C44"></div><div class="meta"><div class="nm">Indigo Ink</div><div class="hx">#1E1C44</div><div class="role">Darkest text · reversed bg</div></div></div>
+    </div>
+  </section>
+
+  <!-- TYPE -->
+  <section>
+    <h2>Typography</h2>
+    <div class="type">
+      <div class="spec">Found money, made obvious.
+        <small>Outfit · 800 — geometric, distinctive, pairs with the geometric “P”. Display + headlines + wordmark.</small>
+      </div>
+      <div class="bodyspec" style="font-size:16px">
+        IBM Plex Sans carries the body and product UI — financial, trustworthy, and already in the build, so the brand and the live app stay continuous.
+        <small style="display:block;color:var(--muted);font-size:13px;margin-top:8px">IBM Plex Sans · 400 / 500 — body, labels, data.</small>
+      </div>
+    </div>
+  </section>
+
+  <!-- EVOLUTION -->
+  <section>
+    <h2>How it evolves into a full identity</h2>
+    <div class="notes">
+      <div class="note"><h3>Token system</h3><p>The gold token flexes: app icon, favicon, loading state, and a “claimed” stamp on perks. One shape, many jobs.</p></div>
+      <div class="note"><h3>Guilloché pattern</h3><p>The fine texture on the token becomes a brand pattern — deck dividers, card backs, empty states — depth without weight.</p></div>
+      <div class="note"><h3>Light theme retheme</h3><p>Product shifts from dark slate to eggshell + indigo text + gold accents. A real but worthwhile re-tokening (the design-system phase handles it).</p></div>
+      <div class="note"><h3>Logo variants</h3><p>Primary lockup, mono indigo, reversed on indigo, and gold-foil on dark for premium moments (the pitch deck cover).</p></div>
+    </div>
+  </section>
+
+  <div class="foot">Perki · brand concept v1 · 2026-06-03 — a starting point for discussion, not a final lockup. Colours and the “P” construction are exploratory.</div>
+</div>
+</body>
+</html>

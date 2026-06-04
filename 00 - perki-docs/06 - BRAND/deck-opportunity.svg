@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 680" width="1500" height="680" role="img" aria-label="The size of the opportunity and where Perki sits">
+<title>Perki opportunity</title>
+<rect x="0" y="0" width="1500" height="680" rx="18" fill="#F4F0E6"/>
+
+<!-- LEFT: scale of the market -->
+<text x="48" y="54" fill="#B07C1A" font-family="Outfit, sans-serif" font-size="17" font-weight="700" letter-spacing="3">THE SIZE OF IT</text>
+
+<rect x="44" y="74" width="500" height="158" rx="12" fill="#FCFAF4" stroke="#E4DDCB"/>
+<text x="68" y="146" fill="#2B2A6E" font-family="Outfit, sans-serif" font-size="50" font-weight="800">28m</text>
+<text x="68" y="178" fill="#23202A" font-family="Work Sans, sans-serif" font-size="16">UK households. Almost every one</text>
+<text x="68" y="202" fill="#23202A" font-family="Work Sans, sans-serif" font-size="16">pays for subscriptions.</text>
+
+<rect x="44" y="246" width="500" height="158" rx="12" fill="#FCFAF4" stroke="#E4DDCB"/>
+<text x="68" y="318" fill="#2B2A6E" font-family="Outfit, sans-serif" font-size="50" font-weight="800">£786</text>
+<text x="68" y="350" fill="#23202A" font-family="Work Sans, sans-serif" font-size="16">Average subscription spend,</text>
+<text x="68" y="374" fill="#23202A" font-family="Work Sans, sans-serif" font-size="16">per household, each year.</text>
+
+<rect x="44" y="418" width="500" height="186" rx="12" fill="#F7ECD4" stroke="#E0A93B"/>
+<text x="68" y="494" fill="#B07C1A" font-family="Outfit, sans-serif" font-size="52" font-weight="800">≈ £22bn</text>
+<text x="68" y="528" fill="#23202A" font-family="Work Sans, sans-serif" font-size="16">Paid for subscriptions every year.</text>
+<text x="68" y="552" fill="#23202A" font-family="Work Sans, sans-serif" font-size="16">Most of the perks inside go unclaimed.</text>
+<text x="68" y="582" fill="#2B2A6E" font-family="Work Sans, sans-serif" font-size="15" font-weight="700">That unclaimed value is the opening.</text>
+
+<!-- divider -->
+<line x1="588" y1="74" x2="588" y2="606" stroke="#E4DDCB" stroke-width="1"/>
+
+<!-- RIGHT: where Perki sits -->
+<text x="624" y="54" fill="#B07C1A" font-family="Outfit, sans-serif" font-size="17" font-weight="700" letter-spacing="3">WHERE PERKI SITS</text>
+
+<rect x="724" y="96" width="700" height="430" rx="10" fill="#FCFAF4" stroke="#E4DDCB"/>
+<line x1="1074" y1="96" x2="1074" y2="526" stroke="#E4DDCB" stroke-width="1"/>
+<line x1="724" y1="311" x2="1424" y2="311" stroke="#E4DDCB" stroke-width="1"/>
+<text x="1074" y="556" text-anchor="middle" fill="#6B6757" font-family="Work Sans, sans-serif" font-size="15">Single provider&#160;&#160;&#8594;&#160;&#160;Every provider</text>
+<text x="648" y="311" text-anchor="middle" fill="#6B6757" font-family="Work Sans, sans-serif" font-size="15" transform="rotate(-90 648 311)">Cancel / spend less&#160;&#160;&#8594;&#160;&#160;Use what you own</text>
+
+<circle cx="845" cy="200" r="8" fill="#6B6757"/>
+<text x="864" y="196" fill="#23202A" font-family="Work Sans, sans-serif" font-size="15" font-weight="600">Bank &amp; card perks</text>
+<text x="864" y="216" fill="#6B6757" font-family="Work Sans, sans-serif" font-size="13">Monzo · Revolut · Amex</text>
+
+<circle cx="1190" cy="430" r="8" fill="#6B6757"/>
+<text x="1209" y="426" fill="#23202A" font-family="Work Sans, sans-serif" font-size="15" font-weight="600">Cashback &amp; coupons</text>
+<text x="1209" y="446" fill="#6B6757" font-family="Work Sans, sans-serif" font-size="13">Honey · TopCashback</text>
+
+<circle cx="900" cy="445" r="8" fill="#6B6757"/>
+<text x="788" y="478" fill="#23202A" font-family="Work Sans, sans-serif" font-size="15" font-weight="600">Cancellation apps</text>
+<text x="788" y="498" fill="#6B6757" font-family="Work Sans, sans-serif" font-size="13">Emma · Rocket Money</text>
+
+<circle cx="1300" cy="180" r="22" fill="#2B2A6E"/>
+<text x="1300" y="188" text-anchor="middle" fill="#E0A93B" font-family="Outfit, sans-serif" font-size="20" font-weight="700">P</text>
+<text x="1300" y="228" text-anchor="middle" fill="#2B2A6E" font-family="Outfit, sans-serif" font-size="19" font-weight="700">Perki</text>
+<text x="1300" y="250" text-anchor="middle" fill="#B07C1A" font-family="Work Sans, sans-serif" font-size="13" font-weight="600">The empty corner</text>
+
+<text x="724" y="590" fill="#23202A" font-family="Work Sans, sans-serif" font-size="15">Everyone else clusters left or bottom. The valuable corner, every provider</text>
+<text x="724" y="612" fill="#23202A" font-family="Work Sans, sans-serif" font-size="15">and the value you already own, is open. Perki takes it.</text>
+</svg>

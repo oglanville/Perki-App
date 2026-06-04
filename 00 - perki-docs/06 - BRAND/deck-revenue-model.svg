@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 478" width="680" height="478" role="img" aria-label="How Perki earns">
+<title>How Perki earns</title>
+<defs>
+<marker id="ai" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#2B2A6E" stroke-width="1.5" stroke-linecap="round"/></marker>
+<marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#B07C1A" stroke-width="1.5" stroke-linecap="round"/></marker>
+</defs>
+<rect x="0" y="0" width="680" height="478" rx="14" fill="#F4F0E6"/>
+<text x="24" y="34" fill="#2B2A6E" font-family="Outfit, sans-serif" font-size="17" font-weight="700">How Perki earns</text>
+<text x="24" y="52" fill="#6B6757" font-family="Work Sans, sans-serif" font-size="12">Two ways in, three ways to earn.</text>
+<rect x="24" y="70" width="150" height="58" rx="10" fill="#FCFAF4" stroke="#E4DDCB"/>
+<text x="99" y="95" text-anchor="middle" fill="#23202A" font-family="Work Sans, sans-serif" font-size="13.5" font-weight="600">Perki member</text>
+<text x="99" y="113" text-anchor="middle" fill="#6B6757" font-family="Work Sans, sans-serif" font-size="11">signed in</text>
+<rect x="24" y="152" width="150" height="58" rx="10" fill="#FCFAF4" stroke="#E4DDCB"/>
+<text x="99" y="177" text-anchor="middle" fill="#23202A" font-family="Work Sans, sans-serif" font-size="13.5" font-weight="600">Non-member</text>
+<text x="99" y="195" text-anchor="middle" fill="#6B6757" font-family="Work Sans, sans-serif" font-size="11">just browsing</text>
+<text x="252" y="62" fill="#B07C1A" font-family="Outfit, sans-serif" font-size="11" font-weight="700" letter-spacing="2">PERKI</text>
+<rect x="250" y="70" width="170" height="58" rx="10" fill="#2B2A6E"/>
+<text x="335" y="95" text-anchor="middle" fill="#FFFFFF" font-family="Outfit, sans-serif" font-size="14" font-weight="600">Marketplace</text>
+<text x="335" y="113" text-anchor="middle" fill="#E0A93B" font-family="Work Sans, sans-serif" font-size="11">open to everyone</text>
+<rect x="250" y="152" width="170" height="58" rx="10" fill="#2B2A6E"/>
+<text x="335" y="177" text-anchor="middle" fill="#FFFFFF" font-family="Outfit, sans-serif" font-size="14" font-weight="600">Profile</text>
+<text x="335" y="195" text-anchor="middle" fill="#E0A93B" font-family="Work Sans, sans-serif" font-size="11">members only</text>
+<rect x="500" y="108" width="156" height="62" rx="10" fill="#FCFAF4" stroke="#E4DDCB"/>
+<text x="578" y="134" text-anchor="middle" fill="#23202A" font-family="Work Sans, sans-serif" font-size="13.5" font-weight="600">Provider app</text>
+<text x="578" y="152" text-anchor="middle" fill="#6B6757" font-family="Work Sans, sans-serif" font-size="11">Monzo · O2 · Sky</text>
+<line x1="176" y1="96" x2="246" y2="95" stroke="#2B2A6E" stroke-width="1.5" marker-end="url(#ai)"/>
+<line x1="176" y1="104" x2="246" y2="174" stroke="#2B2A6E" stroke-width="1.5" marker-end="url(#ai)"/>
+<line x1="176" y1="176" x2="246" y2="106" stroke="#2B2A6E" stroke-width="1.5" marker-end="url(#ai)"/>
+<line x1="422" y1="98" x2="496" y2="130" stroke="#B07C1A" stroke-width="1.5" marker-end="url(#ag)"/>
+<line x1="422" y1="180" x2="496" y2="150" stroke="#B07C1A" stroke-width="1.5" marker-end="url(#ag)"/>
+<text x="455" y="147" text-anchor="middle" fill="#B07C1A" font-family="Work Sans, sans-serif" font-size="10.5" font-weight="600">deep-link</text>
+<rect x="24" y="248" width="200" height="200" rx="11" fill="#F7ECD4" stroke="#E0A93B"/>
+<text x="40" y="276" fill="#B07C1A" font-family="Outfit, sans-serif" font-size="14" font-weight="700">1 · Click-through</text>
+<text x="40" y="300" fill="#23202A" font-family="Work Sans, sans-serif" font-size="12">Any user, member or not,</text>
+<text x="40" y="318" fill="#23202A" font-family="Work Sans, sans-serif" font-size="12">taps a perk and lands in</text>
+<text x="40" y="336" fill="#23202A" font-family="Work Sans, sans-serif" font-size="12">the provider's app.</text>
+<text x="40" y="362" fill="#2B2A6E" font-family="Work Sans, sans-serif" font-size="12" font-weight="600">Perki earns on every tap.</text>
+<rect x="240" y="248" width="200" height="200" rx="11" fill="#FCFAF4" stroke="#E4DDCB"/>
+<text x="256" y="276" fill="#2B2A6E" font-family="Outfit, sans-serif" font-size="13" font-weight="700">2 · Upgrades &amp; sign-ups</text>
+<text x="256" y="300" fill="#23202A" font-family="Work Sans, sans-serif" font-size="12">A member upgrades a tier,</text>
+<text x="256" y="318" fill="#23202A" font-family="Work Sans, sans-serif" font-size="12">or a non-member picks a</text>
+<text x="256" y="336" fill="#23202A" font-family="Work Sans, sans-serif" font-size="12">new membership.</text>
+<text x="256" y="362" fill="#2B2A6E" font-family="Work Sans, sans-serif" font-size="12" font-weight="600">The provider pays Perki.</text>
+<rect x="456" y="248" width="200" height="200" rx="11" fill="#FCFAF4" stroke="#E4DDCB"/>
+<text x="472" y="276" fill="#2B2A6E" font-family="Outfit, sans-serif" font-size="14" font-weight="700">3 · Placement</text>
+<text x="472" y="300" fill="#23202A" font-family="Work Sans, sans-serif" font-size="12">Providers compete to rank:</text>
+<text x="472" y="324" fill="#23202A" font-family="Work Sans, sans-serif" font-size="12">• Natural ranking by fit</text>
+<text x="472" y="346" fill="#23202A" font-family="Work Sans, sans-serif" font-size="12">• Boosted ranking on search</text>
+<text x="472" y="368" fill="#23202A" font-family="Work Sans, sans-serif" font-size="12">• Pay-to-rank slots</text>
+<text x="472" y="394" fill="#2B2A6E" font-family="Work Sans, sans-serif" font-size="12" font-weight="600">Providers pay for visibility.</text>
+</svg>

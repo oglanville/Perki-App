@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Perki — every perk you're already paying for</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script>
+tailwind.config={theme:{extend:{
+  colors:{gold:'#F59E0B',goldlight:'#FBBF24',purple:'#8B5CF6',ink:'#0F172A',ink2:'#1A2433',snow:'#F8FAFC',muted:'#94A3B8'},
+  fontFamily:{sans:['"IBM Plex Sans"','system-ui','sans-serif']},
+  borderRadius:{btn:'8px',card:'12px',modal:'16px'},
+  boxShadow:{sm:'0 1px 2px rgba(0,0,0,.05)',md:'0 4px 6px rgba(0,0,0,.1)',lg:'0 10px 15px rgba(0,0,0,.1)',xl:'0 20px 25px rgba(0,0,0,.15)'},
+  transitionTimingFunction:{fluid:'cubic-bezier(.4,0,.2,1)'},
+}}}
+</script>
+<style>
+  html{scroll-behavior:smooth}
+  body{font-family:'IBM Plex Sans',system-ui,sans-serif;background:#0F172A;color:#F8FAFC;overscroll-behavior:contain}
+  .glass{background:rgba(248,250,252,0.06);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(248,250,252,0.12)}
+  .orb{background:radial-gradient(circle at 30% 30%,#8B5CF6,#F59E0B 70%,transparent 75%);filter:blur(6px);animation:float 6s var(--e,cubic-bezier(.4,0,.2,1)) infinite alternate}
+  @keyframes float{from{transform:translateY(0) scale(1)}to{transform:translateY(-14px) scale(1.05)}}
+  .swipe{scroll-snap-type:x mandatory;-ms-overflow-style:none;scrollbar-width:none}
+  .swipe::-webkit-scrollbar{display:none}
+  .swipe>*{scroll-snap-align:start}
+  .count-up{font-variant-numeric:tabular-nums}
+  @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body class="antialiased">
+
+<!-- FLOATING NAV -->
+<header class="fixed top-3 inset-x-3 z-20 max-w-6xl mx-auto">
+  <nav class="glass rounded-btn px-4 py-2.5 flex items-center justify-between">
+    <a href="#" class="flex items-center gap-2 cursor-pointer">
+      <span class="grid place-items-center w-8 h-8 rounded-btn bg-gold text-ink"><i data-lucide="sparkles" class="w-5 h-5"></i></span>
+      <span class="font-bold text-lg tracking-tight">Perki</span>
+    </a>
+    <a href="#signup" class="bg-purple text-white text-sm font-semibold px-4 py-2 rounded-btn min-h-[40px] grid place-items-center cursor-pointer transition-all duration-200 ease-fluid hover:opacity-90 hover:-translate-y-px focus:outline-none focus:ring-[3px] focus:ring-purple/50">Get Perki</a>
+  </nav>
+</header>
+
+<main class="max-w-6xl mx-auto px-4 pt-24">
+
+  <!-- HERO -->
+  <section class="relative text-center lg:text-left lg:grid lg:grid-cols-2 lg:gap-12 lg:items-center pt-6 pb-12">
+    <div class="lg:py-10">
+      <span class="inline-flex items-center gap-1.5 glass rounded-full px-3 py-1 text-sm font-medium text-goldlight mb-6">
+        <i data-lucide="badge-check" class="w-4 h-4"></i> Cross-provider perk inventory
+      </span>
+      <h1 class="font-bold tracking-tight text-[40px] leading-[44px] md:text-[56px] md:leading-[60px]">
+        £200+ a month in perks.<br><span class="text-gold">You're using almost none.</span>
+      </h1>
+      <p class="mt-5 text-lg leading-7 text-snow/90 max-w-md mx-auto lg:mx-0">
+        Perki finds every benefit hidden in your subscriptions and memberships — and puts them in one place.
+      </p>
+      <div class="mt-8 flex flex-col items-center lg:items-start gap-2">
+        <a href="#signup" class="w-full sm:w-auto bg-purple text-white font-semibold px-8 py-3.5 rounded-btn min-h-[52px] inline-flex items-center justify-center gap-2 cursor-pointer transition-all duration-200 ease-fluid hover:opacity-90 hover:-translate-y-px focus:outline-none focus:ring-[3px] focus:ring-purple/50">
+          See my perks <i data-lucide="arrow-right" class="w-5 h-5"></i>
+        </a>
+        <span class="text-sm text-muted">No card · 2-minute setup</span>
+      </div>
+    </div>
+    <div class="hidden lg:block relative h-80">
+      <div class="orb absolute inset-0 m-auto w-56 h-56 rounded-full opacity-80"></div>
+    </div>
+  </section>
+
+  <!-- TRUST LOGOS -->
+  <section class="py-8 border-y border-snow/10">
+    <p class="text-center text-sm font-medium text-muted tracking-wide uppercase mb-5">Trusted across your wallet</p>
+    <div class="flex items-center justify-center gap-7 flex-wrap text-snow/70">
+      <span class="flex items-center gap-2 font-semibold"><i data-lucide="landmark" class="w-5 h-5"></i>Monzo</span>
+      <span class="flex items-center gap-2 font-semibold"><i data-lucide="credit-card" class="w-5 h-5"></i>Revolut</span>
+      <span class="flex items-center gap-2 font-semibold"><i data-lucide="tv" class="w-5 h-5"></i>Sky</span>
+      <span class="flex items-center gap-2 font-semibold"><i data-lucide="zap" class="w-5 h-5"></i>OVO</span>
+    </div>
+  </section>
+
+  <!-- BENEFITS (3 max) -->
+  <section class="py-12 grid gap-4 md:grid-cols-3">
+    <div class="glass rounded-card p-6">
+      <span class="grid place-items-center w-11 h-11 rounded-btn bg-gold/15 text-gold mb-4"><i data-lucide="layout-grid" class="w-6 h-6"></i></span>
+      <h3 class="text-xl font-semibold mb-1.5">Every perk, one place</h3>
+      <p class="text-snow/80 leading-7">All your subscriptions and memberships, surfaced in a single clean view.</p>
+    </div>
+    <div class="glass rounded-card p-6">
+      <span class="grid place-items-center w-11 h-11 rounded-btn bg-gold/15 text-gold mb-4"><i data-lucide="layers" class="w-6 h-6"></i></span>
+      <h3 class="text-xl font-semibold mb-1.5">Tier-aware</h3>
+      <p class="text-snow/80 leading-7">We only show what's actually yours — matched to your exact plan and tier.</p>
+    </div>
+    <div class="glass rounded-card p-6">
+      <span class="grid place-items-center w-11 h-11 rounded-btn bg-gold/15 text-gold mb-4"><i data-lucide="bell-ring" class="w-6 h-6"></i></span>
+      <h3 class="text-xl font-semibold mb-1.5">Never miss one</h3>
+      <p class="text-snow/80 leading-7">Reminders before perks reset or expire, so value never slips away.</p>
+    </div>
+  </section>
+
+  <!-- LIVE PREVIEW -->
+  <section class="py-8">
+    <div class="flex items-end justify-between mb-5">
+      <h2 class="text-2xl font-semibold">Real perks, right now</h2>
+      <span class="text-sm text-muted hidden sm:flex items-center gap-1">Swipe <i data-lucide="move-horizontal" class="w-4 h-4"></i></span>
+    </div>
+    <div class="swipe flex gap-4 overflow-x-auto -mx-4 px-4 pb-2 md:grid md:grid-cols-3 md:overflow-visible md:mx-0 md:px-0">
+      <!-- card -->
+      <article class="glass rounded-card p-6 min-w-[80%] sm:min-w-[300px] md:min-w-0 cursor-pointer shadow-md transition-[box-shadow,transform] duration-200 ease-fluid hover:shadow-lg hover:-translate-y-0.5 focus-within:ring-[3px] focus-within:ring-purple/40">
+        <div class="flex items-center justify-between mb-4">
+          <span class="flex items-center gap-2 font-semibold"><i data-lucide="landmark" class="w-5 h-5 text-gold"></i>Monzo</span>
+          <span class="rounded-full bg-goldlight/15 text-gold text-sm font-medium px-2.5 py-0.5">Perks</span>
+        </div>
+        <h3 class="text-xl font-semibold mb-1">Weekly Greggs treat</h3>
+        <p class="text-snow/75 mb-4">A free Greggs item, every single week.</p>
+        <div class="flex items-center justify-between">
+          <span class="inline-flex items-center gap-1.5 text-sm text-muted"><i data-lucide="rotate-cw" class="w-4 h-4"></i>Resets weekly</span>
+          <i data-lucide="chevron-right" class="w-5 h-5 text-muted"></i>
+        </div>
+      </article>
+      <!-- card -->
+      <article class="glass rounded-card p-6 min-w-[80%] sm:min-w-[300px] md:min-w-0 cursor-pointer shadow-md transition-[box-shadow,transform] duration-200 ease-fluid hover:shadow-lg hover:-translate-y-0.5 focus-within:ring-[3px] focus-within:ring-purple/40">
+        <div class="flex items-center justify-between mb-4">
+          <span class="flex items-center gap-2 font-semibold"><i data-lucide="credit-card" class="w-5 h-5 text-gold"></i>Revolut</span>
+          <span class="rounded-full bg-goldlight/15 text-gold text-sm font-medium px-2.5 py-0.5">Metal</span>
+        </div>
+        <h3 class="text-xl font-semibold mb-1">Airport lounge access</h3>
+        <p class="text-snow/75 mb-4">Skip the terminal chaos with included lounge passes.</p>
+        <div class="flex items-center justify-between">
+          <span class="inline-flex items-center gap-1.5 text-sm text-muted"><i data-lucide="infinity" class="w-4 h-4"></i>Ongoing</span>
+          <i data-lucide="chevron-right" class="w-5 h-5 text-muted"></i>
+        </div>
+      </article>
+      <!-- card -->
+      <article class="glass rounded-card p-6 min-w-[80%] sm:min-w-[300px] md:min-w-0 cursor-pointer shadow-md transition-[box-shadow,transform] duration-200 ease-fluid hover:shadow-lg hover:-translate-y-0.5 focus-within:ring-[3px] focus-within:ring-purple/40">
+        <div class="flex items-center justify-between mb-4">
+          <span class="flex items-center gap-2 font-semibold"><i data-lucide="zap" class="w-5 h-5 text-gold"></i>OVO</span>
+          <span class="rounded-full bg-goldlight/15 text-gold text-sm font-medium px-2.5 py-0.5">Beyond</span>
+        </div>
+        <h3 class="text-xl font-semibold mb-1">VIP ticket access</h3>
+        <p class="text-snow/75 mb-4">Exclusive tickets at The O2 and partner venues.</p>
+        <div class="flex items-center justify-between">
+          <span class="inline-flex items-center gap-1.5 text-sm text-muted"><i data-lucide="ticket" class="w-4 h-4"></i>Subject to availability</span>
+          <i data-lucide="chevron-right" class="w-5 h-5 text-muted"></i>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- VALUE COUNTER -->
+  <section class="py-12 text-center">
+    <p class="text-sm uppercase tracking-wide text-muted mb-2">Unclaimed value waiting for the average user</p>
+    <div class="count-up text-5xl md:text-6xl font-bold text-gold" id="counter">£0</div>
+    <p class="text-snow/70 mt-2">a year, hiding in subscriptions they already pay for.</p>
+  </section>
+
+  <!-- TESTIMONIALS (social proof before final CTA) -->
+  <section class="py-12">
+    <h2 class="text-2xl font-semibold text-center mb-8">People keep finding money they forgot they had</h2>
+    <div class="grid gap-4 md:grid-cols-3">
+      <figure class="glass rounded-card p-6">
+        <i data-lucide="quote" class="w-6 h-6 text-gold mb-3"></i>
+        <blockquote class="text-snow/90 leading-7">"Found £140 of Sky perks I completely forgot I had."</blockquote>
+        <figcaption class="mt-4 flex items-center gap-3">
+          <span class="w-9 h-9 rounded-full bg-purple/30 grid place-items-center font-semibold">S</span>
+          <span><span class="block font-semibold text-sm">Sam</span><span class="block text-xs text-muted">Sky + Monzo user</span></span>
+        </figcaption>
+      </figure>
+      <figure class="glass rounded-card p-6">
+        <i data-lucide="quote" class="w-6 h-6 text-gold mb-3"></i>
+        <blockquote class="text-snow/90 leading-7">"I had no idea my Revolut plan included lounge access. Used it twice already."</blockquote>
+        <figcaption class="mt-4 flex items-center gap-3">
+          <span class="w-9 h-9 rounded-full bg-purple/30 grid place-items-center font-semibold">A</span>
+          <span><span class="block font-semibold text-sm">Aisha</span><span class="block text-xs text-muted">Revolut Metal</span></span>
+        </figcaption>
+      </figure>
+      <figure class="glass rounded-card p-6">
+        <i data-lucide="quote" class="w-6 h-6 text-gold mb-3"></i>
+        <blockquote class="text-snow/90 leading-7">"It paid for itself in the first week. The Greggs reminder alone."</blockquote>
+        <figcaption class="mt-4 flex items-center gap-3">
+          <span class="w-9 h-9 rounded-full bg-purple/30 grid place-items-center font-semibold">T</span>
+          <span><span class="block font-semibold text-sm">Tom</span><span class="block text-xs text-muted">Monzo Perks</span></span>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- FINAL CTA -->
+  <section id="signup" class="py-14 text-center">
+    <h2 class="text-3xl md:text-4xl font-bold tracking-tight">Stop paying for perks<br>you never use.</h2>
+    <form class="mt-8 max-w-sm mx-auto flex flex-col gap-3" onsubmit="event.preventDefault();this.querySelector('.ok').classList.remove('hidden')">
+      <label for="email" class="sr-only">Email address</label>
+      <input id="email" type="email" required placeholder="you@email.com" class="px-4 py-3.5 text-base rounded-btn bg-ink2 border border-snow/15 placeholder-muted focus:border-gold focus:ring-[3px] focus:ring-gold/20 focus:outline-none min-h-[52px]">
+      <button type="submit" class="bg-purple text-white font-semibold px-8 py-3.5 rounded-btn min-h-[52px] cursor-pointer transition-all duration-200 ease-fluid hover:opacity-90 hover:-translate-y-px focus:outline-none focus:ring-[3px] focus:ring-purple/50">Get Perki free</button>
+      <p class="ok hidden text-goldlight text-sm flex items-center justify-center gap-1.5"><i data-lucide="check-circle" class="w-4 h-4"></i>You're on the list — check your inbox.</p>
+    </form>
+  </section>
+
+</main>
+
+<!-- FOOTER -->
+<footer class="border-t border-snow/10 mt-8">
+  <div class="max-w-6xl mx-auto px-4 py-10 grid gap-8 sm:grid-cols-4">
+    <div class="sm:col-span-1">
+      <span class="flex items-center gap-2 mb-3"><span class="grid place-items-center w-7 h-7 rounded-btn bg-gold text-ink"><i data-lucide="sparkles" class="w-4 h-4"></i></span><span class="font-bold">Perki</span></span>
+      <p class="text-sm text-muted leading-6">Every perk you're already paying for, in one place.</p>
+    </div>
+    <div><h4 class="font-semibold text-sm mb-3">Product</h4><ul class="space-y-2 text-sm text-muted"><li><a href="#" class="cursor-pointer hover:text-snow">How it works</a></li><li><a href="#" class="cursor-pointer hover:text-snow">Perks</a></li><li><a href="#" class="cursor-pointer hover:text-snow">Pricing</a></li></ul></div>
+    <div><h4 class="font-semibold text-sm mb-3">Company</h4><ul class="space-y-2 text-sm text-muted"><li><a href="#" class="cursor-pointer hover:text-snow">About</a></li><li><a href="#" class="cursor-pointer hover:text-snow">Security</a></li></ul></div>
+    <div><h4 class="font-semibold text-sm mb-3">Trust</h4><ul class="space-y-2 text-sm text-muted"><li class="flex items-center gap-1.5"><i data-lucide="lock" class="w-4 h-4"></i>Read-only access</li><li class="flex items-center gap-1.5"><i data-lucide="map-pin" class="w-4 h-4"></i>Made in the UK</li></ul></div>
+  </div>
+  <p class="text-center text-xs text-muted pb-24 sm:pb-8">© 2026 Perki. We never move your money.</p>
+</footer>
+
+<!-- STICKY MOBILE CTA -->
+<div id="stickyCta" class="fixed inset-x-3 bottom-3 z-30 sm:hidden translate-y-24 transition-transform duration-300 ease-fluid">
+  <a href="#signup" class="glass rounded-btn flex items-center justify-center gap-2 bg-purple/90 text-white font-semibold py-3.5 min-h-[52px] cursor-pointer">See my perks <i data-lucide="arrow-right" class="w-5 h-5"></i></a>
+</div>
+
+<script>
+  lucide.createIcons();
+  // sticky CTA reveal after hero
+  const sticky=document.getElementById('stickyCta');
+  addEventListener('scroll',()=>{sticky.style.transform = scrollY>420 ? 'translateY(0)' : 'translateY(6rem)';},{passive:true});
+  // value count-up (reduced-motion safe)
+  const el=document.getElementById('counter'), target=2400;
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduce){el.textContent='£'+target.toLocaleString();}
+  else{
+    const io=new IntersectionObserver((e)=>{if(e[0].isIntersecting){let n=0;const t=setInterval(()=>{n+=Math.ceil(target/40);if(n>=target){n=target;clearInterval(t);}el.textContent='£'+n.toLocaleString();},20);io.disconnect();}});
+    io.observe(el);
+  }
+</script>
+</body>
+</html>
