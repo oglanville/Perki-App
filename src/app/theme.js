@@ -106,3 +106,5 @@ export function getPerkBrand(perk){
 
 
 export const PROVIDER_SLUGS={"Monzo":"monzo","Revolut":"revolut","OVO Energy":"ovoenergy","OVO":"ovoenergy","American Express":"americanexpress","Amex":"americanexpress","Sky TV":"sky","Sky":"sky","O2":"o2","Lidl":"lidl"};
+
+export const PROVIDER_LOGOS={"OVO Energy":"https://logo.clearbit.com/ovoenergy.com","OVO":"https://logo.clearbit.com/ovoenergy.com"};

@@ -31,6 +31,7 @@
   .card li::before{content:"›";position:absolute;left:2px;color:var(--muted)}
   .tag{display:inline-block;font-size:10px;font-weight:600;border-radius:5px;padding:2px 7px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
   .tag.prio{background:rgba(255,111,97,.18);color:var(--today)}
+  .tag.next{background:rgba(245,166,35,.18);color:var(--week)}
   .chk{appearance:none;-webkit-appearance:none;min-width:20px;height:20px;margin-top:2px;border:2px solid var(--muted);border-radius:6px;cursor:pointer;position:relative;transition:.15s;background:transparent}
   .chk:hover{border-color:var(--done)}.chk:checked{background:var(--done);border-color:var(--done)}
   .chk:checked::after{content:"✓";position:absolute;color:#0f1622;font-size:14px;font-weight:800;left:3px;top:-1px}
@@ -63,13 +64,13 @@
 <body>
   <header>
     <h1>🚀 Perki — Rolling To-Do</h1>
-    <span class="north">North star: website foundation is built — now make it unmistakably <em>Perki</em>, then pitch it.</span>
+    <span class="north">North star: the app, website and email now share one brand — ship them, test with real people, then build the marketplace.</span>
   </header>
   <div class="board">
 
     <section class="col today" data-horizon="Today">
       <h2>☀️ Today <span class="count"></span></h2>
-      <div class="sub">Brand and deck are done. Tie off the loose ends.</div>
+      <div class="sub">App + email are redesigned. Get them live and tidy the rest.</div>
       <div class="card" data-id="a1"><input type="checkbox" class="chk"><div class="body">
         <div class="t">🛒 Ingest O2 + Lidl</div>
         <span class="tag prio">Top priority</span>
@@ -85,38 +86,25 @@
         <div class="t">🔁 Sort out renewal logic</div>
         <div class="syn">Make perk reset and renewal dates compute correctly across the app.</div>
       </div></div>
-      <div class="card" data-id="e2"><input type="checkbox" class="chk"><div class="body">
-        <div class="t">🗂️ Collapse Active/Inactive by default</div>
-        <div class="syn">On the Profile tab, both sections start collapsed on first load.</div>
-      </div></div>
     </section>
 
     <section class="col week" data-horizon="This Week">
       <h2>📅 This Week <span class="count"></span></h2>
       <div class="sub">Strengthen the MVP and get it in front of people.</div>
-      <div class="card" data-id="b1"><input type="checkbox" class="chk"><div class="body">
-        <div class="t">🎨 Re-skin the legacy /app</div>
-        <div class="syn">The old blue dashboard still needs the eggshell brand.</div>
-        <ul><li>Port the legacy app to the design-system tokens</li><li>Retire or fold it into the new pages</li></ul>
+      <div class="card" data-id="i1"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">📧 Finish email automation</div>
+        <div class="syn">Wire the 7am send end to end (template + function are done).</div>
+        <ul><li>Run the cron migration 003 (06:00 + 07:00 UTC jobs)</li><li>Verify the perki.app sending domain in Resend (SPF/DKIM/DMARC)</li><li>Confirm one send fires at 7am London</li></ul>
       </div></div>
-      <div class="card" data-id="c1"><input type="checkbox" class="chk"><div class="body">
-        <div class="t">📧 Build the email blast</div>
-        <div class="syn">The "never miss" channel — weekly or daily perk reminders.</div>
-        <ul><li>Templated digest of active and resetting perks</li><li>Deep-link straight into the provider</li></ul>
+      <div class="card" data-id="f2"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">🖼️ Add screenshots to the deck</div>
+        <div class="syn">Drop real website and app examples into the pitch deck (now that both are on-brand).</div>
       </div></div>
       <div class="card" data-id="f1"><input type="checkbox" class="chk"><div class="body">
         <div class="t">🤝 Seek founder advice (weekly)</div>
         <span class="tag prio" style="background:rgba(47,182,168,.18);color:#2fb6a8">Weekly</span>
         <div class="syn">Message each contact once a week for input.</div>
         <ul><li>Tori Prew (HUUR)</li><li>Tom Standen (Sylvi)</li><li>George Gazzard (Solskin)</li></ul>
-      </div></div>
-      <div class="card" data-id="f2"><input type="checkbox" class="chk"><div class="body">
-        <div class="t">🖼️ Add screenshots to the deck</div>
-        <div class="syn">Drop real website and app examples into the pitch deck.</div>
-      </div></div>
-      <div class="card" data-id="f3"><input type="checkbox" class="chk"><div class="body">
-        <div class="t">🟢 Fix the OVO logo</div>
-        <div class="syn">The OVO brand mark is wrong; correct it in the catalogue/app.</div>
       </div></div>
     </section>
 
@@ -165,14 +153,17 @@
 
   <!-- DONE TODAY — daily highlight -->
   <section class="donebox">
-    <h2>✅ Done today — 4 Jun 2026 · brand + deck</h2>
+    <h2>✅ Done today — 4 Jun 2026 · app redesign + email</h2>
     <ul>
-      <li>Brand identity locked — essence, three adjectives, one-liner</li>
-      <li>Logo locked — flat indigo coin + gold P, with vector assets</li>
-      <li>Design system v2 — eggshell/indigo/gold, Outfit + Work Sans</li>
-      <li>Brand voice guidelines written and signed off</li>
-      <li>App re-skinned to the new light/eggshell brand (build green)</li>
-      <li>Investor pitch deck built and refined to v3, with positioning + revenue diagrams</li>
+      <li>App fully redesigned to the brand (Phases 1–5): re-skin, single slide-out drawer, real provider logos + brand rows, lowest-tier pricing</li>
+      <li>Monolithic LegacyApp split into a clean src/app/ module tree (AppShell, tabs, hooks); legacy file retired</li>
+      <li>Homepage "How it works" button added above "See my perks"</li>
+      <li>Profile mobile fixed: dropdowns collapsed by default, no zoom, old bottom nav removed, "App" added to the menu</li>
+      <li>Daily email redesigned on the brand: responsive 7-section template + full brief</li>
+      <li>daily-digest edge function ported to the new email, with a 7am Europe/London guard + cron migration (003); JWT/header bugs fixed</li>
+      <li>Daily email deployed + previewed (new design confirmed in inbox)</li>
+      <li>App redesign pushed live to Vercel</li>
+      <li>OVO Energy badge fixed — now loads the real OVO logo (was falling back to "OV" initials)</li>
     </ul>
   </section>
 
@@ -182,8 +173,23 @@
     <ul class="tl">
       <li>
         <div class="date">4 Jun 2026</div>
+        <div class="ttl">Daily email redesign + automation</div>
+        <div class="desc">Rebuilt the 7am digest on the new brand: a responsive, table-based 7-section email (preamble, dashboard, memberships, what-to-use-today, worth-adding, where-to-use-next, all-by-category) with a working sample template and a full brief. Ported the daily-digest edge function to emit it, de-AI'd the subject lines, and added a 7am Europe/London guard (two UTC crons + DST-proof check). Wrote the cron schedule as migration 003 (Vault-backed secret). Debugged the verify_jwt gateway collision and aligned the Authorization: Bearer header.</div>
+      </li>
+      <li>
+        <div class="date">4 Jun 2026</div>
+        <div class="ttl">Profile mobile fixes + homepage button</div>
+        <div class="desc">Fixed the website Profile page on mobile: Active/Inactive dropdowns now collapsed by default, added an overflow guard so nothing forces zoom, removed the old app bottom-tab bar, gave Profile the top menu, and added an "App" item to the main menu that opens the app intentionally. Added a "How it works" button above "See my perks" on the homepage.</div>
+      </li>
+      <li>
+        <div class="date">4 Jun 2026</div>
+        <div class="ttl">App redesign (Phases 1–5)</div>
+        <div class="desc">Took the mobile app onto the new brand and structure: re-skinned the shell + four-tab bottom nav to brand tokens, routed every perk tap through one branded slide-out sheet (retired the old tooltip/modal), rebuilt the rows with real provider logos to match the website, fixed the data layer (derive tier prices from perks.price, enforce lowest-tier, removed the dead tiers query), and split the 968-line LegacyApp into a modular src/app/ tree. Validated by bundling the whole graph.</div>
+      </li>
+      <li>
+        <div class="date">4 Jun 2026</div>
         <div class="ttl">Pitch deck v3 (precise edits)</div>
-        <div class="desc">Product slide now names features, perks, discounts and competitions in one place. Marketplace copy trimmed and framed as a public library anyone can search. Re-inserted the positioning 2x2 (single→every provider, cancel→use-what-you-own) right after Product. Fixed the revenue diagram: deep-link label moved between both gold arrows, Box 2 formatting cleaned.</div>
+        <div class="desc">Product slide now names features, perks, discounts and competitions in one place, with a "not an AI bot" statement. Added the scale-and-position Opportunity slide. Marketplace copy trimmed; positioning 2x2 and revenue diagram refined.</div>
       </li>
       <li>
         <div class="date">4 Jun 2026</div>
@@ -193,12 +199,12 @@
       <li>
         <div class="date">4 Jun 2026</div>
         <div class="ttl">Investor pitch deck (v1)</div>
-        <div class="desc">Built a 14-slide investor deck on the new brand (eggshell/indigo/gold, coin motif, value-first voice): problem, why-now with real UK subscription stats, the insight, product, how it works, the two surfaces, competition, market, business model, what's built, roadmap, team, and a vision close (no funding ask). Saved to 05 - OUTPUTS/Perki-Pitch-Deck.pptx.</div>
+        <div class="desc">Built a 14-slide investor deck on the new brand (eggshell/indigo/gold, coin motif, value-first voice): problem, why-now with real UK subscription stats, the insight, product, how it works, the two surfaces, competition, market, business model, what's built, roadmap, team, and a vision close. Saved to 05 - OUTPUTS/Perki-Pitch-Deck.pptx.</div>
       </li>
       <li>
         <div class="date">3 Jun 2026</div>
         <div class="ttl">App re-skin → eggshell brand</div>
-        <div class="desc">Re-skinned the website + app from the dark slate theme to the light/eggshell design system: remapped Tailwind tokens, switched to Outfit + Work Sans, converted the glass surface to a light card, fixed gold-on-light contrast (deep gold for small text, indigo for secondary actions), and dropped the real coin logo into the nav. Build verified. (Legacy /app keeps its own theme — separate job.)</div>
+        <div class="desc">Re-skinned the website + app from the dark slate theme to the light/eggshell design system: remapped Tailwind tokens, switched to Outfit + Work Sans, converted the glass surface to a light card, fixed gold-on-light contrast, and dropped the real coin logo into the nav. Build verified.</div>
       </li>
       <li>
         <div class="date">3 Jun 2026</div>
@@ -218,7 +224,7 @@
       <li>
         <div class="date">3 Jun 2026</div>
         <div class="ttl">Website build complete</div>
-        <div class="desc">Shipped the full Perki website in a day: UX overhaul on the premium fintech design system, new site structure (router, marketing pages, app shell, nav), Marketplace + Profile tab logic (tier filtering, dedupe, active/inactive), slide-out panels with live Supabase write-backs, brand/navigation/layout behaviours, and fixes to the Perks/Marketplace + Profile flows (live pricing, monthly cost, mark-as-used).</div>
+        <div class="desc">Shipped the full Perki website in a day: UX overhaul on the premium fintech design system, new site structure, Marketplace + Profile tab logic, slide-out panels with live Supabase write-backs, and fixes to the Perks/Marketplace + Profile flows.</div>
       </li>
       <li>
         <div class="date">2 Jun 2026</div>
@@ -229,13 +235,13 @@
   </section>
 
   <footer>
-    <p>🤝 <b>Need from you:</b> O2 + Lidl source data · install Outfit + Work Sans fonts · friends to test the app + email blast.</p>
+    <p>🤝 <b>Need from you:</b> O2 + Lidl source data · install Outfit + Work Sans fonts · verify the perki.app sending domain in Resend · friends to test the app + email.</p>
     <p style="margin-top:6px">🧭 Guardrails: manual ingestion only, no scraping · accuracy over speed · brand gates deck work · auto-send is OFF (manual pulls only).</p>
-    <p style="margin-top:6px;opacity:.6">Last updated 2026-06-04 (rev 2) · mirrors daily-todo.md · tick cards to dim them (saved in your browser)</p>
+    <p style="margin-top:6px;opacity:.6">Last updated 2026-06-04 (rev 5) · mirrors daily-todo.md · tick cards to dim them (saved in your browser)</p>
   </footer>
 
 <script>
-  const KEY='perki-todo-done-v4';
+  const KEY='perki-todo-done-v5';
   const saved=JSON.parse(localStorage.getItem(KEY)||'{}');
   function colCounts(){document.querySelectorAll('.col').forEach(col=>{const cards=[...col.querySelectorAll('.card')];col.querySelector('.count').textContent=cards.filter(c=>!c.classList.contains('done')).length;});}
   document.querySelectorAll('.card').forEach(card=>{const id=card.dataset.id;const chk=card.querySelector('.chk');
@@ -245,4 +251,3 @@
 </script>
 </body>
 </html>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           

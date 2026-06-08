@@ -95,7 +95,7 @@ const PROVIDER_META: Record<string, { color: string; initials: string }> = {
 };
 
 function providerColor(provider: string): string {
-  return PROVIDER_META[provider]?.color ?? "#0B3D91";
+  return PROVIDER_META[provider]?.color ?? "#2B2A6E";
 }
 
 function providerInitials(provider: string): string {
@@ -396,38 +396,22 @@ function featureTypeLabel(f: string): string {
 
 function perkRow(p: EnrichedPerk, showDate = false): string {
   const dim = p.used || p.dismissed;
-  const op = dim ? "0.4" : "1";
+  const op = dim ? "0.5" : "1";
   const strike = p.used ? "line-through" : "none";
-  const tick = p.used ? "✅" : "⬜";
-  const cat = categoryIcon(p.category);
-  const letter = providerLetter(p.provider);
-  const color = providerColor(p.provider);
-  const tag = `<span style="display:inline-block;font-size:7px;font-weight:800;color:#64748B;background:#F1F5F9;border-radius:3px;padding:1px 3px;margin-left:3px;vertical-align:middle;text-transform:uppercase;line-height:1;">${featureTypeLabel(p.feature)}</span>`;
+  const isFeature = p.feature === "feature";
+  const chip = `<span style="font-family:'Work Sans','Helvetica Neue',Arial,sans-serif;font-size:10px;font-weight:600;color:${isFeature ? "#2B2A6E" : "#6B6757"};border:1px solid ${isFeature ? "#E0A93B" : "#E4DDCB"};background:${isFeature ? "#F7ECD4" : "transparent"};border-radius:20px;padding:2px 8px;margin-left:8px;white-space:nowrap;">${escHtml(featureTypeLabel(p.feature))}</span>`;
   const dateTd = showDate && p.next_reset_date
-    ? `<td width="40" align="right" style="font-size:9px;color:#94A3B8;white-space:nowrap;vertical-align:middle;">${escHtml(new Date(p.next_reset_date).toLocaleDateString("en-GB", { day: "numeric", month: "short" }))}</td>`
+    ? `<td align="right" style="font-family:'Work Sans','Helvetica Neue',Arial,sans-serif;font-size:11px;color:#6B6757;white-space:nowrap;vertical-align:middle;">${escHtml(new Date(p.next_reset_date).toLocaleDateString("en-GB", { day: "numeric", month: "short" }))}</td>`
     : "";
-
-  return `<tr>
-  <td style="padding:2px 8px;opacity:${op};">
+  return `<tr><td style="padding:6px 16px;opacity:${op};">
     <table cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
-      <td width="26" style="font-size:12px;vertical-align:middle;white-space:nowrap;">${tick}${cat}</td>
-      <td style="font-size:11px;line-height:1.3;vertical-align:middle;overflow:hidden;">
-        <span style="color:#0F172A;font-weight:500;text-decoration:${strike};white-space:nowrap;">${escHtml(trunc(p.title))}</span>${tag}
-      </td>
+      <td style="vertical-align:middle;font-family:'Work Sans','Helvetica Neue',Arial,sans-serif;font-size:13px;color:#23202A;text-decoration:${strike};">${escHtml(trunc(p.title, 34))}${chip}</td>
       ${dateTd}
-      <td width="20" align="right" style="vertical-align:middle;">
-        <div style="width:16px;height:16px;border-radius:4px;background:${color};text-align:center;line-height:16px;">
-          <span style="color:#fff;font-size:8px;font-weight:900;">${escHtml(letter)}</span>
-        </div>
-      </td>
     </tr></table>
-  </td>
-</tr>`;
+  </td></tr>`;
 }
 
-/* ═══════════════════════════════════════════════════════
-   HTML EMAIL TEMPLATE
-   ═══════════════════════════════════════════════════════ */
+/* ── EMAIL TEMPLATE ── */
 
 interface EmailData {
   name: string;
@@ -460,291 +444,201 @@ function actionBox(icon: string, title: string, subtitle: string, body: string):
 }
 
 function buildEmailHtml(d: EmailData): string {
-  /* ── Banner-style section divider ── */
-  const divider = `
-        <tr>
-          <td style="padding:12px 0;">
-            <table cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
-              <td style="height:4px;border-radius:2px;background:linear-gradient(90deg,#0B3D91,#1E90FF);font-size:0;line-height:0;">&nbsp;</td>
-            </tr></table>
-          </td>
-        </tr>`;
+  const APP = "https://perki.app";
+  const card = "background:#FFFFFF;border:1px solid #E4DDCB;border-radius:12px;";
+  const h = "font-family:'Outfit','Helvetica Neue',Arial,sans-serif;";
+  const b = "font-family:'Work Sans','Helvetica Neue',Arial,sans-serif;";
+  const PROVIDER_LOGO: Record<string, string> = { "OVO Energy": "https://logo.clearbit.com/ovoenergy.com", "OVO": "https://logo.clearbit.com/ovoenergy.com" };
+  const tileInner = (provider: string) => PROVIDER_LOGO[provider]
+    ? `<img src="${PROVIDER_LOGO[provider]}" alt="${escHtml(provider)} logo" width="18" height="18" style="display:inline-block;width:18px;height:18px;object-fit:contain;vertical-align:middle;border:0;"/>`
+    : `<span style="${h}font-size:11px;font-weight:800;color:#2B2A6E;">${escHtml(providerInitials(provider))}</span>`;
 
-  /* --- Summary counts --- */
-  const summaryHtml = `
-  <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:8px;">
-    <tr>
-      <td width="33%" align="center" style="padding:2px;">
-        <div style="padding:8px 4px;border-radius:8px;background:#F0FDF4;border:1.5px solid #BBF7D0;text-align:center;">
-          <div style="font-size:22px;font-weight:900;color:#10B981;">${d.available}</div>
-          <div style="font-size:8px;font-weight:700;color:#065F46;text-transform:uppercase;">Available</div>
-        </div>
-      </td>
-      <td width="33%" align="center" style="padding:2px;">
-        <div style="padding:8px 4px;border-radius:8px;background:#EFF6FF;border:1.5px solid #BFDBFE;text-align:center;">
-          <div style="font-size:22px;font-weight:900;color:#1E90FF;">${d.used}</div>
-          <div style="font-size:8px;font-weight:700;color:#1E40AF;text-transform:uppercase;">Used</div>
-        </div>
-      </td>
-      <td width="33%" align="center" style="padding:2px;">
-        <div style="padding:8px 4px;border-radius:8px;background:#FEF2F2;border:1.5px solid #FECACA;text-align:center;">
-          <div style="font-size:22px;font-weight:900;color:#EF4444;">${d.willNotUse}</div>
-          <div style="font-size:8px;font-weight:700;color:#991B1B;text-transform:uppercase;">Won't use</div>
-        </div>
-      </td>
-    </tr>
-  </table>`;
-
-  /* --- Membership box --- */
-  const membershipRows = d.memberships.map((m) => `
-    <tr>
-      <td style="padding:3px 8px;">
+  /* 2. Dashboard */
+  const headline = d.available > 0 ? `${d.available} ${d.available === 1 ? "perk" : "perks"} ready to use` : "You are all caught up";
+  const memCount = d.memberships.length;
+  const tile = (val: string, label: string, hi: boolean) => `
+    <td width="25%" style="padding:4px;vertical-align:top;">
+      <div style="background:${hi ? "#F7ECD4" : "#FCFAF4"};border:1px solid ${hi ? "#E0A93B" : "#E4DDCB"};border-radius:10px;text-align:center;padding:12px 4px;">
+        <div style="${h}font-size:22px;font-weight:800;color:${hi ? "#B07C1A" : "#2B2A6E"};">${val}</div>
+        <div style="${b}font-size:10px;font-weight:600;color:#6B6757;padding-top:2px;">${label}</div>
+      </div>
+    </td>`;
+  const dashboard = `
+    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="${card}">
+      <tr><td style="padding:18px 18px 4px;">
+        <div style="${h}font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#B07C1A;">Your dashboard</div>
+        <div style="${h}font-size:22px;font-weight:800;color:#23202A;padding-top:3px;">${escHtml(headline)}</div>
+        <div style="${b}font-size:13px;color:#6B6757;padding-top:3px;">Across your ${memCount} ${memCount === 1 ? "membership" : "memberships"}.</div>
+      </td></tr>
+      <tr><td style="padding:10px 14px 18px;">
         <table cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
-          <td width="24" style="vertical-align:middle;">
-            <div style="width:20px;height:20px;border-radius:5px;background:${m.color};text-align:center;line-height:20px;">
-              <span style="color:#fff;font-size:9px;font-weight:800;">${escHtml(providerInitials(m.provider))}</span>
-            </div>
-          </td>
-          <td style="padding-left:5px;vertical-align:middle;">
-            <span style="font-size:11px;font-weight:700;color:#0F172A;">${escHtml(m.provider)}</span>
-            <span style="font-size:10px;color:#64748B;"> · ${escHtml(m.tier)}</span>
-          </td>
+          ${tile(String(d.available), "Available", true)}
+          ${tile(String(d.used), "Used", false)}
+          ${tile(String(d.willNotUse), "Set aside", false)}
+          ${tile(String(memCount), memCount === 1 ? "Membership" : "Memberships", false)}
         </tr></table>
-      </td>
-    </tr>`).join("");
-
-  const membershipBoxHtml = `
-  <table cellpadding="0" cellspacing="0" border="0" width="100%"
-         style="margin-bottom:8px;border-radius:8px;overflow:hidden;border:1.5px solid #E2E8F0;background:#FAFBFC;">
-    <tr><td style="padding:6px 8px 3px;font-size:9px;font-weight:800;color:#64748B;text-transform:uppercase;">💳 Your memberships</td></tr>
-    ${membershipRows}
-    <tr><td style="height:4px;"></td></tr>
-  </table>`;
-
-  /* ─────────────────────────────────────────────────────
-     SECTION 1: What to Use Today + Missing Out
-     These two boxes are IDENTICAL components.
-     ───────────────────────────────────────────────────── */
-
-  // LEFT: What to Use Today — perks + features only
-  let leftBox = "";
-  if (d.whatToUseToday.length > 0) {
-    const rows = d.whatToUseToday.map((p) => perkRow(p, true)).join("");
-    leftBox = actionBox("🔥", "Use today", "Time-sensitive perks", rows);
-  } else {
-    leftBox = actionBox("✅", "All caught up", "Nothing urgent today", `
-    <tr><td style="padding:8px;text-align:center;">
-      <div style="font-size:16px;">🎉</div>
-      <div style="font-size:10px;color:#065F46;font-weight:600;">You're on top of it!</div>
-    </td></tr>`);
-  }
-
-  // RIGHT: Missing Out — ONLY unselected membership summaries
-  let rightBox = "";
-  if (d.missingMemberships.length > 0) {
-    const membershipRows = d.missingMemberships.map((m) => {
-      const color = providerColor(m.provider);
-      const letter = providerLetter(m.provider);
-      const catIcons = m.topCategories.map((c) => categoryIcon(c)).join("");
-      return `<tr>
-  <td style="padding:2px 8px;">
-    <table cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
-      <td width="26" style="font-size:12px;vertical-align:middle;white-space:nowrap;">⬜${catIcons ? catIcons.charAt(0) + catIcons.charAt(1) : "📦"}</td>
-      <td style="font-size:11px;line-height:1.3;vertical-align:middle;">
-        <span style="color:#0F172A;font-weight:500;">${escHtml(trunc(m.provider, 18))}</span>
-        <span style="display:inline-block;font-size:7px;font-weight:800;color:#64748B;background:#F1F5F9;border-radius:3px;padding:1px 3px;margin-left:3px;vertical-align:middle;text-transform:uppercase;line-height:1;">${m.perkCount} perks</span>
-      </td>
-      <td width="40" align="right" style="font-size:9px;color:#94A3B8;vertical-align:middle;white-space:nowrap;">${escHtml(trunc(m.tier, 10))}</td>
-      <td width="20" align="right" style="vertical-align:middle;">
-        <div style="width:16px;height:16px;border-radius:4px;background:${color};text-align:center;line-height:16px;">
-          <span style="color:#fff;font-size:8px;font-weight:900;">${escHtml(letter)}</span>
-        </div>
-      </td>
-    </tr></table>
-  </td>
-</tr>`;
-    }).join("");
-    rightBox = actionBox("👀", "Missing out", "Memberships not added", membershipRows);
-  } else {
-    rightBox = actionBox("🎉", "Fully loaded", "All memberships added", `
-    <tr><td style="padding:8px;text-align:center;">
-      <div style="font-size:16px;">💪</div>
-      <div style="font-size:10px;color:#065F46;font-weight:600;">Every membership activated!</div>
-    </td></tr>`);
-  }
-
-  const section1Html = `
-  <table cellpadding="0" cellspacing="0" border="0" width="100%">
-    <tr>
-      <td width="50%" style="vertical-align:top;padding-right:5px;">${leftBox}</td>
-      <td width="50%" style="vertical-align:top;padding-left:5px;">${rightBox}</td>
-    </tr>
-  </table>`;
-
-  /* ─────────────────────────────────────────────────────
-     SECTION 2: Where to Use Next (themed question boxes)
-     ───────────────────────────────────────────────────── */
-  let section2Html = "";
-  if (d.momentBoxes.length > 0) {
-    const boxes = d.momentBoxes.map((box) => {
-      const usedN = box.items.filter((p) => p.used).length;
-      const rows = box.items.map((p) => perkRow(p, true)).join("");
-      return `
-      <table cellpadding="0" cellspacing="0" border="0" width="100%"
-             style="margin-bottom:8px;border-radius:8px;overflow:hidden;border:1px solid #E2E8F0;">
-        <tr>
-          <td style="padding:8px 10px 4px;background:#F8FAFC;border-bottom:1px solid #E2E8F0;">
-            <div style="font-size:12px;font-weight:800;color:#0F172A;">${box.emoji} ${escHtml(box.question)}</div>
-            <div style="font-size:9px;color:#64748B;">${usedN}/${box.items.length} used</div>
-          </td>
-        </tr>
-        ${rows}
-        <tr><td style="height:3px;"></td></tr>
-      </table>`;
-    }).join("");
-
-    section2Html = `
-      <div style="font-size:13px;font-weight:900;color:#0F172A;padding:0 0 6px;">Where to use next</div>
-      ${boxes}`;
-  }
-
-  /* ─────────────────────────────────────────────────────
-     SECTION 3: All Perks by Category
-     ───────────────────────────────────────────────────── */
-  const section3Html = d.categoryGrouped.map((g) => {
-    const rows = g.items.map((p) => perkRow(p, true)).join("");
-    return `
-    <table cellpadding="0" cellspacing="0" border="0" width="100%"
-           style="margin-bottom:6px;border-radius:7px;overflow:hidden;border:1px solid #E2E8F0;">
-      <tr>
-        <td style="padding:6px 10px;background:#F8FAFC;border-bottom:1px solid #E2E8F0;">
-          <span style="font-size:11px;font-weight:800;color:#0F172A;">${g.icon} ${escHtml(g.category)}</span>
-          <span style="font-size:9px;color:#94A3B8;margin-left:3px;">${g.items.length}</span>
-        </td>
-      </tr>
-      ${rows}
-      <tr><td style="height:3px;"></td></tr>
+      </td></tr>
     </table>`;
-  }).join("");
 
-  /* --- Top unselected memberships --- */
-  let topUnselectedHtml = "";
-  if (d.topUnselectedMemberships.length > 0) {
-    const rows = d.topUnselectedMemberships.map((m) => `
-      <tr><td style="padding:3px 8px;">
-        <table cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
-          <td width="24" style="vertical-align:middle;">
-            <div style="width:20px;height:20px;border-radius:5px;background:${m.color};text-align:center;line-height:20px;">
-              <span style="color:#fff;font-size:9px;font-weight:800;">${escHtml(providerInitials(m.provider))}</span>
-            </div>
-          </td>
-          <td style="padding-left:5px;vertical-align:middle;">
-            <span style="font-size:11px;font-weight:700;color:#0F172A;">${escHtml(m.provider)}</span>
-            <span style="font-size:9px;color:#64748B;"> · ${escHtml(m.tier)} · ${m.perkCount} perks</span>
-          </td>
-        </tr></table>
-      </td></tr>`).join("");
+  /* 3. Your memberships */
+  const memRows = d.memberships.map((m, i) => `
+    <tr><td style="padding:12px 16px;${i < d.memberships.length - 1 ? "border-bottom:1px solid #EFE9DA;" : ""}">
+      <table cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
+        <td width="34" style="vertical-align:middle;"><div style="width:30px;height:30px;border-radius:8px;background:#FFFFFF;border:1px solid #E4DDCB;text-align:center;line-height:30px;">${tileInner(m.provider)}</div></td>
+        <td style="padding-left:10px;vertical-align:middle;"><span style="${b}font-size:14px;font-weight:600;color:#23202A;">${escHtml(m.provider)}</span><span style="${b}font-size:12px;color:#6B6757;"> &middot; ${escHtml(m.tier)}</span></td>
+        <td align="right" style="vertical-align:middle;"><span style="${b}font-size:10px;font-weight:700;color:#B07C1A;background:#F7ECD4;border-radius:20px;padding:3px 10px;">Active</span></td>
+      </tr></table>
+    </td></tr>`).join("");
+  const memberships = d.memberships.length > 0
+    ? `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="${card}">${memRows}</table>`
+    : `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="${card}"><tr><td style="padding:18px;text-align:center;${b}font-size:13px;color:#6B6757;">No memberships added yet. Add one and your perks appear here.</td></tr></table>`;
 
-    topUnselectedHtml = `
-    <table cellpadding="0" cellspacing="0" border="0" width="100%"
-           style="margin-bottom:8px;border-radius:8px;overflow:hidden;border:1.5px solid #E2E8F0;background:#FAFBFC;">
-      <tr><td style="padding:6px 8px 3px;font-size:9px;font-weight:800;color:#64748B;text-transform:uppercase;">🌟 Memberships you might like</td></tr>
-      ${rows}
-      <tr><td style="padding:4px 8px 6px;"><div style="font-size:9px;color:#1E90FF;font-weight:600;">Add in the Perki app →</div></td></tr>
-    </table>`;
-  }
+  /* 4. What to use today */
+  const todayCard = (p: EnrichedPerk) => {
+    const reset = p.next_reset_date
+      ? `resets ${new Date(p.next_reset_date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`
+      : p.reset_period === "WEEKLY" ? "resets weekly" : p.reset_period === "MONTHLY" ? "resets monthly" : "available now";
+    return `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="${card}margin-bottom:10px;"><tr>
+      <td width="44" style="padding:14px 0 14px 14px;vertical-align:middle;"><div style="width:34px;height:34px;border-radius:9px;background:#F7ECD4;text-align:center;line-height:34px;font-size:16px;">${categoryIcon(p.category)}</div></td>
+      <td style="padding:12px;vertical-align:middle;"><div style="${b}font-size:14px;font-weight:600;color:#23202A;">${escHtml(trunc(p.title, 30))}</div><div style="${b}font-size:12px;color:#6B6757;">${escHtml(p.provider)} &middot; ${reset}</div></td>
+      <td align="right" style="padding:12px 14px;vertical-align:middle;"><a href="${APP}" style="${b}font-size:12px;font-weight:700;color:#FFFFFF;background:#2B2A6E;border-radius:8px;padding:8px 14px;display:inline-block;">Open</a></td>
+    </tr></table>`;
+  };
+  const today = d.whatToUseToday.length > 0
+    ? d.whatToUseToday.slice(0, 6).map(todayCard).join("")
+    : `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="${card}"><tr><td style="padding:18px;text-align:center;${b}font-size:13px;color:#6B6757;">Nothing urgent today. You are on top of it.</td></tr></table>`;
 
-  /* ══════════════════════════════════════════════════════
-     FULL EMAIL ASSEMBLY
-     ══════════════════════════════════════════════════════ */
+  /* 5. Worth adding */
+  const wa = d.topUnselectedMemberships.slice(0, 2);
+  const waCard = (m: TopUnselectedMembership) => `
+    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="${card}"><tr><td style="padding:14px;">
+      <table cellpadding="0" cellspacing="0" border="0"><tr>
+        <td style="vertical-align:middle;"><div style="width:30px;height:30px;border-radius:8px;background:#FFFFFF;border:1px solid #E4DDCB;text-align:center;line-height:30px;">${tileInner(m.provider)}</div></td>
+        <td style="padding-left:9px;vertical-align:middle;"><span style="${b}font-size:14px;font-weight:600;color:#23202A;">${escHtml(m.provider)}</span></td>
+      </tr></table>
+      <div style="${b}font-size:12px;color:#6B6757;padding:10px 0 6px;">Adds ${m.perkCount} ${m.perkCount === 1 ? "perk" : "perks"} you would actually use.</div>
+      <a href="${APP}" style="${b}font-size:12px;font-weight:700;color:#2B2A6E;background:#F7ECD4;border:1px solid #E0A93B;border-radius:8px;padding:8px 14px;display:inline-block;">Add membership</a>
+    </td></tr></table>`;
+  const worthAdding = wa.length === 0 ? "" : `
+    <tr><td class="px" style="padding:18px 8px 6px;">
+      <div style="${h}font-size:17px;font-weight:700;color:#23202A;padding-bottom:3px;">Worth adding</div>
+      <div style="${b}font-size:13px;color:#6B6757;padding-bottom:10px;">Memberships that would unlock more of what you already use.</div>
+      <table cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
+        <td class="stack stack-mb" width="50%" style="vertical-align:top;padding-right:5px;">${waCard(wa[0])}</td>
+        <td class="stack" width="50%" style="vertical-align:top;padding-left:5px;">${wa[1] ? waCard(wa[1]) : ""}</td>
+      </tr></table>
+    </td></tr>`;
+
+  /* 6. Where to use next */
+  const topCats = [...d.categoryGrouped].sort((a, b2) => b2.items.length - a.items.length).slice(0, 3);
+  const catTile = (g: { category: string; icon: string; items: EnrichedPerk[] }) => `
+    <td class="stack stack-mb" width="33.33%" style="vertical-align:top;padding:0 4px;">
+      <a href="${APP}" style="display:block;${card}padding:14px;text-align:center;">
+        <div style="font-size:22px;">${g.icon}</div>
+        <div style="${b}font-size:13px;font-weight:600;color:#23202A;padding-top:5px;">${escHtml(g.category)}</div>
+        <div style="${b}font-size:11px;color:#6B6757;">${g.items.length} ${g.items.length === 1 ? "perk" : "perks"}</div>
+      </a>
+    </td>`;
+  const whereNext = topCats.length === 0 ? "" : `
+    <tr><td class="px" style="padding:18px 8px 6px;">
+      <div style="${h}font-size:17px;font-weight:700;color:#23202A;padding-bottom:3px;">Where to use next</div>
+      <div style="${b}font-size:13px;color:#6B6757;padding-bottom:10px;">Browse by category, the way you would on the marketplace.</div>
+      <table cellpadding="0" cellspacing="0" border="0" width="100%"><tr>${topCats.map(catTile).join("")}</tr></table>
+    </td></tr>`;
+
+  /* 7. All perks by category */
+  const catCards = d.categoryGrouped.map((g) => `
+    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="${card}margin-bottom:10px;">
+      <tr><td style="padding:12px 16px;border-bottom:1px solid #EFE9DA;">
+        <span style="font-size:15px;">${g.icon}</span><span style="${h}font-size:14px;font-weight:700;color:#23202A;padding-left:8px;">${escHtml(g.category)}</span><span style="${b}font-size:11px;font-weight:700;color:#B07C1A;background:#F7ECD4;border-radius:20px;padding:2px 9px;margin-left:8px;">${g.items.length}</span>
+      </td></tr>
+      ${g.items.map((p) => perkRow(p, true)).join("")}
+      <tr><td style="height:6px;"></td></tr>
+    </table>`).join("");
+
+  /* Assembly */
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Perki Daily Digest</title>
-  <!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]-->
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="color-scheme" content="light"/>
+<meta name="supported-color-schemes" content="light"/>
+<title>Your Perki</title>
+<!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]-->
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Work+Sans:wght@400;500;600;700&display=swap');
+  body,table,td,a{-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;}
+  table,td{mso-table-lspace:0pt;mso-table-rspace:0pt;}
+  img{-ms-interpolation-mode:bicubic;border:0;}
+  body{margin:0;padding:0;width:100%!important;background:#F4F0E6;}
+  a{text-decoration:none;}
+  @media only screen and (max-width:600px){
+    .container{width:100%!important;}
+    .px{padding-left:18px!important;padding-right:18px!important;}
+    .stack{display:block!important;width:100%!important;box-sizing:border-box;}
+    .stack-mb{margin-bottom:10px!important;}
+  }
+</style>
 </head>
-<body style="margin:0;padding:0;background:#F1F5F9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;">
-  <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#F1F5F9;">
-    <tr><td align="center" style="padding:12px 6px 20px;">
-      <table cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:600px;background:#FFFFFF;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(15,23,42,0.06);">
+<body style="margin:0;padding:0;background:#F4F0E6;">
+<span style="display:none!important;visibility:hidden;opacity:0;color:transparent;height:0;width:0;overflow:hidden;mso-hide:all;">Here is what is worth a tap this morning.</span>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#F4F0E6;"><tr><td align="center" style="padding:20px 12px;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" class="container" style="width:600px;max-width:600px;">
 
-        <!-- ═══ BANNER ═══ -->
-        <tr>
-          <td bgcolor="#0B3D91" style="background:#0B3D91;background:linear-gradient(135deg,#0B3D91 0%,#1E90FF 100%);padding:16px 12px 14px;text-align:center;">
-            <!--[if mso]><v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false" style="width:600px;height:60px;"><v:fill type="gradient" color="#0B3D91" color2="#1E90FF" angle="135"/><v:textbox inset="0,0,0,0" style="mso-fit-shape-to-text:true;"><![endif]-->
-            <div style="font-size:22px;font-weight:900;color:#FFFFFF;letter-spacing:-0.5px;">
-              <span style="display:inline-block;width:26px;height:26px;background:rgba(255,255,255,0.25);border-radius:7px;text-align:center;line-height:26px;font-size:14px;font-weight:900;vertical-align:middle;margin-right:5px;">P</span>
-              Perki
-            </div>
-            <div style="font-size:10px;color:rgba(255,255,255,0.85);margin-top:3px;font-weight:500;">Your Daily Membership Digest</div>
-            <!--[if mso]></v:textbox></v:rect><![endif]-->
-          </td>
-        </tr>
+  <tr><td class="px" style="padding:4px 8px 14px;">
+    <table cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
+      <td align="left" style="vertical-align:middle;"><table cellpadding="0" cellspacing="0" border="0"><tr>
+        <td style="vertical-align:middle;"><div style="width:30px;height:30px;border-radius:8px;background:#2B2A6E;text-align:center;line-height:30px;"><span style="${h}color:#E0A93B;font-size:16px;font-weight:800;">P</span></div></td>
+        <td style="vertical-align:middle;padding-left:9px;"><span style="${h}font-size:19px;font-weight:800;color:#23202A;">Perki</span></td>
+      </tr></table></td>
+      <td align="right" style="vertical-align:middle;"><span style="${b}font-size:12px;color:#6B6757;">${escHtml(d.dateStr)}</span></td>
+    </tr></table>
+  </td></tr>
 
-        <!-- ═══ GREETING ═══ -->
-        <tr>
-          <td style="padding:12px 10px 6px;">
-            <div style="font-size:16px;font-weight:900;color:#0F172A;">Hi ${escHtml(d.name)}! 👋</div>
-            <div style="font-size:10px;color:#64748B;margin-top:1px;">${escHtml(d.dateStr)}</div>
-          </td>
-        </tr>
+  <tr><td class="px" style="padding:0 8px 16px;">
+    <div style="${h}font-size:26px;line-height:32px;font-weight:800;color:#23202A;margin-bottom:8px;">Morning, ${escHtml(d.name)}.</div>
+    <div style="${b}font-size:15px;line-height:23px;color:#6B6757;">Here is everything you are already paying for, lined up and ready. A few perks reset this week, so they are the ones worth grabbing first. Two minutes now, real value back.</div>
+  </td></tr>
 
-        <!-- ═══ SUMMARY COUNTS ═══ -->
-        <tr><td style="padding:0 10px 4px;">${summaryHtml}</td></tr>
+  <tr><td class="px" style="padding:0 8px 10px;">${dashboard}</td></tr>
 
-        <!-- ═══ YOUR MEMBERSHIPS ═══ -->
-        <tr><td style="padding:0 10px;">${membershipBoxHtml}</td></tr>
+  <tr><td class="px" style="padding:16px 8px 6px;">
+    <div style="${h}font-size:17px;font-weight:700;color:#23202A;padding-bottom:10px;">Your memberships</div>
+    ${memberships}
+  </td></tr>
 
-        ${divider}
+  <tr><td class="px" style="padding:18px 8px 6px;">
+    <div style="${h}font-size:17px;font-weight:700;color:#23202A;padding-bottom:3px;">What to use today</div>
+    <div style="${b}font-size:13px;color:#6B6757;padding-bottom:10px;">Resetting or expiring soon. Worth a tap before they roll over.</div>
+    ${today}
+  </td></tr>
 
-        <!-- ═══ SECTION 1: Use Today + Missing Out ═══ -->
-        <tr><td style="padding:0 10px;">${section1Html}</td></tr>
+  ${worthAdding}
+  ${whereNext}
 
-        ${divider}
+  <tr><td class="px" style="padding:18px 8px 6px;">
+    <div style="${h}font-size:17px;font-weight:700;color:#23202A;padding-bottom:10px;">All your perks by category</div>
+    ${catCards}
+  </td></tr>
 
-        <!-- ═══ SECTION 2: Where to Use Next ═══ -->
-        ${section2Html ? `<tr><td style="padding:0 10px;">${section2Html}</td></tr>` : ""}
+  <tr><td class="px" align="center" style="padding:22px 8px 8px;">
+    <a href="${APP}" style="${b}font-size:14px;font-weight:700;color:#FFFFFF;background:#2B2A6E;border-radius:10px;padding:13px 28px;display:inline-block;">Open Perki</a>
+  </td></tr>
 
-        ${section2Html ? divider : ""}
+  <tr><td class="px" align="center" style="padding:18px 8px 8px;">
+    <div style="${b}font-size:12px;color:#6B6757;line-height:18px;">Read-only. We never move your money.</div>
+    <div style="${b}font-size:12px;color:#6B6757;line-height:20px;padding-top:8px;"><a href="${APP}" style="color:#B07C1A;font-weight:600;">Manage preferences</a> &nbsp;&middot;&nbsp; <a href="${APP}" style="color:#B07C1A;font-weight:600;">Unsubscribe</a></div>
+    <div style="${b}font-size:11px;color:#9A9482;padding-top:10px;">Perki &middot; London, UK</div>
+  </td></tr>
 
-        <!-- ═══ MEMBERSHIPS YOU MIGHT LIKE ═══ -->
-        ${topUnselectedHtml ? `<tr><td style="padding:0 10px;">${topUnselectedHtml}</td></tr>` : ""}
-
-        ${topUnselectedHtml ? divider : ""}
-
-        <!-- ═══ SECTION 3: All Perks by Category ═══ -->
-        <tr>
-          <td style="padding:0 10px;">
-            <div style="font-size:13px;font-weight:900;color:#0F172A;padding:0 0 6px;">All your perks by category</div>
-            ${section3Html}
-          </td>
-        </tr>
-
-        ${divider}
-
-        <!-- ═══ FOOTER ═══ -->
-        <tr>
-          <td style="background:#F8FAFC;padding:12px 14px;border-top:1px solid #E2E8F0;text-align:center;">
-            <div style="font-size:9px;color:#94A3B8;line-height:1.4;">
-              You're receiving this because you have active memberships on
-              <a href="https://perki.app" style="color:#1E90FF;text-decoration:none;font-weight:600;">Perki</a>.
-              <br/>To stop these emails, update your preferences in the app.
-            </div>
-          </td>
-        </tr>
-
-      </table>
-    </td></tr>
-  </table>
+</table>
+</td></tr></table>
 </body>
 </html>`;
 }
 
-/* ═══════════════════════════════════════════════════════
-   EMAIL BUILDER
-   ═══════════════════════════════════════════════════════ */
+/* ── PER-USER BUILDER ── */
 
 function buildDigestForUser(
   userId: string,
@@ -817,16 +711,25 @@ Deno.serve(async (req: Request) => {
     if (isPreview) {
       console.log("[daily-digest] Preview mode: skipping auth");
     } else {
-      const cronSecret = Deno.env.get("cron_secret");
-      const header = req.headers.get("x-cron-secret");
+      const cronSecret = Deno.env.get("CRON_SECRET");
+      const header = req.headers.get("authorization");
       console.log("[daily-digest] Auth check — secret set:", !!cronSecret, "header set:", !!header);
-      if (!cronSecret || header !== cronSecret) {
+      if (!cronSecret || header !== `Bearer ${cronSecret}`) {
         return new Response("Unauthorized", { status: 401 });
       }
     }
 
     const today = new Date();
     console.log(`[daily-digest] Starting ${isPreview ? "PREVIEW" : "production"} digest for ${todayFormatted(today)}`);
+
+    // Send only at 07:00 Europe/London. Two UTC crons (06:00 + 07:00) fire; this guard makes one a no-op across DST.
+    if (!isPreview && body.force !== true) {
+      const londonHour = Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", hour: "2-digit", hour12: false }).format(today));
+      if (londonHour !== 7) {
+        console.log(`[daily-digest] Skipping run: London hour is ${londonHour}, not 7.`);
+        return new Response(JSON.stringify({ skipped: true, reason: "not 07:00 Europe/London", londonHour }), { headers: { "Content-Type": "application/json" } });
+      }
+    }
 
     const { data: allPerks, error: perksErr } = await supabase.from("perks").select("*").order("title");
     if (perksErr) throw new Error(`Failed to load perks: ${perksErr.message}`);
@@ -867,7 +770,7 @@ Deno.serve(async (req: Request) => {
       const sendTo = (body.email as string) ?? authEmail;
       console.log(`[daily-digest] Preview: sending ${name}'s digest to ${sendTo}`);
       try {
-        await resend.emails.send({ from: FROM_EMAIL, to: sendTo, subject: `[PREVIEW] Perki Digest for ${name} — ${todayFormatted(today)}`, html });
+        await resend.emails.send({ from: FROM_EMAIL, to: sendTo, subject: `[PREVIEW] Perki for ${name}, ${todayFormatted(today)}`, html });
       } catch (sendErr: unknown) {
         const msg = sendErr instanceof Error ? sendErr.message : String(sendErr);
         return new Response(JSON.stringify({ mode: "preview", error: `Failed to send: ${msg}` }), { status: 500, headers: { "Content-Type": "application/json" } });
@@ -910,7 +813,7 @@ Deno.serve(async (req: Request) => {
       if (!email) continue;
       const { html, name } = buildDigestForUser(userId, membershipsByUser[userId], allPerks as Perk[], tierPrices, perkStatesByUser[userId] ?? [], profileNameMap[userId] ?? authNameMap[userId] ?? null, email, today);
       try {
-        await resend.emails.send({ from: FROM_EMAIL, to: email, subject: `Your Perki Digest — ${todayFormatted(today)}`, html });
+        await resend.emails.send({ from: FROM_EMAIL, to: email, subject: `Your Perki for ${todayFormatted(today)}`, html });
         sentCount++;
       } catch (sendErr: unknown) {
         const msg = sendErr instanceof Error ? sendErr.message : String(sendErr);

@@ -5,8 +5,8 @@ import { providerInitials } from "../data/catalog";
 export const BRAND = {
   "Monzo":      { slug: "monzo" },
   "Revolut":    { slug: "revolut" },
-  "OVO Energy": { slug: "ovoenergy" },
-  "OVO":        { slug: "ovoenergy" },
+  "OVO Energy": { slug: "ovoenergy", logo: "https://logo.clearbit.com/ovoenergy.com" },
+  "OVO":        { slug: "ovoenergy", logo: "https://logo.clearbit.com/ovoenergy.com" },
   "Sky TV":     { slug: "sky" },
   "Sky":        { slug: "sky" },
   "Lidl":       { slug: "lidl" },
@@ -15,8 +15,9 @@ export const BRAND = {
 
 export function BrandLogo({ provider, className = "w-7 h-7" }) {
   const [failed, setFailed] = React.useState(false);
-  const slug = BRAND[provider]?.slug;
-  if (!slug || failed) {
+  const entry = BRAND[provider];
+  const src = entry?.logo || (entry?.slug ? `https://cdn.simpleicons.org/${entry.slug}` : null);
+  if (!src || failed) {
     return (
       <span className={`grid place-items-center rounded-full bg-purple/25 text-snow font-semibold shrink-0 ${className}`}>
         <span className="text-[0.6em] leading-none">{providerInitials(provider)}</span>
@@ -26,7 +27,7 @@ export function BrandLogo({ provider, className = "w-7 h-7" }) {
   return (
     <span className={`grid place-items-center rounded-full bg-white shrink-0 overflow-hidden ${className}`}>
       <img
-        src={`https://cdn.simpleicons.org/${slug}`}
+        src={src}
         alt={`${provider} logo`}
         onError={() => setFailed(true)}
         className="w-[62%] h-[62%] object-contain"

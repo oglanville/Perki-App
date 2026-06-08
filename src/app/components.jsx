@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { supabase } from "../lib/supabase";
-import { SB_CONFIGURED, T, PROVIDERS, CATEGORIES, resetLabel, getPerkBrand, PROVIDER_SLUGS } from "./theme";
+import { SB_CONFIGURED, T, PROVIDERS, CATEGORIES, resetLabel, getPerkBrand, PROVIDER_SLUGS, PROVIDER_LOGOS } from "./theme";
 
 export function PerkBrandIcon({perk,size=32}){
   const b=getPerkBrand(perk);
@@ -98,13 +98,14 @@ export function PerkSheet({perk,mode="owned",onToggle,onDismiss,onClose}){
 export function AppBrandLogo({provider,size=28}){
   const[failed,setFailed]=useState(false);
   const slug=PROVIDER_SLUGS[provider];
+  const src=PROVIDER_LOGOS[provider]||(slug?`https://cdn.simpleicons.org/${slug}`:null);
   const pCfg=PROVIDERS[provider]||{};
   const initials=pCfg.initials||(provider||"?").slice(0,2).toUpperCase();
   const tint=pCfg.color||T.muted;
-  if(!slug||failed){
+  if(!src||failed){
     return(<div style={{width:size,height:size,borderRadius:size*0.28,background:`${tint}1A`,border:`1.5px solid ${tint}33`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:size*0.4,fontWeight:800,color:tint,flexShrink:0,fontFamily:"'Work Sans',sans-serif"}}>{initials}</div>);
   }
-  return(<div style={{width:size,height:size,borderRadius:size*0.28,background:"#fff",border:`1px solid ${T.border}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,overflow:"hidden"}}><img src={`https://cdn.simpleicons.org/${slug}`} alt={`${provider} logo`} onError={()=>setFailed(true)} style={{width:"62%",height:"62%",objectFit:"contain"}} loading="lazy"/></div>);
+  return(<div style={{width:size,height:size,borderRadius:size*0.28,background:"#fff",border:`1px solid ${T.border}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,overflow:"hidden"}}><img src={src} alt={`${provider} logo`} onError={()=>setFailed(true)} style={{width:"62%",height:"62%",objectFit:"contain"}} loading="lazy"/></div>);
 }
 
 export function FeatureChip({feature}){
