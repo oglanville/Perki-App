@@ -15,6 +15,13 @@ export const BRAND = {
 
 export function BrandLogo({ provider, className = "w-7 h-7" }) {
   const [failed, setFailed] = React.useState(false);
+  if (provider === "OVO Energy" || provider === "OVO") {
+    return (
+      <span className={`grid place-items-center rounded-full bg-white shrink-0 ${className}`} aria-label="OVO Energy">
+        <span className="leading-none font-extrabold tracking-tight" style={{ color: "#0a9d2b", fontSize: "0.5em" }}>OVO</span>
+      </span>
+    );
+  }
   const entry = BRAND[provider];
   const src = entry?.logo || (entry?.slug ? `https://cdn.simpleicons.org/${entry.slug}` : null);
   if (!src || failed) {

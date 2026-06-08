@@ -448,9 +448,8 @@ function buildEmailHtml(d: EmailData): string {
   const card = "background:#FFFFFF;border:1px solid #E4DDCB;border-radius:12px;";
   const h = "font-family:'Outfit','Helvetica Neue',Arial,sans-serif;";
   const b = "font-family:'Work Sans','Helvetica Neue',Arial,sans-serif;";
-  const PROVIDER_LOGO: Record<string, string> = { "OVO Energy": "https://logo.clearbit.com/ovoenergy.com", "OVO": "https://logo.clearbit.com/ovoenergy.com" };
-  const tileInner = (provider: string) => PROVIDER_LOGO[provider]
-    ? `<img src="${PROVIDER_LOGO[provider]}" alt="${escHtml(provider)} logo" width="18" height="18" style="display:inline-block;width:18px;height:18px;object-fit:contain;vertical-align:middle;border:0;"/>`
+  const tileInner = (provider: string) => (provider === "OVO Energy" || provider === "OVO")
+    ? `<span style="${h}font-size:9px;font-weight:800;color:#0a9d2b;letter-spacing:-0.3px;">OVO</span>`
     : `<span style="${h}font-size:11px;font-weight:800;color:#2B2A6E;">${escHtml(providerInitials(provider))}</span>`;
 
   /* 2. Dashboard */

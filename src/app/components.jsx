@@ -97,6 +97,9 @@ export function PerkSheet({perk,mode="owned",onToggle,onDismiss,onClose}){
 
 export function AppBrandLogo({provider,size=28}){
   const[failed,setFailed]=useState(false);
+  if(provider==="OVO Energy"||provider==="OVO"){
+    return(<div style={{width:size,height:size,borderRadius:size*0.28,background:"#fff",border:`1px solid ${T.border}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><span style={{fontSize:size*0.34,fontWeight:800,color:"#0a9d2b",letterSpacing:"-0.5px",fontFamily:"'Outfit',sans-serif"}}>OVO</span></div>);
+  }
   const slug=PROVIDER_SLUGS[provider];
   const src=PROVIDER_LOGOS[provider]||(slug?`https://cdn.simpleicons.org/${slug}`:null);
   const pCfg=PROVIDERS[provider]||{};
