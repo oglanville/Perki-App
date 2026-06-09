@@ -52,8 +52,8 @@ export default function Perks() {
 
   const tierChips = React.useMemo(() => {
     const seen = {};
-    baseRows.forEach((p) => { const so = tierMap[`${p.provider}|${p.tier}`]?.sort_order ?? 0; if (!(p.tier in seen) || so < seen[p.tier]) seen[p.tier] = so; });
-    return Object.keys(seen).sort((a, b) => seen[a] - seen[b]);
+    baseRows.forEach((p) => { const k = `${p.provider}|${p.tier}`; const so = tierMap[k]?.sort_order ?? 0; if (!(p.tier in seen) || so < seen[p.tier].so) seen[p.tier] = { so, label: tierMap[k]?.price_label }; });
+    return Object.keys(seen).sort((a, b) => seen[a].so - seen[b].so).map((t) => ({ tier: t, label: seen[t].label }));
   }, [baseRows, tierMap]);
 
   const categoryChips = React.useMemo(() => [...new Set(baseRows.map((p) => p.category).filter(Boolean))].sort(), [baseRows]);
@@ -98,7 +98,7 @@ export default function Perks() {
       {/* Tiers (permanent) */}
       <div className="swipe flex gap-2 overflow-x-auto -mx-4 px-4 pb-2 mb-2">
         <button onClick={() => setTier(null)} className={chip(tier == null)}>All tiers</button>
-        {tierChips.map((t) => <button key={t} onClick={() => setTier(t)} className={chip(tier === t)}>{t}</button>)}
+        {tierChips.map((t) => <button key={t.tier} onClick={() => setTier(t.tier)} className={chip(tier === t.tier)}>{t.tier}{t.label ? ` · ${t.label}` : ""}</button>)}
       </div>
 
       {/* Categories (permanent) */}

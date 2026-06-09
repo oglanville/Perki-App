@@ -22,7 +22,7 @@ export default function MarketplaceTab({allPerks,tierPrices}){
   const selCat=useMemo(()=>catalog.find(c=>`${c.provider}|${c.membership}`===membership)||null,[catalog,membership]);
   const baseRows=useMemo(()=>selCat?allPerks.filter(p=>p.provider===selCat.provider&&p.membership===selCat.membership):allPerks,[allPerks,selCat]);
 
-  const tierChips=useMemo(()=>{const seen={};baseRows.forEach(p=>{const so=tp[`${p.provider}|${p.tier}`]?.sort_order??0;if(!(p.tier in seen)||so<seen[p.tier])seen[p.tier]=so;});return Object.keys(seen).sort((a,b)=>seen[a]-seen[b]);},[baseRows,tp]);
+  const tierChips=useMemo(()=>{const seen={};baseRows.forEach(p=>{const k=`${p.provider}|${p.tier}`;const so=tp[k]?.sort_order??0;if(!(p.tier in seen)||so<seen[p.tier].so)seen[p.tier]={so,label:tp[k]?.price_label};});return Object.keys(seen).sort((a,b)=>seen[a].so-seen[b].so).map(t=>({tier:t,label:seen[t].label}));},[baseRows,tp]);
   const catChips=useMemo(()=>[...new Set(baseRows.map(p=>p.category).filter(Boolean))].sort(),[baseRows]);
 
   const visible=useMemo(()=>{
@@ -47,7 +47,7 @@ export default function MarketplaceTab({allPerks,tierPrices}){
 
     <div style={{display:"flex",gap:8,overflowX:"auto",paddingBottom:8,marginBottom:6}}>
       <button onClick={e=>{e.stopPropagation();setTier(null);}} style={chip(tier==null)}>All tiers</button>
-      {tierChips.map(t=><button key={t} onClick={e=>{e.stopPropagation();setTier(t);}} style={chip(tier===t)}>{t}</button>)}
+      {tierChips.map(t=><button key={t.tier} onClick={e=>{e.stopPropagation();setTier(t.tier);}} style={chip(tier===t.tier)}>{t.tier}{t.label?` · ${t.label}`:""}</button>)}
     </div>
 
     <div style={{display:"flex",gap:8,overflowX:"auto",paddingBottom:8,marginBottom:10}}>
