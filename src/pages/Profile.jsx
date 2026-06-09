@@ -79,8 +79,8 @@ export default function Profile() {
   const availablePerks = React.useMemo(() => dedupeByTitle(unlockedPerks), [unlockedPerks]);
 
   const usedIds = React.useMemo(() => new Set(stateRows.filter((s) => s.used).map((s) => s.perk_id)), [stateRows]);
-  // Features auto-active; perks/comps/discounts active when marked used
-  const isActive = (p) => (p.feature === "feature") || usedIds.has(p.perk_id);
+  // All types active when marked used (features now toggle like perks)
+  const isActive = (p) => usedIds.has(p.perk_id);
 
   const q = query.trim().toLowerCase();
   const match = (p) => !q || [p.title, p.description, p.provider, p.tier].some((v) => (v || "").toLowerCase().includes(q));
@@ -90,14 +90,14 @@ export default function Profile() {
   const nonFeature = availablePerks.filter((p) => (p.feature || "perk") !== "feature");
   const totalAvailableNF = nonFeature.length;
   const totalActiveNF = nonFeature.filter((p) => usedIds.has(p.perk_id)).length;
-  const activeFeaturesCount = availablePerks.filter((p) => p.feature === "feature").length;
+  const activeFeaturesCount = availablePerks.filter((p) => p.feature === "feature" && usedIds.has(p.perk_id)).length;
 
   // Membership lists
   const memMatch = (c) => !q || [c.provider, c.membership, ...c.tiers.map((t) => t.tier)].some((v) => (v || "").toLowerCase().includes(q));
   const activeList = catalog.filter((c) => activeMap[`${c.provider}|${c.membership}`] != null && memMatch(c));
   const potentialList = catalog.map((c) => {
     const cur = activeMap[`${c.provider}|${c.membership}`];
-    if (cur == null) return { ...c, upgradeTiers: c.tiers };
+    if (cur == null) return null;
     const curSort = tierMap[`${c.provider}|${cur}`]?.sort_order ?? 0;
     const higher = c.tiers.filter((t) => t.sort_order > curSort);
     return higher.length ? { ...c, upgradeTiers: higher } : null;
@@ -155,7 +155,7 @@ export default function Profile() {
               <Stat Icon={CreditCard} label="Monthly Cost" value={`£${monthlyCost.toLocaleString()}`} />
               <Stat Icon={CheckCircle2} label="Active Plans" value={memberships.length} accent="text-purple" />
               <Stat Icon={LayoutGrid} label="Total Available Perks / Discounts / Competitions" value={totalAvailableNF} accent="text-golddeep" />
-              <Stat Icon={ThumbsUp} label="Total Active Perks / Discounts / Competitions" value={totalActiveNF} />
+              <Stat Icon={ThumbsUp} label="Claimed Perks / Discounts / Competitions" value={totalActiveNF} />
               <Stat Icon={Sparkles} label="Active Features" value={activeFeaturesCount} accent="text-golddeep" />
             </div>
 
@@ -189,16 +189,17 @@ export default function Profile() {
             <div className="mt-8 grid md:grid-cols-2 gap-x-8 gap-y-2">
               <div>
                 <h2 className="text-xl font-semibold mb-4 text-gold">Active</h2>
-                <Sub title="Active Perks" type="perk" active={true} />
-                <Sub title="Active Competitions" type="competition" active={true} />
-                <Sub title="Active Discounts" type="discount" active={true} />
                 <Sub title="Active Features" type="feature" active={true} />
+                <Sub title="Active Perks" type="perk" active={true} />
+                <Sub title="Used Discounts" type="discount" active={true} />
+                <Sub title="Entered Competitions" type="competition" active={true} />
               </div>
               <div>
                 <h2 className="text-xl font-semibold mb-4 text-muted">Inactive</h2>
+                <Sub title="Inactive Features" type="feature" active={false} />
                 <Sub title="Inactive Perks" type="perk" active={false} />
-                <Sub title="Inactive Competitions" type="competition" active={false} />
-                <Sub title="Inactive Discounts" type="discount" active={false} />
+                <Sub title="Unused Discounts" type="discount" active={false} />
+                <Sub title="Unentered Competitions" type="competition" active={false} />
               </div>
             </div>
           </>

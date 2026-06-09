@@ -2,9 +2,13 @@ import React, { useState, useMemo, useRef } from "react";
 import { T, PROVIDERS, featureThenAlpha, buildMembershipCatalog } from "../theme";
 import { SectionHeader, TabDesc, CollapsibleSection, AppBrandLogo, PerkTile } from "../components";
 
-/* Active/Inactive split order (Profile): Perk -> Competition -> Discount -> Feature */
-const ACTIVE_TYPES = [["perk","Perks"],["competition","Competitions"],["discount","Discounts"],["feature","Features"]];
-const INACTIVE_TYPES = [["perk","Perks"],["competition","Competitions"],["discount","Discounts"]];
+/* Profile order: Feature -> Perk -> Discount -> Competition.  [type, activeLabel, inactiveLabel] */
+const TYPE_ROWS = [
+  ["feature","Active Features","Inactive Features"],
+  ["perk","Active Perks","Inactive Perks"],
+  ["discount","Used Discounts","Unused Discounts"],
+  ["competition","Entered Competitions","Unentered Competitions"],
+];
 
 export default function ProfileTab({perks,activeMemberships,rawMemberships,onRemoveMembership,onAddMembership,allPerks,user,onLogout,onToggle,onDismiss,tierPrices}){
   const[selectedPerk,setSelectedPerk]=useState(null);
@@ -18,12 +22,12 @@ export default function ProfileTab({perks,activeMemberships,rawMemberships,onRem
   const nonFeature=countable.filter(p=>p.feature!=="feature");
   const totalAvailable=nonFeature.length;
   const totalActive=nonFeature.filter(p=>p.used).length;
-  const activeFeatures=countable.filter(p=>p.feature==="feature").length;
+  const activeFeatures=countable.filter(p=>p.feature==="feature"&&p.used).length;
   const activePlans=activeMemberships.length;
 
   const q=query.trim().toLowerCase();
   const matchP=(p)=>!q||[p.title,p.description,p.provider,p.tier,p.category].some(v=>(v||"").toString().toLowerCase().includes(q));
-  const activeOf=(t)=>countable.filter(p=>p.feature===t&&matchP(p)&&(t==="feature"?true:p.used)).sort(featureThenAlpha);
+  const activeOf=(t)=>countable.filter(p=>p.feature===t&&matchP(p)&&p.used).sort(featureThenAlpha);
   const inactiveOf=(t)=>countable.filter(p=>p.feature===t&&matchP(p)&&!p.used).sort(featureThenAlpha);
 
   /* Cost summary — highest-priced tier per provider, from perks.price */
@@ -53,9 +57,16 @@ export default function ProfileTab({perks,activeMemberships,rawMemberships,onRem
   },[activeMemberships,perks]);
 
   const unusedList=useMemo(()=>{
-    const cat=buildMembershipCatalog(allPerks||[],tierPrices||{});
+    const tp=tierPrices||{};
+    const cat=buildMembershipCatalog(allPerks||[],tp);
     const added={}; (rawMemberships||[]).forEach(m=>{(added[`${m.provider}|${m.membership}`]=added[`${m.provider}|${m.membership}`]||new Set()).add(m.tier);});
-    return cat.map(c=>{const a=added[`${c.provider}|${c.membership}`]||new Set(); const unused=c.tiers.filter(t=>!a.has(t.tier)); return unused.length?{...c,unusedTiers:unused}:null;}).filter(Boolean);
+    return cat.map(c=>{
+      const a=added[`${c.provider}|${c.membership}`];
+      if(!a||a.size===0) return null;
+      const maxSo=Math.max(...[...a].map(t=>tp[`${c.provider}|${t}`]?.sort_order??0));
+      const unused=c.tiers.filter(t=>(t.sort_order??0)>maxSo);
+      return unused.length?{...c,unusedTiers:unused}:null;
+    }).filter(Boolean);
   },[allPerks,tierPrices,rawMemberships]);
 
   const handlePic=e=>{const f=e.target.files?.[0];if(f){const r=new FileReader();r.onload=ev=>setProfilePic(ev.target.result);r.readAsDataURL(f);}};
@@ -91,7 +102,7 @@ export default function ProfileTab({perks,activeMemberships,rawMemberships,onRem
       {statTile(activePlans,"Active plans","#2B2A6E")}
       {statTile(`£${totalMonthlyCost.toFixed(0)}`,"Monthly cost","#2B2A6E")}
       {statTile(totalAvailable,"Available perks, discounts, comps","#B07C1A")}
-      {statTile(totalActive,"Active perks, discounts, comps","#2B2A6E")}
+      {statTile(totalActive,"Claimed perks, discounts, comps","#2B2A6E")}
     </div>
     <div style={{marginBottom:14}}>{statTile(activeFeatures,"Active features","#B07C1A")}</div>
 
@@ -125,7 +136,7 @@ export default function ProfileTab({perks,activeMemberships,rawMemberships,onRem
     {providerGroups.map(pg=>{
       const pCfg=PROVIDERS[pg.provider]||{color:T.muted,bg:"#f1f5f9"};
       return(
-        <CollapsibleSection key={pg.provider} title={pg.provider} count={pg.memberships.length+" tier"+(pg.memberships.length!==1?"s":"")} badge={<AppBrandLogo provider={pg.provider} size={28}/>} headerBg={pCfg.bg} headerBorder={`${pCfg.color}33`} defaultOpen={false}>
+        <CollapsibleSection key={pg.provider} title={`${pg.provider} · ${pg.memberships[pg.memberships.length-1].tier}`} badge={<AppBrandLogo provider={pg.provider} size={28}/>} headerBg={pCfg.bg} headerBorder={`${pCfg.color}33`} defaultOpen={false}>
           {pg.memberships.map(m=>{
             const tierPerks=perks.filter(p=>p.provider===m.provider&&p.tier===m.tier).sort(featureThenAlpha);
             const tierPrice=tierPerks.find(p=>p.price!=null)?.price;
@@ -146,7 +157,7 @@ export default function ProfileTab({perks,activeMemberships,rawMemberships,onRem
     {/* Unused Tiers */}
     <SectionHeader count={unusedList.length}>Unused Tiers</SectionHeader>
     {unusedList.length===0
-      ? <p style={{textAlign:"center",color:T.muted,margin:"4px 0 14px",fontSize:13,fontFamily:"'Work Sans',sans-serif"}}>You have added everything available.</p>
+      ? <p style={{textAlign:"center",color:T.muted,margin:"4px 0 14px",fontSize:13,fontFamily:"'Work Sans',sans-serif"}}>No upgrades available.</p>
       : unusedList.map(c=>{
           const key=`${c.provider}|${c.membership}`; const sel=pick[key]||c.unusedTiers[0].tier;
           return(
@@ -169,12 +180,12 @@ export default function ProfileTab({perks,activeMemberships,rawMemberships,onRem
 
     {/* Active / Inactive split — collapsed by default; auto-expand on search */}
     <SectionHeader>Active</SectionHeader>
-    {ACTIVE_TYPES.map(([t,label])=>{const list=activeOf(t); if(q&&list.length===0)return null; return(
-      <CollapsibleSection key={`a-${t}-${q?1:0}`} title={`Active ${label}`} count={list.length} defaultOpen={!!q}>{renderList(list)}</CollapsibleSection>
+    {TYPE_ROWS.map(([t,at])=>{const list=activeOf(t); if(q&&list.length===0)return null; return(
+      <CollapsibleSection key={`a-${t}-${q?1:0}`} title={at} count={list.length} defaultOpen={!!q}>{renderList(list)}</CollapsibleSection>
     );})}
     <SectionHeader>Inactive</SectionHeader>
-    {INACTIVE_TYPES.map(([t,label])=>{const list=inactiveOf(t); if(q&&list.length===0)return null; return(
-      <CollapsibleSection key={`i-${t}-${q?1:0}`} title={`Inactive ${label}`} count={list.length} defaultOpen={!!q}>{renderList(list)}</CollapsibleSection>
+    {TYPE_ROWS.map(([t,at,it])=>{const list=inactiveOf(t); if(q&&list.length===0)return null; return(
+      <CollapsibleSection key={`i-${t}-${q?1:0}`} title={it} count={list.length} defaultOpen={!!q}>{renderList(list)}</CollapsibleSection>
     );})}
   </div>);
 }

@@ -48,7 +48,7 @@ export default function HomeTab({perks,onToggle,onDismiss,tierPrices,allPerks}){
 
       {/* Perks / Features / Competitions / Discounts sub-tabs */}
       <div style={{display:"flex",gap:0,marginBottom:10,borderRadius:10,overflow:"hidden",border:`1.5px solid ${T.border}`}}>
-        {[{id:"perks",label:"Perks",count:regularPerks.length},{id:"features",label:"Features",count:features.length},{id:"competitions",label:"Competitions",count:competitions.length},{id:"discounts",label:"Discounts",count:discounts.length}].map(t=>(
+        {[{id:"features",label:"Features",count:features.length},{id:"perks",label:"Perks",count:regularPerks.length},{id:"discounts",label:"Discounts",count:discounts.length},{id:"competitions",label:"Competitions",count:competitions.length}].map(t=>(
           <button key={t.id} onClick={()=>{setSubTab(t.id);setSelected(null);}} style={{flex:1,padding:"8px 0",border:"none",background:subTab===t.id?"#F7ECD4":T.surface,color:subTab===t.id?T.accent:T.textSecondary,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"'Work Sans',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
             {t.label}
             <span style={{fontSize:9,fontWeight:700,background:subTab===t.id?`${T.accent}22`:T.bg,color:subTab===t.id?T.accent:T.muted,padding:"1px 6px",borderRadius:8}}>{t.count}</span>
