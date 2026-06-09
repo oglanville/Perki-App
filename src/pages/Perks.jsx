@@ -44,7 +44,7 @@ export default function Perks() {
     let rows = perks;
     if (selected) rows = rows.filter((p) => p.provider === selected.provider && p.membership === selected.membership);
     if (tier) rows = rows.filter((p) => p.tier === tier);
-    else rows = dedupeAcrossTiers(rows, tierMap);
+    // "All tiers": show every tier (no dedupe across tiers)
     if (query.trim()) {
       const q = query.toLowerCase();
       rows = rows.filter((p) =>
@@ -97,7 +97,7 @@ export default function Perks() {
       {loading ? (
         <ul className="space-y-2">{Array.from({ length: 8 }).map((_, i) => <li key={i} className="glass rounded-btn h-12 animate-pulse" />)}</ul>
       ) : (
-        <PerkList perks={visible} mode="marketplace" scope={perks} tierMap={tierMap} emptyLabel={selected ? "No perks match your filters." : "Pick a membership to explore its perks."} />
+        <PerkList perks={visible} mode="marketplace" scope={perks} tierMap={tierMap} groupByCategory emptyLabel={selected ? "No perks match your filters." : "Pick a membership to explore its perks."} />
       )}
 
       <RequestMembershipModal open={reqOpen} onClose={() => setReqOpen(false)} onSubmit={submitRequest} busy={reqBusy} done={reqDone} />

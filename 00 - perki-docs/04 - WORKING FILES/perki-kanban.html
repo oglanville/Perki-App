@@ -153,7 +153,7 @@
 
   <!-- DONE TODAY — daily highlight -->
   <section class="donebox">
-    <h2>✅ Done today — 4 Jun 2026 · app redesign + email</h2>
+    <h2>✅ Done today — 4 Jun 2026 · brand build-out + spec</h2>
     <ul>
       <li>App fully redesigned to the brand (Phases 1–5): re-skin, single slide-out drawer, real provider logos + brand rows, lowest-tier pricing</li>
       <li>Monolithic LegacyApp split into a clean src/app/ module tree (AppShell, tabs, hooks); legacy file retired</li>
@@ -164,6 +164,12 @@
       <li>Daily email deployed + previewed (new design confirmed in inbox)</li>
       <li>App redesign pushed live to Vercel</li>
       <li>OVO Energy badge fixed — now loads the real OVO logo (was falling back to "OV" initials)</li>
+      <li>Unified Web + App product spec written (decisions, glossary, component map, implementation notes)</li>
+      <li>Spec implemented across web + app: splitter order, "Unused Tiers" rename, typed Active/Inactive split, no Inactive Feature, search auto-expands every box</li>
+      <li>App Marketplace flattened to mirror the website (individual perks, type-sorted); add-membership moved to Profile → Unused Tiers</li>
+      <li>App tooltip now matches the website: cheapest tier, higher tiers, and everything included at that tier and below</li>
+      <li>Home grid icons: emojis replaced with a premium brand SVG icon set (image_url ready for real photos later)</li>
+      <li>OVO badge unified to a green "OVO" wordmark across website, app and email (reliable, no broken images)</li>
     </ul>
   </section>
 
@@ -171,6 +177,16 @@
   <section class="timeline">
     <h2>🧭 Progress timeline</h2>
     <ul class="tl">
+      <li>
+        <div class="date">4 Jun 2026</div>
+        <div class="ttl">Product spec implemented (web + app)</div>
+        <div class="desc">Built the unified spec into the codebase: set the splitter order (Perk → Feature → Discount → Competition), renamed Potential to "Unused Tiers", gave the app Profile full website parity (five stats + a typed Active/Inactive split with no Inactive Feature), and made search auto-expand every collapsible box. Flattened the app Marketplace to mirror the website (individual perks, tier-deduped, type-sorted) and moved add-membership into Profile → Unused Tiers. Brought the app tooltip to parity (cheapest tier, higher tiers, tier-and-below). Replaced Home emojis with a premium brand SVG icon set (image_url ready). Fixed the OVO badge to a green wordmark across web, app and email. All bundle-verified.</div>
+      </li>
+      <li>
+        <div class="date">4 Jun 2026</div>
+        <div class="ttl">Unified Web + App product spec</div>
+        <div class="desc">Turned messy requirements into one implementation-ready spec that unifies behaviour across website and app: resolved naming/order conflicts, a canonical glossary, per-surface rules, a component-by-component map to the real files, and actionable implementation notes (sorting, grouping, tooltip logic, collapsible + search behaviour, image rules, edge cases, data implications). Saved to 02 - PRODUCT/Perki-Unified-Spec-Web-App.md.</div>
+      </li>
       <li>
         <div class="date">4 Jun 2026</div>
         <div class="ttl">Daily email redesign + automation</div>
@@ -237,7 +253,7 @@
   <footer>
     <p>🤝 <b>Need from you:</b> O2 + Lidl source data · install Outfit + Work Sans fonts · verify the perki.app sending domain in Resend · friends to test the app + email.</p>
     <p style="margin-top:6px">🧭 Guardrails: manual ingestion only, no scraping · accuracy over speed · brand gates deck work · auto-send is OFF (manual pulls only).</p>
-    <p style="margin-top:6px;opacity:.6">Last updated 2026-06-04 (rev 5) · mirrors daily-todo.md · tick cards to dim them (saved in your browser)</p>
+    <p style="margin-top:6px;opacity:.6">Last updated 2026-06-04 (rev 6) · mirrors daily-todo.md · tick cards to dim them (saved in your browser)</p>
   </footer>
 
 <script>

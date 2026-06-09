@@ -1,12 +1,12 @@
 # 🚀 PERKI — ROLLING TO-DO
 
-_Pulled manually · Last updated: 2026-06-04 (rev 5) · Scheduled auto-send: OFF (update on request only)_
+_Pulled manually · Last updated: 2026-06-04 (rev 6) · Scheduled auto-send: OFF (update on request only)_
 
 > North star: the app, website and email now share one brand. Ship them, test with real people, then build the marketplace.
 
 ---
 
-## ✅ DONE TODAY (2026-06-04) — app redesign + email
+## ✅ DONE TODAY (2026-06-04) — brand build-out + spec
 - **App fully redesigned** to the brand (Phases 1–5): re-skin, single slide-out drawer, real provider logos + brand rows, lowest-tier pricing.
 - **LegacyApp retired** — the 968-line monolith split into a clean `src/app/` module tree (AppShell, tabs, hooks); validated by bundling the whole graph.
 - **Homepage** — added a "How it works" button above "See my perks".
@@ -15,7 +15,11 @@ _Pulled manually · Last updated: 2026-06-04 (rev 5) · Scheduled auto-send: OFF
 - **daily-digest function ported** to the new email with a 7am Europe/London guard + cron migration (003); JWT/header bugs diagnosed and fixed.
 - **Daily email deployed + previewed** — new design confirmed.
 - **App redesign pushed live to Vercel**.
-- **OVO Energy badge fixed** — loads the real OVO logo (was falling back to "OV" initials).
+- **OVO Energy badge fixed** — unified to a green "OVO" wordmark across website, app and email.
+- **Unified Web + App product spec** written, then implemented: splitter order, "Unused Tiers" rename, typed Active/Inactive split (no Inactive Feature), search auto-expand.
+- **App Marketplace flattened** to mirror the website; add-membership moved to Profile → Unused Tiers.
+- **App tooltip parity** — cheapest tier, higher tiers, and the tier-and-below included set.
+- **Home grid icons** — emojis replaced with a premium brand SVG icon set (image_url ready for real photos later).
 
 ---
 

@@ -65,11 +65,26 @@ export function PerkListItem({ perk, drawerOptions }) {
 }
 
 /* ── Shared perk list (applies ordering) ─────────────────────────────── */
-export function PerkList({ perks, emptyLabel = "No perks to show.", comparator = featureThenAlpha, mode = "marketplace", scope, tierMap }) {
+export function PerkList({ perks, emptyLabel = "No perks to show.", comparator = featureThenAlpha, mode = "marketplace", scope, tierMap, groupByCategory = false }) {
   const ordered = React.useMemo(() => [...perks].sort(comparator), [perks, comparator]);
   const drawerOptions = React.useMemo(() => ({ mode, scope, tierMap }), [mode, scope, tierMap]);
   if (!ordered.length) return <p className="text-sm text-muted text-center py-6">{emptyLabel}</p>;
-  return <ul className="space-y-2">{ordered.map((p) => <PerkListItem key={p.perk_id} perk={p} drawerOptions={drawerOptions} />)}</ul>;
+  if (!groupByCategory) return <ul className="space-y-2">{ordered.map((p) => <PerkListItem key={p.perk_id} perk={p} drawerOptions={drawerOptions} />)}</ul>;
+  const groups = {};
+  ordered.forEach((p) => { const c = p.category || "Other"; (groups[c] = groups[c] || []).push(p); });
+  return (
+    <div className="space-y-6">
+      {Object.keys(groups).sort().map((cat) => (
+        <div key={cat}>
+          <h3 className="flex items-center gap-2 text-sm font-semibold text-snow/90 mb-2">
+            <span aria-hidden="true">{categoryEmoji(cat)}</span>{cat}
+            <span className="rounded-full bg-snow/10 text-muted text-xs px-2 py-0.5">{groups[cat].length}</span>
+          </h3>
+          <ul className="space-y-2">{groups[cat].map((p) => <PerkListItem key={p.perk_id} perk={p} drawerOptions={drawerOptions} />)}</ul>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 /* ── Tier selector (logo + price next to each tier) ──────────────────── */

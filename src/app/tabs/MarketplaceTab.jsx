@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
-import { T, featureThenAlpha, buildMembershipCatalog, dedupeAcrossTiers } from "../theme";
-import { TabDesc, PotentialPerkTile } from "../components";
+import { T, CATEGORIES, featureThenAlpha, buildMembershipCatalog, dedupeAcrossTiers } from "../theme";
+import { TabDesc, SectionHeader, PotentialPerkTile } from "../components";
 
 export default function MarketplaceTab({allPerks,tierPrices}){
   const[membership,setMembership]=useState(null);
@@ -16,7 +16,7 @@ export default function MarketplaceTab({allPerks,tierPrices}){
     let rows=allPerks;
     if(selectedCat)rows=rows.filter(p=>p.provider===selectedCat.provider&&p.membership===selectedCat.membership);
     if(tier)rows=rows.filter(p=>p.tier===tier);
-    else rows=dedupeAcrossTiers(rows,tp);
+    // "All tiers": show every tier (no dedupe across tiers)
     if(query.trim()){const q=query.toLowerCase();rows=rows.filter(p=>[p.title,p.description,p.provider,p.tier,p.category].some(v=>(v||"").toLowerCase().includes(q)));}
     return [...rows].sort(featureThenAlpha);
   },[allPerks,selectedCat,tier,query,tp]);
@@ -45,8 +45,13 @@ export default function MarketplaceTab({allPerks,tierPrices}){
 
     <input value={query} onChange={e=>setQuery(e.target.value)} onClick={e=>e.stopPropagation()} placeholder="Search perks, providers, tiers..." style={{width:"100%",padding:"10px 14px",borderRadius:10,border:`1.5px solid ${T.border}`,background:T.surface,fontSize:13,fontFamily:"'Work Sans',sans-serif",color:T.textPrimary,margin:"2px 0 12px",boxSizing:"border-box",outline:"none"}}/>
 
-    {visible.length>0
-      ? <div style={{display:"flex",flexDirection:"column",gap:6}}>{visible.map(p=><PotentialPerkTile key={p.perk_id} perk={p} selected={selected} onSelect={setSelected} scope={allPerks} tierMap={tp}/>)}</div>
-      : <p style={{textAlign:"center",color:T.muted,marginTop:24,fontSize:13,fontFamily:"'Work Sans',sans-serif"}}>No perks match.</p>}
+    {visible.length===0
+      ? <p style={{textAlign:"center",color:T.muted,marginTop:24,fontSize:13,fontFamily:"'Work Sans',sans-serif"}}>No perks match.</p>
+      : Object.entries(visible.reduce((acc,p)=>{const c=p.category||"Other";(acc[c]=acc[c]||[]).push(p);return acc;},{})).sort((a,b)=>a[0].localeCompare(b[0])).map(([cat,items])=>(
+          <div key={cat}>
+            <SectionHeader count={items.length}>{(CATEGORIES[cat]||{}).icon||"✨"} {cat}</SectionHeader>
+            <div style={{display:"flex",flexDirection:"column",gap:6}}>{items.map(p=><PotentialPerkTile key={p.perk_id} perk={p} selected={selected} onSelect={setSelected} scope={allPerks} tierMap={tp}/>)}</div>
+          </div>
+        ))}
   </div>);
 }
