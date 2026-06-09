@@ -17,7 +17,7 @@ export function resetLabel(p){return{WEEKLY:"Weekly",MONTHLY:"Monthly",ANNUALLY:
 export function alphaSort(a,b){return a.title.localeCompare(b.title);}
 
 
-export const FEATURE_ORDER={feature:0,perk:1,competition:2,discount:3};
+export const FEATURE_ORDER={perk:0,feature:1,discount:2,competition:3};
 
 export function featureThenAlpha(a,b){
   const fa=FEATURE_ORDER[a.feature]??1;
@@ -108,3 +108,14 @@ export function getPerkBrand(perk){
 export const PROVIDER_SLUGS={"Monzo":"monzo","Revolut":"revolut","OVO Energy":"ovoenergy","OVO":"ovoenergy","American Express":"americanexpress","Amex":"americanexpress","Sky TV":"sky","Sky":"sky","O2":"o2","Lidl":"lidl"};
 
 export const PROVIDER_LOGOS={"OVO Energy":"https://logo.clearbit.com/ovoenergy.com","OVO":"https://logo.clearbit.com/ovoenergy.com"};
+
+export function buildMembershipCatalog(perks, tp){
+  const groups={};
+  perks.forEach(p=>{const key=`${p.provider}|${p.membership}`; if(!groups[key])groups[key]={provider:p.provider,membership:p.membership,tierSet:new Set()}; groups[key].tierSet.add(p.tier);});
+  return Object.values(groups).map(g=>({provider:g.provider,membership:g.membership,tiers:[...g.tierSet].map(tt=>({tier:tt,...(tp[`${g.provider}|${tt}`]||{price:0,price_label:"Free",sort_order:0})})).sort((a,b)=>a.sort_order-b.sort_order)})).sort((a,b)=>a.provider.localeCompare(b.provider));
+}
+export function dedupeAcrossTiers(perks, tp){
+  const rank=p=>tp[`${p.provider}|${p.tier}`]?.sort_order ?? (Number(p.price)||0);
+  const byKey={}; perks.forEach(p=>{const key=`${p.provider}|${(p.title||"").toLowerCase()}`; if(!byKey[key]||rank(p)>rank(byKey[key]))byKey[key]=p;});
+  return Object.values(byKey);
+}

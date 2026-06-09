@@ -109,17 +109,18 @@ export default function Profile() {
   const Sub = ({ title, type, active }) => {
     const list = ofType(type, active);
     const [open, setOpen] = React.useState(false);
+    const isOpen = q ? true : open;
     return (
       <div className={`rounded-card border-2 ${active ? "border-gold/40 bg-gold/[0.04]" : "border-snow/15 bg-snow/[0.02]"} p-3 sm:p-4 mb-3 shadow-md`}>
         <button
           onClick={() => setOpen((o) => !o)}
-          aria-expanded={open}
+          aria-expanded={isOpen}
           className="w-full flex items-center gap-2 cursor-pointer min-h-[44px] focus:outline-none focus:ring-[3px] focus:ring-purple/40 rounded-btn">
-          <ChevronDown className={`w-5 h-5 shrink-0 transition-transform duration-200 ${active ? "text-gold" : "text-muted"} ${open ? "" : "-rotate-90"}`} />
+          <ChevronDown className={`w-5 h-5 shrink-0 transition-transform duration-200 ${active ? "text-gold" : "text-muted"} ${isOpen ? "" : "-rotate-90"}`} />
           <h4 className="font-semibold">{title}</h4>
           <span className={`rounded-full text-xs px-2 py-0.5 ${active ? "bg-gold/20 text-golddeep" : "bg-snow/10 text-muted"}`}>{list.length}</span>
         </button>
-        {open && <div className="mt-3"><PerkList perks={list} mode="profile" scope={unlockedPerks} tierMap={tierMap} emptyLabel="None." /></div>}
+        {isOpen && <div className="mt-3"><PerkList perks={list} mode="profile" scope={unlockedPerks} tierMap={tierMap} emptyLabel="None." /></div>}
       </div>
     );
   };
@@ -172,7 +173,7 @@ export default function Profile() {
 
             {/* Potential memberships */}
             <section className="mt-8">
-              <h2 className="text-xl font-semibold mb-3">Potential memberships</h2>
+              <h2 className="text-xl font-semibold mb-3">Unused Tiers</h2>
               {potentialList.length === 0 ? <GlassCard className="!py-5 text-center text-sm text-muted">You've added everything available.</GlassCard> : (
                 <div className="space-y-2">{potentialList.map((c) => (
                   <PotentialRow key={`${c.provider}|${c.membership}`} c={c}
@@ -198,7 +199,6 @@ export default function Profile() {
                 <Sub title="Inactive Perks" type="perk" active={false} />
                 <Sub title="Inactive Competitions" type="competition" active={false} />
                 <Sub title="Inactive Discounts" type="discount" active={false} />
-                <Sub title="Inactive Features" type="feature" active={false} />
               </div>
             </div>
           </>

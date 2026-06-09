@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { supabase } from "../lib/supabase";
-import { SB_CONFIGURED, T, PROVIDERS, CATEGORIES, resetLabel, getPerkBrand, PROVIDER_SLUGS, PROVIDER_LOGOS } from "./theme";
+import { SB_CONFIGURED, T, PROVIDERS, CATEGORIES, resetLabel, getPerkBrand, featureThenAlpha, PROVIDER_SLUGS, PROVIDER_LOGOS } from "./theme";
 
 export function PerkBrandIcon({perk,size=32}){
   const b=getPerkBrand(perk);
@@ -51,10 +51,22 @@ export function CollapsibleSection({ title, subtitle, count, badge, defaultOpen 
 }
 
 
-export function PerkSheet({perk,mode="owned",onToggle,onDismiss,onClose}){
+export function PerkSheet({perk,mode="owned",onToggle,onDismiss,onClose,scope,tierMap}){
   const pCfg=PROVIDERS[perk.provider]||{color:T.accent};
   const url=perk.url;
   const isMarket=mode==="marketplace";
+  const tm=tierMap||{};
+  const rk=(p)=>tm[`${p.provider}|${p.tier}`]?.sort_order ?? (p.price ?? 0);
+  let market=null;
+  if(isMarket&&scope){
+    const sc=scope.filter(p=>p.provider===perk.provider&&p.membership===perk.membership);
+    const sameTitle=sc.filter(p=>(p.title||"").toLowerCase()===(perk.title||"").toLowerCase()).sort((a,b)=>rk(a)-rk(b));
+    const cheapest=sameTitle[0]||perk; const cheapestRank=rk(cheapest);
+    const cheapestLabel=tm[`${cheapest.provider}|${cheapest.tier}`]?.price_label||(cheapest.price===0?"Free":cheapest.price!=null?`£${cheapest.price}`:"Free");
+    const atOrBelow=sc.filter(p=>rk(p)<=cheapestRank); const byTitle={};
+    atOrBelow.forEach(p=>{const k=(p.title||"").toLowerCase(); if(!byTitle[k]||rk(p)<rk(byTitle[k]))byTitle[k]=p;});
+    market={cheapestTier:cheapest.tier,cheapestLabel,clickedHigher:rk(perk)>cheapestRank,included:Object.values(byTitle).sort(featureThenAlpha),higher:[...new Set(sameTitle.filter(p=>rk(p)>cheapestRank).map(p=>p.tier))]};
+  }
   return(
     <div onClick={onClose} style={{position:"fixed",inset:0,zIndex:200,background:"rgba(35,32,42,0.5)",backdropFilter:"blur(2px)",display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
       <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:420,background:T.surface,borderRadius:"20px 20px 0 0",boxShadow:"0 -12px 40px rgba(43,42,40,0.22)",padding:"10px 18px 22px",fontFamily:"'Work Sans',sans-serif",animation:"perkiSheetUp 0.26s cubic-bezier(.4,0,.2,1)",borderTop:`3px solid ${pCfg.color||T.accent}`}}>
@@ -75,8 +87,30 @@ export function PerkSheet({perk,mode="owned",onToggle,onDismiss,onClose}){
           {isMarket&&<span>📊 {perk.usage_limit||"—"}</span>}
         </div>
         {isMarket?(
-          url?<a href={url} target="_blank" rel="noopener noreferrer" style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,width:"100%",padding:"13px 0",borderRadius:12,background:T.primary,color:"#fff",fontSize:14,fontWeight:800,textDecoration:"none",fontFamily:"'Outfit',sans-serif"}}>Visit provider ↗</a>
-          :<div style={{textAlign:"center",fontSize:12,color:T.muted,padding:"10px 0"}}>No provider link yet.</div>
+          <>
+          {market&&(
+            <div style={{marginBottom:14}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",background:T.bg,border:`1px solid ${T.border}`,borderRadius:10,padding:"10px 12px",marginBottom:10}}>
+                <span style={{fontSize:12,color:T.muted}}>From the {market.cheapestTier} tier</span>
+                <span style={{fontSize:18,fontWeight:800,color:"#B07C1A",fontFamily:"'Outfit',sans-serif"}}>{market.cheapestLabel}<span style={{fontSize:11,fontWeight:500,color:T.muted}}>/mo</span></span>
+              </div>
+              {market.clickedHigher&&<div style={{fontSize:12,fontWeight:600,color:"#B07C1A",background:"#F7ECD4",border:"1px solid #E0A93B",borderRadius:10,padding:"8px 10px",marginBottom:10}}>Also in a cheaper tier. Get it from {market.cheapestTier} ({market.cheapestLabel}/mo).</div>}
+              <div style={{fontSize:10,fontWeight:700,letterSpacing:1,textTransform:"uppercase",color:T.muted,marginBottom:6}}>Included with {market.cheapestTier} &amp; below</div>
+              <div style={{display:"flex",flexDirection:"column",gap:5}}>
+                {market.included.map(ip=>(
+                  <div key={ip.perk_id} style={{display:"flex",alignItems:"center",gap:8,background:T.bg,border:`1px solid ${T.border}`,borderRadius:8,padding:"7px 10px"}}>
+                    <span style={{fontSize:13}}>{(CATEGORIES[ip.category]||{}).icon||"✨"}</span>
+                    <span style={{flex:1,minWidth:0,fontSize:12,color:T.textPrimary,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{ip.title}</span>
+                    <span style={{fontSize:10,color:T.muted,flexShrink:0}}>{ip.tier}</span>
+                  </div>
+                ))}
+              </div>
+              {market.higher.length>0&&<div style={{fontSize:12,color:T.textSecondary,marginTop:8}}>Also available in: <span style={{color:"#B07C1A",fontWeight:600}}>{market.higher.join(", ")}</span></div>}
+            </div>
+          )}
+          {url?<a href={url} target="_blank" rel="noopener noreferrer" style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,width:"100%",padding:"13px 0",borderRadius:12,background:T.primary,color:"#fff",fontSize:14,fontWeight:800,textDecoration:"none",fontFamily:"'Outfit',sans-serif"}}>Visit provider ↗</a>
+          :<div style={{textAlign:"center",fontSize:12,color:T.muted,padding:"10px 0"}}>No provider link yet.</div>}
+          </>
         ):(
           <div style={{display:"flex",flexDirection:"column",gap:10}}>
             <label style={{display:"flex",alignItems:"center",gap:10,cursor:"pointer",fontSize:14,fontWeight:600,color:T.textPrimary,padding:"11px 12px",borderRadius:10,border:`1px solid ${perk.used?T.success:T.border}`,background:perk.used?"#F7ECD4":T.bg}}>
@@ -138,7 +172,7 @@ export function PerkTile({perk,onToggle,onDismiss,selected,onSelect}){
 }
 
 
-export function PotentialPerkTile({perk,selected,onSelect}){
+export function PotentialPerkTile({perk,selected,onSelect,scope,tierMap}){
   const isSel=perk.perk_id===selected;
   const url=perk.url;
   const catEmoji=(CATEGORIES[perk.category]||{}).icon;
@@ -153,39 +187,72 @@ export function PotentialPerkTile({perk,selected,onSelect}){
         </div>
         {url?<a href={url} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} style={{fontSize:10,fontWeight:700,color:T.primary,textDecoration:"none",background:"#F7ECD4",padding:"4px 9px",borderRadius:8,flexShrink:0,fontFamily:"'Work Sans',sans-serif"}}>Visit ↗</a>:<FeatureChip feature={perk.feature}/>}
       </div>
-      {isSel&&<PerkSheet perk={perk} mode="marketplace" onClose={()=>onSelect(null)}/>}
+      {isSel&&<PerkSheet perk={perk} mode="marketplace" scope={scope} tierMap={tierMap} onClose={()=>onSelect(null)}/>}
     </div>
   );
 }
 
 
+/* ── Brand category icons (premium line art, replaces emoji on Home) ── */
+const GLYPHS = {
+  finance:'<rect x="3" y="7" width="18" height="10" rx="2"/><circle cx="12" cy="12" r="2.3"/>',
+  card:'<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/>',
+  shield:'<path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/>',
+  travel:'<path d="M21 4 3 11l6 2 2 6 4-7"/><path d="M11 13 21 4"/>',
+  car:'<path d="M5 16l1.4-5h11L19 16"/><rect x="3" y="16" width="18" height="3" rx="1"/><circle cx="7.5" cy="20" r="1.2"/><circle cx="16.5" cy="20" r="1.2"/>',
+  play:'<circle cx="12" cy="12" r="8.5"/><path d="M10 9l5 3-5 3z"/>',
+  food:'<path d="M5 8h11v5a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4z"/><path d="M16 9h2a2 2 0 0 1 0 4h-2"/>',
+  bag:'<path d="M6 8h12l-1 11H7z"/><path d="M9 8a3 3 0 0 1 6 0"/>',
+  activity:'<path d="M3 12h4l2 6 4-12 2 6h6"/>',
+  people:'<circle cx="9" cy="9" r="3"/><path d="M4 19c0-3 2.2-5 5-5s5 2 5 5"/><path d="M16 7a3 3 0 0 1 0 6"/>',
+  tool:'<path d="M15 7a3.5 3.5 0 0 0-4.6 4.4l-5.4 5.4 2.2 2.2 5.4-5.4A3.5 3.5 0 0 0 17 9"/>',
+  star:'<path d="M12 3l2.2 5.6L20 9.4l-4.2 3.8L17 19l-5-3-5 3 1.2-5.8L4 9.4l5.8-.8z"/>',
+  book:'<path d="M6 4h11a1 1 0 0 1 1 1v15H7a1 1 0 0 1-1-1z"/><path d="M6 17h12"/>',
+  monitor:'<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M9 20h6M12 16v4"/>',
+  gift:'<rect x="4" y="9" width="16" height="11" rx="1"/><path d="M3 9h18v3H3z"/><path d="M12 9v11"/>',
+};
+const CAT_GLYPH = {
+  Banking:"finance",Savings:"finance",Currency:"finance",Transfers:"finance",Investments:"finance",Budgeting:"finance",Credit:"card",Card:"card",
+  Protection:"shield",Security:"shield",Insurance:"shield",
+  Travel:"travel",Automotive:"car",
+  Streaming:"play",Entertainment:"play",News:"play",Broadband:"play",
+  Food:"food",Shopping:"bag",Rewards:"gift",
+  Fitness:"activity",Sports:"activity",Wellness:"activity",
+  Family:"people",Tools:"tool",Hardware:"tool",
+  Creativity:"star",Lifestyle:"star",Productivity:"star",
+  Education:"book",Workspace:"monitor",
+};
+export function CatGlyph({category,size="44%",color="#2B2A6E"}){
+  const g=GLYPHS[CAT_GLYPH[category]||"star"];
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" dangerouslySetInnerHTML={{__html:g}}/>;
+}
+
+/* ── PerkSquareTile (Home grid) — image-based, brand icon fallback ── */
 export function PerkSquareTile({perk,onToggle,onDismiss,selected,onSelect}){
-  const b=getPerkBrand(perk);
-  const pCfg=PROVIDERS[perk.provider]||{color:T.muted,initials:"??"};
   const isDimmed=perk.used||perk.dismissed;
   const isSel=perk.perk_id===selected;
+  const img=perk.image_url;
   return(
     <div style={{position:"relative"}}>
       <div onClick={e=>{e.stopPropagation();onSelect(isSel?null:perk.perk_id);}} style={{
-        width:"100%",aspectRatio:"1",borderRadius:10,overflow:"hidden",cursor:"pointer",
-        background:b.gradient,position:"relative",transition:"all 0.15s",
-        opacity:isDimmed?0.45:1,
-        border:`2px solid ${isSel?T.accent:"transparent"}`,
-        boxShadow:isSel?"0 0 0 2px rgba(30,144,255,0.3)":isDimmed?"none":"0 2px 8px rgba(0,0,0,0.1)",
+        width:"100%",aspectRatio:"1",borderRadius:12,overflow:"hidden",cursor:"pointer",position:"relative",transition:"all 0.15s",
+        background:img?"#FFFFFF":"#F7ECD4",opacity:isDimmed?0.5:1,
+        border:`2px solid ${isSel?T.primary:T.border}`,boxShadow:isDimmed?"none":T.shadow,
       }}>
-        <div style={{position:"absolute",top:3,right:3,width:16,height:16,borderRadius:5,background:pCfg.color,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:6,fontWeight:800,border:"1px solid rgba(255,255,255,0.4)",fontFamily:"'Work Sans',sans-serif",boxShadow:"0 1px 3px rgba(0,0,0,0.2)",zIndex:2}}>{pCfg.initials}</div>
-        {perk.dismissed&&<div style={{position:"absolute",top:3,left:3,fontSize:7,background:"rgba(0,0,0,0.5)",color:"#F87171",padding:"1px 4px",borderRadius:4,fontWeight:700,fontFamily:"'Work Sans',sans-serif",zIndex:2}}>✗</div>}
-        {perk.used&&!perk.dismissed&&<div style={{position:"absolute",top:3,left:3,fontSize:7,background:"rgba(0,0,0,0.5)",color:"#E0A93B",padding:"1px 4px",borderRadius:4,fontWeight:700,fontFamily:"'Work Sans',sans-serif",zIndex:2}}>✓</div>}
-        <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"60%",fontSize:22,filter:isDimmed?"grayscale(0.5)":"none"}}>{b.emoji}</div>
-        <div style={{position:"absolute",bottom:0,left:0,right:0,background:"rgba(0,0,0,0.55)",backdropFilter:"blur(4px)",padding:"3px 4px"}}>
-          <div style={{fontSize:7,fontWeight:700,color:"#fff",fontFamily:"'Work Sans',sans-serif",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",lineHeight:1.3}}>{perk.title}</div>
+        <div style={{position:"absolute",top:4,right:4,zIndex:2}}><AppBrandLogo provider={perk.provider} size={16}/></div>
+        {perk.dismissed&&<div style={{position:"absolute",top:4,left:4,zIndex:2,fontSize:8,fontWeight:800,color:"#fff",background:T.danger,borderRadius:4,padding:"1px 4px"}}>✕</div>}
+        {perk.used&&!perk.dismissed&&<div style={{position:"absolute",top:4,left:4,zIndex:2,fontSize:8,fontWeight:800,color:"#fff",background:"#B07C1A",borderRadius:4,padding:"1px 4px"}}>✓</div>}
+        {img
+          ? <img src={img} alt={perk.title} loading="lazy" style={{width:"100%",height:"100%",objectFit:"cover",display:"block",filter:isDimmed?"grayscale(0.4)":"none"}}/>
+          : <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100%"}}><CatGlyph category={perk.category}/></div>}
+        <div style={{position:"absolute",bottom:0,left:0,right:0,background:img?"rgba(35,32,42,0.62)":"rgba(255,255,255,0.86)",backdropFilter:"blur(3px)",padding:"3px 5px"}}>
+          <div style={{fontSize:7.5,fontWeight:700,color:img?"#fff":T.textPrimary,fontFamily:"'Work Sans',sans-serif",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",lineHeight:1.3}}>{perk.title}</div>
         </div>
       </div>
       {isSel&&<PerkSheet perk={perk} mode="owned" onToggle={onToggle} onDismiss={onDismiss} onClose={()=>onSelect(null)}/>}
     </div>
   );
 }
-
 
 export function HowToUseModal({onClose}){
   return(

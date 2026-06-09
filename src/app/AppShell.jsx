@@ -27,7 +27,7 @@ export default function AppShell(){
         {tab==="home"&&<HomeTab perks={d.userPerks} onToggle={d.toggleUsed} onDismiss={d.toggleDismissed} tierPrices={d.tierPrices} allPerks={d.allPerks}/>}
         {tab==="where"&&<WhereTab perks={d.userPerks} onToggle={d.toggleUsed} onDismiss={d.toggleDismissed} tierPrices={d.tierPrices}/>}
         {tab==="marketplace"&&<MarketplaceTab allPerks={d.allPerks} activeMemberships={d.activeMemberships} onAddMembership={d.addMembership} userName={d.user.name} userId={d.user.id} tierPrices={d.tierPrices}/>}
-        {tab==="profile"&&<ProfileTab perks={d.highestTierPerks} activeMemberships={d.displayMemberships} onRemoveMembership={d.removeMembership} user={d.user} onLogout={d.handleLogout} onToggle={d.toggleUsed} onDismiss={d.toggleDismissed} tierPrices={d.tierPrices}/>}
+        {tab==="profile"&&<ProfileTab perks={d.highestTierPerks} activeMemberships={d.displayMemberships} rawMemberships={d.activeMemberships} onRemoveMembership={d.removeMembership} onAddMembership={d.addMembership} allPerks={d.allPerks} user={d.user} onLogout={d.handleLogout} onToggle={d.toggleUsed} onDismiss={d.toggleDismissed} tierPrices={d.tierPrices}/>}
       </div>
       <BottomNav tab={tab} setTab={setTab}/>
     </div>

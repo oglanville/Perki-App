@@ -19,7 +19,7 @@ export const categoryLabel = (feature) => CATEGORY_LABEL[feature] || "Perk";
 
 /* ── Ordering ────────────────────────────────────────────────────────── */
 /* Perks-page order: features → perks → competitions → discounts, alpha within. */
-export const FEATURE_ORDER = { feature: 0, perk: 1, competition: 2, discount: 3 };
+export const FEATURE_ORDER = { perk: 0, feature: 1, discount: 2, competition: 3 };
 export function featureThenAlpha(a, b) {
   const fa = FEATURE_ORDER[a.feature] ?? 1;
   const fb = FEATURE_ORDER[b.feature] ?? 1;
