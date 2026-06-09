@@ -153,7 +153,7 @@
 
   <!-- DONE TODAY — daily highlight -->
   <section class="donebox">
-    <h2>✅ Done today — 4 Jun 2026 · brand build-out + spec</h2>
+    <h2>✅ Done recently — to 9 Jun 2026 · brand build-out, marketplace, spec & deck</h2>
     <ul>
       <li>App fully redesigned to the brand (Phases 1–5): re-skin, single slide-out drawer, real provider logos + brand rows, lowest-tier pricing</li>
       <li>Monolithic LegacyApp split into a clean src/app/ module tree (AppShell, tabs, hooks); legacy file retired</li>
@@ -168,7 +168,11 @@
       <li>Spec implemented across web + app: splitter order, "Unused Tiers" rename, typed Active/Inactive split, no Inactive Feature, search auto-expands every box</li>
       <li>App Marketplace flattened to mirror the website (individual perks, type-sorted); add-membership moved to Profile → Unused Tiers</li>
       <li>App tooltip now matches the website: cheapest tier, higher tiers, and everything included at that tier and below</li>
-      <li>Home grid icons: emojis replaced with a premium brand SVG icon set (image_url ready for real photos later)</li>
+      <li>Home grid icons: trialled a brand SVG set, then reverted to emoji on the gold-tint tile (image_url support kept for real photos later)</li>
+      <li>Marketplace finalised (web + app): permanent Memberships → Tiers → Categories filter rows, flat A–Z list, deduped to the cheapest tier, tier chips show price</li>
+      <li>Pitch deck updated: removed the Opportunity slide, added a "See it in action" email-screenshots slide with an app placeholder, founder origin story on Team, and a live Vercel link</li>
+      <li>Spec written + built: Profile order (Feature → Perk → Discount → Competition), terminology (Used/Unused, Entered/Unentered), Unused Tiers = upgrades only, membership shows active tier not a count</li>
+      <li>Features now toggle Active/Inactive like Perks across web + app; dashboard "Active" aggregate renamed "Claimed"</li>
       <li>OVO badge unified to a green "OVO" wordmark across website, app and email (reliable, no broken images)</li>
     </ul>
   </section>
@@ -177,6 +181,21 @@
   <section class="timeline">
     <h2>🧭 Progress timeline</h2>
     <ul class="tl">
+      <li>
+        <div class="date">9 Jun 2026</div>
+        <div class="ttl">Profile spec + Feature logic (web + app)</div>
+        <div class="desc">Implemented the Profile / order / terminology spec on both surfaces: section order is now Feature → Perk → Discount → Competition, with type-specific labels (Used/Unused Discounts, Entered/Unentered Competitions, Active/Inactive Perks). Features now toggle Active/Inactive exactly like Perks (Inactive Features now exist). Unused Tiers shows upgrades only; active membership rows show the tier after the name with no count; the app Home sub-tabs reorder to Features · Perks · Discounts · Competitions; the dashboard "Active" aggregate is renamed "Claimed". Bundle-verified.</div>
+      </li>
+      <li>
+        <div class="date">9 Jun 2026</div>
+        <div class="ttl">Marketplace finalised (web + app)</div>
+        <div class="desc">Settled the marketplace UX: three permanent filter rows (Memberships → Tiers → Categories, tiers always visible with their price), an ungrouped flat list in alphabetical order, and a dedupe so each perk appears once at the cheapest tier it lives in. The tooltip still resolves the cheapest tier and lists higher tiers.</div>
+      </li>
+      <li>
+        <div class="date">9 Jun 2026</div>
+        <div class="ttl">Pitch deck update</div>
+        <div class="desc">Removed the Opportunity slide; added a "See it in action" slide with the three daily-email screenshots, captions and a reserved app-screenshots placeholder; added the founder origin story (the airport lounge moment) to the Team slide; and added a live link to perki-app.vercel.app on "Where we are". Renumbered pages and fixed a packaging glitch.</div>
+      </li>
       <li>
         <div class="date">4 Jun 2026</div>
         <div class="ttl">Product spec implemented (web + app)</div>
@@ -253,7 +272,7 @@
   <footer>
     <p>🤝 <b>Need from you:</b> O2 + Lidl source data · install Outfit + Work Sans fonts · verify the perki.app sending domain in Resend · friends to test the app + email.</p>
     <p style="margin-top:6px">🧭 Guardrails: manual ingestion only, no scraping · accuracy over speed · brand gates deck work · auto-send is OFF (manual pulls only).</p>
-    <p style="margin-top:6px;opacity:.6">Last updated 2026-06-04 (rev 6) · mirrors daily-todo.md · tick cards to dim them (saved in your browser)</p>
+    <p style="margin-top:6px;opacity:.6">Last updated 2026-06-09 (rev 7) · mirrors daily-todo.md · tick cards to dim them (saved in your browser)</p>
   </footer>
 
 <script>

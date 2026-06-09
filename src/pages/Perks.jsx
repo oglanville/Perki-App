@@ -9,6 +9,12 @@ import { supabase } from "../lib/supabase";
 
 const byTitle = (a, b) => (a.title || "").localeCompare(b.title || "");
 
+/* True when no query, or when the perk matches the search text. */
+const matches = (p, query) => {
+  const q = (query || "").trim().toLowerCase();
+  return !q || [p.title, p.description, p.provider, p.tier, p.category].some((v) => (v || "").toLowerCase().includes(q));
+};
+
 /* Keep only the cheapest tier each perk appears in (per provider + title). */
 function dedupeCheapest(rows, tierMap) {
   const rank = (p) => tierMap[`${p.provider}|${p.tier}`]?.sort_order ?? (Number(p.price) || 0);
@@ -50,20 +56,31 @@ export default function Perks() {
 
   const baseRows = React.useMemo(() => selected ? perks.filter((p) => p.provider === selected.provider && p.membership === selected.membership) : perks, [perks, selected]);
 
+  /* When searching, only show membership chips whose provider has a matching perk. */
+  const membershipChips = React.useMemo(
+    () => catalog.filter((c) => perks.some((p) => p.provider === c.provider && p.membership === c.membership && matches(p, query))),
+    [catalog, perks, query]
+  );
+
   const tierChips = React.useMemo(() => {
     const seen = {};
-    baseRows.forEach((p) => { const k = `${p.provider}|${p.tier}`; const so = tierMap[k]?.sort_order ?? 0; if (!(p.tier in seen) || so < seen[p.tier].so) seen[p.tier] = { so, label: tierMap[k]?.price_label }; });
+    baseRows.filter((p) => matches(p, query)).forEach((p) => { const k = `${p.provider}|${p.tier}`; const so = tierMap[k]?.sort_order ?? 0; if (!(p.tier in seen) || so < seen[p.tier].so) seen[p.tier] = { so, label: tierMap[k]?.price_label }; });
     return Object.keys(seen).sort((a, b) => seen[a].so - seen[b].so).map((t) => ({ tier: t, label: seen[t].label }));
-  }, [baseRows, tierMap]);
+  }, [baseRows, tierMap, query]);
 
-  const categoryChips = React.useMemo(() => [...new Set(baseRows.map((p) => p.category).filter(Boolean))].sort(), [baseRows]);
+  const categoryChips = React.useMemo(() => [...new Set(baseRows.filter((p) => matches(p, query)).map((p) => p.category).filter(Boolean))].sort(), [baseRows, query]);
+
+  /* Clear any active filter that the search has emptied out, so it can't stay selected while hidden. */
+  React.useEffect(() => { if (membership && !membershipChips.some((c) => `${c.provider}|${c.membership}` === membership)) setMembership(null); }, [membershipChips, membership]);
+  React.useEffect(() => { if (tier && !tierChips.some((t) => t.tier === tier)) setTier(null); }, [tierChips, tier]);
+  React.useEffect(() => { if (category && !categoryChips.includes(category)) setCategory(null); }, [categoryChips, category]);
 
   const visible = React.useMemo(() => {
     let rows = baseRows;
     if (tier) rows = rows.filter((p) => p.tier === tier);
     if (category) rows = rows.filter((p) => p.category === category);
     if (!tier) rows = dedupeCheapest(rows, tierMap);
-    if (query.trim()) { const q = query.toLowerCase(); rows = rows.filter((p) => [p.title, p.description, p.provider, p.tier, p.category].some((v) => (v || "").toLowerCase().includes(q))); }
+    if (query.trim()) rows = rows.filter((p) => matches(p, query));
     return rows;
   }, [baseRows, tier, category, query, tierMap]);
 
@@ -90,7 +107,7 @@ export default function Perks() {
       {/* Memberships */}
       <div className="swipe flex gap-2 overflow-x-auto -mx-4 px-4 pb-2 mb-2">
         <button onClick={() => setMembership(null)} className={chip(membership == null)}>All</button>
-        {catalog.map((c) => { const key = `${c.provider}|${c.membership}`; return (
+        {membershipChips.map((c) => { const key = `${c.provider}|${c.membership}`; return (
           <button key={key} onClick={() => setMembership(key)} className={`${chip(membership === key)} flex items-center gap-2`}><BrandLogo provider={c.provider} className="w-6 h-6" />{c.provider}</button>
         ); })}
       </div>

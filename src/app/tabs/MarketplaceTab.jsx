@@ -1,8 +1,12 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { T, CATEGORIES, buildMembershipCatalog } from "../theme";
 import { TabDesc, PotentialPerkTile } from "../components";
 
 const byTitle = (a, b) => (a.title || "").localeCompare(b.title || "");
+const matches = (p, query) => {
+  const q = (query || "").trim().toLowerCase();
+  return !q || [p.title, p.description, p.provider, p.tier, p.category].some(v => (v || "").toLowerCase().includes(q));
+};
 function dedupeCheapest(rows, tp){
   const rank = p => tp[`${p.provider}|${p.tier}`]?.sort_order ?? (Number(p.price) || 0);
   const byKey = {};
@@ -22,15 +26,21 @@ export default function MarketplaceTab({allPerks,tierPrices}){
   const selCat=useMemo(()=>catalog.find(c=>`${c.provider}|${c.membership}`===membership)||null,[catalog,membership]);
   const baseRows=useMemo(()=>selCat?allPerks.filter(p=>p.provider===selCat.provider&&p.membership===selCat.membership):allPerks,[allPerks,selCat]);
 
-  const tierChips=useMemo(()=>{const seen={};baseRows.forEach(p=>{const k=`${p.provider}|${p.tier}`;const so=tp[k]?.sort_order??0;if(!(p.tier in seen)||so<seen[p.tier].so)seen[p.tier]={so,label:tp[k]?.price_label};});return Object.keys(seen).sort((a,b)=>seen[a].so-seen[b].so).map(t=>({tier:t,label:seen[t].label}));},[baseRows,tp]);
-  const catChips=useMemo(()=>[...new Set(baseRows.map(p=>p.category).filter(Boolean))].sort(),[baseRows]);
+  /* When searching, only show chips that still have a matching result. */
+  const membershipChips=useMemo(()=>catalog.filter(c=>allPerks.some(p=>p.provider===c.provider&&p.membership===c.membership&&matches(p,query))),[catalog,allPerks,query]);
+  const tierChips=useMemo(()=>{const seen={};baseRows.filter(p=>matches(p,query)).forEach(p=>{const k=`${p.provider}|${p.tier}`;const so=tp[k]?.sort_order??0;if(!(p.tier in seen)||so<seen[p.tier].so)seen[p.tier]={so,label:tp[k]?.price_label};});return Object.keys(seen).sort((a,b)=>seen[a].so-seen[b].so).map(t=>({tier:t,label:seen[t].label}));},[baseRows,tp,query]);
+  const catChips=useMemo(()=>[...new Set(baseRows.filter(p=>matches(p,query)).map(p=>p.category).filter(Boolean))].sort(),[baseRows,query]);
+
+  useEffect(()=>{if(membership&&!membershipChips.some(c=>`${c.provider}|${c.membership}`===membership))setMembership(null);},[membershipChips,membership]);
+  useEffect(()=>{if(tier&&!tierChips.some(t=>t.tier===tier))setTier(null);},[tierChips,tier]);
+  useEffect(()=>{if(category&&!catChips.includes(category))setCategory(null);},[catChips,category]);
 
   const visible=useMemo(()=>{
     let rows=baseRows;
     if(tier)rows=rows.filter(p=>p.tier===tier);
     if(category)rows=rows.filter(p=>p.category===category);
     if(!tier)rows=dedupeCheapest(rows,tp);
-    if(query.trim()){const q=query.toLowerCase();rows=rows.filter(p=>[p.title,p.description,p.provider,p.tier,p.category].some(v=>(v||"").toLowerCase().includes(q)));}
+    if(query.trim())rows=rows.filter(p=>matches(p,query));
     return [...rows].sort(byTitle);
   },[baseRows,tier,category,query,tp]);
 
@@ -42,7 +52,7 @@ export default function MarketplaceTab({allPerks,tierPrices}){
 
     <div style={{display:"flex",gap:8,overflowX:"auto",paddingBottom:8,marginBottom:6}}>
       <button onClick={e=>{e.stopPropagation();setMembership(null);setTier(null);setCategory(null);}} style={chip(membership==null)}>All</button>
-      {catalog.map(c=>{const key=`${c.provider}|${c.membership}`;return <button key={key} onClick={e=>{e.stopPropagation();setMembership(key);setTier(null);setCategory(null);}} style={chip(membership===key)}>{c.provider}</button>;})}
+      {membershipChips.map(c=>{const key=`${c.provider}|${c.membership}`;return <button key={key} onClick={e=>{e.stopPropagation();setMembership(key);setTier(null);setCategory(null);}} style={chip(membership===key)}>{c.provider}</button>;})}
     </div>
 
     <div style={{display:"flex",gap:8,overflowX:"auto",paddingBottom:8,marginBottom:6}}>

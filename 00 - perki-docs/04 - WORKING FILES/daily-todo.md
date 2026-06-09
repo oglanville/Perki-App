@@ -1,12 +1,12 @@
 # 🚀 PERKI — ROLLING TO-DO
 
-_Pulled manually · Last updated: 2026-06-04 (rev 6) · Scheduled auto-send: OFF (update on request only)_
+_Pulled manually · Last updated: 2026-06-09 (rev 7) · Scheduled auto-send: OFF (update on request only)_
 
 > North star: the app, website and email now share one brand. Ship them, test with real people, then build the marketplace.
 
 ---
 
-## ✅ DONE TODAY (2026-06-04) — brand build-out + spec
+## ✅ DONE RECENTLY (to 2026-06-09) — brand build-out, marketplace, spec & deck
 - **App fully redesigned** to the brand (Phases 1–5): re-skin, single slide-out drawer, real provider logos + brand rows, lowest-tier pricing.
 - **LegacyApp retired** — the 968-line monolith split into a clean `src/app/` module tree (AppShell, tabs, hooks); validated by bundling the whole graph.
 - **Homepage** — added a "How it works" button above "See my perks".
@@ -19,7 +19,10 @@ _Pulled manually · Last updated: 2026-06-04 (rev 6) · Scheduled auto-send: OFF
 - **Unified Web + App product spec** written, then implemented: splitter order, "Unused Tiers" rename, typed Active/Inactive split (no Inactive Feature), search auto-expand.
 - **App Marketplace flattened** to mirror the website; add-membership moved to Profile → Unused Tiers.
 - **App tooltip parity** — cheapest tier, higher tiers, and the tier-and-below included set.
-- **Home grid icons** — emojis replaced with a premium brand SVG icon set (image_url ready for real photos later).
+- **Home grid icons** — trialled a brand SVG set, then reverted to emoji on the gold-tint tile (image_url support kept).
+- **Marketplace finalised (web + app)** — permanent Memberships → Tiers → Categories filters, flat A–Z list, deduped to the cheapest tier, tier chips show price.
+- **Pitch deck updated** — removed Opportunity slide; added a "See it in action" email-screenshots slide + app placeholder; founder origin story on Team; live Vercel link.
+- **Profile spec built + Features toggle** — order Feature → Perk → Discount → Competition; Used/Unused Discounts, Entered/Unentered Competitions; Features now Active/Inactive like Perks; Unused Tiers = upgrades; "Claimed" stat.
 
 ---
 
