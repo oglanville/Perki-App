@@ -244,7 +244,7 @@ export function PerkSquareTile({perk,onToggle,onDismiss,selected,onSelect}){
         {perk.used&&!perk.dismissed&&<div style={{position:"absolute",top:4,left:4,zIndex:2,fontSize:8,fontWeight:800,color:"#fff",background:"#B07C1A",borderRadius:4,padding:"1px 4px"}}>✓</div>}
         {img
           ? <img src={img} alt={perk.title} loading="lazy" style={{width:"100%",height:"100%",objectFit:"cover",display:"block",filter:isDimmed?"grayscale(0.4)":"none"}}/>
-          : <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100%"}}><CatGlyph category={perk.category}/></div>}
+          : <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100%",fontSize:28,filter:isDimmed?"grayscale(0.4)":"none"}}>{perk.emoji||(CATEGORIES[perk.category]||{}).icon||"📦"}</div>}
         <div style={{position:"absolute",bottom:0,left:0,right:0,background:img?"rgba(35,32,42,0.62)":"rgba(255,255,255,0.86)",backdropFilter:"blur(3px)",padding:"3px 5px"}}>
           <div style={{fontSize:7.5,fontWeight:700,color:img?"#fff":T.textPrimary,fontFamily:"'Work Sans',sans-serif",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",lineHeight:1.3}}>{perk.title}</div>
         </div>
