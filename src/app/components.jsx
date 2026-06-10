@@ -63,9 +63,11 @@ export function PerkSheet({perk,mode="owned",onToggle,onDismiss,onClose,scope,ti
     const sameTitle=sc.filter(p=>(p.title||"").toLowerCase()===(perk.title||"").toLowerCase()).sort((a,b)=>rk(a)-rk(b));
     const cheapest=sameTitle[0]||perk; const cheapestRank=rk(cheapest);
     const cheapestLabel=tm[`${cheapest.provider}|${cheapest.tier}`]?.price_label||(cheapest.price===0?"Free":cheapest.price!=null?`£${cheapest.price}`:"Free");
-    const atOrBelow=sc.filter(p=>rk(p)<=cheapestRank); const byTitle={};
+    const clickedRank=rk(perk);
+    const clickedLabel=tm[`${perk.provider}|${perk.tier}`]?.price_label||(perk.price===0?"Free":perk.price!=null?`£${perk.price}`:"Free");
+    const atOrBelow=sc.filter(p=>rk(p)<=clickedRank); const byTitle={};
     atOrBelow.forEach(p=>{const k=(p.title||"").toLowerCase(); if(!byTitle[k]||rk(p)<rk(byTitle[k]))byTitle[k]=p;});
-    market={cheapestTier:cheapest.tier,cheapestLabel,clickedHigher:rk(perk)>cheapestRank,included:Object.values(byTitle).sort(featureThenAlpha),higher:[...new Set(sameTitle.filter(p=>rk(p)>cheapestRank).map(p=>p.tier))]};
+    market={clickedTier:perk.tier,clickedLabel,hasCheaper:clickedRank>cheapestRank,cheapestTier:cheapest.tier,cheapestLabel,included:Object.values(byTitle).sort(featureThenAlpha),higher:[...new Set(sameTitle.filter(p=>rk(p)>clickedRank).map(p=>p.tier))]};
   }
   return(
     <div onClick={onClose} style={{position:"fixed",inset:0,zIndex:200,background:"rgba(35,32,42,0.5)",backdropFilter:"blur(2px)",display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
@@ -91,11 +93,11 @@ export function PerkSheet({perk,mode="owned",onToggle,onDismiss,onClose,scope,ti
           {market&&(
             <div style={{marginBottom:14}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",background:T.bg,border:`1px solid ${T.border}`,borderRadius:10,padding:"10px 12px",marginBottom:10}}>
-                <span style={{fontSize:12,color:T.muted}}>From the {market.cheapestTier} tier</span>
-                <span style={{fontSize:18,fontWeight:800,color:"#B07C1A",fontFamily:"'Outfit',sans-serif"}}>{market.cheapestLabel}<span style={{fontSize:11,fontWeight:500,color:T.muted}}>/mo</span></span>
+                <span style={{fontSize:12,color:T.muted}}>From the {market.clickedTier} tier</span>
+                <span style={{fontSize:18,fontWeight:800,color:"#B07C1A",fontFamily:"'Outfit',sans-serif"}}>{market.clickedLabel}<span style={{fontSize:11,fontWeight:500,color:T.muted}}>/mo</span></span>
               </div>
-              {market.clickedHigher&&<div style={{fontSize:12,fontWeight:600,color:"#B07C1A",background:"#F7ECD4",border:"1px solid #E0A93B",borderRadius:10,padding:"8px 10px",marginBottom:10}}>Also in a cheaper tier. Get it from {market.cheapestTier} ({market.cheapestLabel}/mo).</div>}
-              <div style={{fontSize:10,fontWeight:700,letterSpacing:1,textTransform:"uppercase",color:T.muted,marginBottom:6}}>Included with {market.cheapestTier} &amp; below</div>
+              {market.hasCheaper&&<div style={{fontSize:12,fontWeight:600,color:"#B07C1A",background:"#F7ECD4",border:"1px solid #E0A93B",borderRadius:10,padding:"8px 10px",marginBottom:10}}>Also in a cheaper tier. Get it from {market.cheapestTier} ({market.cheapestLabel}/mo).</div>}
+              <div style={{fontSize:10,fontWeight:700,letterSpacing:1,textTransform:"uppercase",color:T.muted,marginBottom:6}}>Included with {market.clickedTier} &amp; below</div>
               <div style={{display:"flex",flexDirection:"column",gap:5}}>
                 {market.included.map(ip=>(
                   <div key={ip.perk_id} style={{display:"flex",alignItems:"center",gap:8,background:T.bg,border:`1px solid ${T.border}`,borderRadius:8,padding:"7px 10px"}}>

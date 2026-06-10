@@ -63,9 +63,13 @@ export function PerkDrawerProvider({ children }) {
     const cheapestRank = rk(cheapest);
     const cheapestTier = cheapest.tier;
     const cheapestLabel = tm[`${cheapest.provider}|${cheapestTier}`]?.price_label || "Free";
-    const clickedHigher = rk(perk) > cheapestRank; // user clicked a pricier instance
-    // included = everything at the cheapest tier and below, de-duped to the cheapest instance
-    const atOrBelow = scope.filter((p) => rk(p) <= cheapestRank);
+    // the tier the user actually clicked through to reach this drawer
+    const clickedTier = perk.tier;
+    const clickedRank = rk(perk);
+    const clickedLabel = tm[`${perk.provider}|${clickedTier}`]?.price_label || "Free";
+    const hasCheaper = clickedRank > cheapestRank; // a cheaper tier carries this same perk
+    // included = everything at the clicked tier and below, de-duped to the cheapest instance
+    const atOrBelow = scope.filter((p) => rk(p) <= clickedRank);
     const byTitle = {};
     atOrBelow.forEach((p) => {
       const k = (p.title || "").toLowerCase();
@@ -73,8 +77,8 @@ export function PerkDrawerProvider({ children }) {
     });
     const included = Object.values(byTitle).sort(featureThenAlpha);
     // higher tiers where this same title also appears
-    const higher = [...new Set(sameTitle.filter((p) => rk(p) > cheapestRank).map((p) => p.tier))];
-    return { cheapestTier, cheapestLabel, clickedHigher, included, higher };
+    const higher = [...new Set(sameTitle.filter((p) => rk(p) > clickedRank).map((p) => p.tier))];
+    return { clickedTier, clickedLabel, hasCheaper, cheapestTier, cheapestLabel, included, higher };
   }, [perk, opts]);
 
   const isProfile = opts.mode === "profile";
@@ -123,15 +127,15 @@ export function PerkDrawerProvider({ children }) {
               {!isProfile && marketplace && (
                 <section>
                   <div className="glass rounded-card flex items-baseline justify-between px-4 py-3 mb-3">
-                    <span className="text-sm text-muted">From the {marketplace.cheapestTier} tier</span>
-                    <span className="text-2xl font-bold text-gold">{marketplace.cheapestLabel}<span className="text-sm font-normal text-muted">/mo</span></span>
+                    <span className="text-sm text-muted">From the {marketplace.clickedTier} tier</span>
+                    <span className="text-2xl font-bold text-gold">{marketplace.clickedLabel}<span className="text-sm font-normal text-muted">/mo</span></span>
                   </div>
-                  {marketplace.clickedHigher && (
+                  {marketplace.hasCheaper && (
                     <div className="rounded-card border border-gold/60 bg-gold/10 text-golddeep px-4 py-2.5 mb-4 text-sm font-medium flex items-center gap-2">
                       <ArrowUpRight className="w-4 h-4 shrink-0 rotate-180" />Also available in a cheaper tier — get it from {marketplace.cheapestTier} ({marketplace.cheapestLabel}/mo).
                     </div>
                   )}
-                  <h3 className="text-sm uppercase tracking-wide text-muted mb-2">Included with {marketplace.cheapestTier} &amp; below</h3>
+                  <h3 className="text-sm uppercase tracking-wide text-muted mb-2">Included with {marketplace.clickedTier} &amp; below</h3>
                   <ul className="space-y-2">
                     {marketplace.included.map((p) => (
                       <li key={p.perk_id} className="glass rounded-btn flex items-center gap-2 px-3 py-2 text-sm">
