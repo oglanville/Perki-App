@@ -96,10 +96,6 @@
         <div class="syn">Wire the 7am send end to end (template + function are done).</div>
         <ul><li>Run the cron migration 003 (06:00 + 07:00 UTC jobs)</li><li>Verify the perki.app sending domain in Resend (SPF/DKIM/DMARC)</li><li>Confirm one send fires at 7am London</li></ul>
       </div></div>
-      <div class="card" data-id="f2"><input type="checkbox" class="chk"><div class="body">
-        <div class="t">🖼️ Add screenshots to the deck</div>
-        <div class="syn">Drop real website and app examples into the pitch deck (now that both are on-brand).</div>
-      </div></div>
       <div class="card" data-id="f1"><input type="checkbox" class="chk"><div class="body">
         <div class="t">🤝 Seek founder advice (weekly)</div>
         <span class="tag prio" style="background:rgba(47,182,168,.18);color:#2fb6a8">Weekly</span>
@@ -153,8 +149,12 @@
 
   <!-- DONE TODAY — daily highlight -->
   <section class="donebox">
-    <h2>✅ Done recently — to 9 Jun 2026 · brand build-out, marketplace, spec & deck</h2>
+    <h2>✅ Done recently — to 10 Jun 2026 · compare, search facets, pricing & deck</h2>
     <ul>
+      <li>Pitch deck repaired and finished: fixed the packaging corruption and added the five app-configuration screenshots to a captioned "Inside the app" slide; the "Make every perk count." close slide is restored. 16 slides, render-QA'd</li>
+      <li>Marketplace search now hides empty filters (web + app): when you search, only Membership / Tier / Category chips that still have a matching result are shown, and a selected-but-emptied filter clears itself</li>
+      <li>Marketplace Compare built (website, spec'd first): a Compare toggle splits the view into two independent marketplaces with one shared search at the top — each side keeps its own Memberships / Tiers / Categories, so anything can be compared against anything</li>
+      <li>Perk pop-out price now follows the tier you clicked (web + app): the headline shows the clicked tier's price, with "also available in a cheaper tier — get it from…" beneath it; All tiers still resolves to the cheapest</li>
       <li>App fully redesigned to the brand (Phases 1–5): re-skin, single slide-out drawer, real provider logos + brand rows, lowest-tier pricing</li>
       <li>Monolithic LegacyApp split into a clean src/app/ module tree (AppShell, tabs, hooks); legacy file retired</li>
       <li>Homepage "How it works" button added above "See my perks"</li>
@@ -181,6 +181,21 @@
   <section class="timeline">
     <h2>🧭 Progress timeline</h2>
     <ul class="tl">
+      <li>
+        <div class="date">10 Jun 2026</div>
+        <div class="ttl">Marketplace Compare (website)</div>
+        <div class="desc">Wrote an engineering-ready spec, then built it. A Compare button under Request splits the Marketplace into two equal, fully independent marketplaces with a single shared search lifted to the top. Each pane carries its own Memberships, Tiers and Categories rows and its own list, so any product/tier can be compared against any other. The marketplace body was extracted into a reusable MarketplacePane so the single view and both panes run identical logic. Panes stack on mobile. Bundle-verified.</div>
+      </li>
+      <li>
+        <div class="date">10 Jun 2026</div>
+        <div class="ttl">Marketplace search facets + clicked-tier pricing (web + app)</div>
+        <div class="desc">Two refinements across both surfaces. First, searching now hides any Membership / Tier / Category chip with zero matching results, and auto-clears a filter that the search has emptied. Second, the perk pop-out now leads with the price of the tier you clicked through: All tiers shows the cheapest, a selected tier shows that tier, and clicking a higher tier shows its price with the "also available in a cheaper tier — get it from…" note moved below. The included list keys to the clicked tier too. Bundle-verified.</div>
+      </li>
+      <li>
+        <div class="date">10 Jun 2026</div>
+        <div class="ttl">Pitch deck repaired + app screenshots</div>
+        <div class="desc">Recovered the deck from a python-pptx packaging corruption (two parts claiming one slide name) via a clean round-trip, then rebuilt the close slide by editing shapes rather than adding/removing slides. Added the five app-configuration screenshots to the "Inside the app" slide with Home / Marketplace / Profile / Active-memberships / Active-Inactive captions. Final deck is 16 slides with no duplicates; render-QA'd the email slide, app slide and close.</div>
+      </li>
       <li>
         <div class="date">9 Jun 2026</div>
         <div class="ttl">Profile spec + Feature logic (web + app)</div>
@@ -272,7 +287,7 @@
   <footer>
     <p>🤝 <b>Need from you:</b> O2 + Lidl source data · install Outfit + Work Sans fonts · verify the perki.app sending domain in Resend · friends to test the app + email.</p>
     <p style="margin-top:6px">🧭 Guardrails: manual ingestion only, no scraping · accuracy over speed · brand gates deck work · auto-send is OFF (manual pulls only).</p>
-    <p style="margin-top:6px;opacity:.6">Last updated 2026-06-09 (rev 7) · mirrors daily-todo.md · tick cards to dim them (saved in your browser)</p>
+    <p style="margin-top:6px;opacity:.6">Last updated 2026-06-10 (rev 8) · mirrors daily-todo.md · tick cards to dim them (saved in your browser)</p>
   </footer>
 
 <script>

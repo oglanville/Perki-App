@@ -1,12 +1,16 @@
 # 🚀 PERKI — ROLLING TO-DO
 
-_Pulled manually · Last updated: 2026-06-09 (rev 7) · Scheduled auto-send: OFF (update on request only)_
+_Pulled manually · Last updated: 2026-06-10 (rev 8) · Scheduled auto-send: OFF (update on request only)_
 
 > North star: the app, website and email now share one brand. Ship them, test with real people, then build the marketplace.
 
 ---
 
-## ✅ DONE RECENTLY (to 2026-06-09) — brand build-out, marketplace, spec & deck
+## ✅ DONE RECENTLY (to 2026-06-10) — compare, search facets, pricing & deck
+- **Marketplace Compare built (website)** — wrote the spec, then built it: a Compare toggle splits the view into two independent marketplaces with one shared search at the top. Each side keeps its own Memberships / Tiers / Categories, so anything can be compared against anything. Marketplace body extracted into a reusable `MarketplacePane`.
+- **Marketplace search hides empty filters (web + app)** — when you search, only Membership / Tier / Category chips with a matching result show, and a selected-but-emptied filter clears itself.
+- **Perk pop-out price follows the clicked tier (web + app)** — headline shows the clicked tier's price, with "also available in a cheaper tier — get it from…" beneath; All tiers still resolves to the cheapest; the included list keys to the clicked tier too.
+- **Pitch deck repaired and finished** — fixed the packaging corruption, restored the "Make every perk count." close slide, and added the five app-configuration screenshots to a captioned "Inside the app" slide. 16 slides, render-QA'd.
 - **App fully redesigned** to the brand (Phases 1–5): re-skin, single slide-out drawer, real provider logos + brand rows, lowest-tier pricing.
 - **LegacyApp retired** — the 968-line monolith split into a clean `src/app/` module tree (AppShell, tabs, hooks); validated by bundling the whole graph.
 - **Homepage** — added a "How it works" button above "See my perks".
@@ -16,12 +20,10 @@ _Pulled manually · Last updated: 2026-06-09 (rev 7) · Scheduled auto-send: OFF
 - **Daily email deployed + previewed** — new design confirmed.
 - **App redesign pushed live to Vercel**.
 - **OVO Energy badge fixed** — unified to a green "OVO" wordmark across website, app and email.
-- **Unified Web + App product spec** written, then implemented: splitter order, "Unused Tiers" rename, typed Active/Inactive split (no Inactive Feature), search auto-expand.
+- **Unified Web + App product spec** written, then implemented: splitter order, "Unused Tiers" rename, typed Active/Inactive split, search auto-expand.
 - **App Marketplace flattened** to mirror the website; add-membership moved to Profile → Unused Tiers.
-- **App tooltip parity** — cheapest tier, higher tiers, and the tier-and-below included set.
-- **Home grid icons** — trialled a brand SVG set, then reverted to emoji on the gold-tint tile (image_url support kept).
 - **Marketplace finalised (web + app)** — permanent Memberships → Tiers → Categories filters, flat A–Z list, deduped to the cheapest tier, tier chips show price.
-- **Pitch deck updated** — removed Opportunity slide; added a "See it in action" email-screenshots slide + app placeholder; founder origin story on Team; live Vercel link.
+- **Pitch deck updated** — removed Opportunity slide; added a "See it in action" email-screenshots slide; founder origin story on Team; live Vercel link.
 - **Profile spec built + Features toggle** — order Feature → Perk → Discount → Competition; Used/Unused Discounts, Entered/Unentered Competitions; Features now Active/Inactive like Perks; Unused Tiers = upgrades; "Claimed" stat.
 
 ---
@@ -33,7 +35,7 @@ _Pulled manually · Last updated: 2026-06-09 (rev 7) · Scheduled auto-send: OFF
 
 ## 📅 THIS WEEK — strengthen the MVP
 - **📧 Finish email automation** — template + function are done; now run cron migration 003 (06:00 + 07:00 UTC jobs), verify the perki.app sending domain in Resend (SPF/DKIM/DMARC), and confirm one send fires at 7am London.
-- **🖼️ Add screenshots to the deck** — drop real website and app examples in, now that both are on-brand.
+- **🧪 QA the new marketplace work** — pressure-test Compare, the search facets and the clicked-tier pop-out on `npm run dev`, then redeploy.
 - **🤝 Seek founder advice (weekly)** — message Tori Prew (HUUR), Tom Standen (Sylvi), George Gazzard (Solskin) once a week for input.
 
 ## 🗓️ THIS MONTH — grow the catalogue and get it tested

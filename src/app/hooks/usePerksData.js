@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { supabase } from "../../lib/supabase";
-import { SB_CONFIGURED, getProviderTierOrder, getEffectiveTiers, getHighestTier, isHierarchicalProvider } from "../theme";
+import { SB_CONFIGURED, getProviderTierOrder, getEffectiveTiers, getHighestTier, isHierarchicalProvider, TIER_RANK } from "../theme";
 
 export function usePerksData(){
   const[user,setUser]=useState(null);
@@ -9,7 +9,7 @@ export function usePerksData(){
   const[activeMemberships,setActiveMemberships]=useState([]);
   const[usedMap,setUsedMap]=useState({});
   const[dismissedMap,setDismissedMap]=useState({});
-  const tierPrices=useMemo(()=>{const m={};allPerks.forEach(p=>{if(p.price!=null){const k=`${p.provider}|${p.tier}`;if(!(k in m))m[k]={price:p.price,price_label:p.price===0?"Free":`£${p.price}`,sort_order:p.price};}});return m;},[allPerks]);
+  const tierPrices=useMemo(()=>{const m={};allPerks.forEach(p=>{if(p.price!=null){const k=`${p.provider}|${p.tier}`;if(!(k in m))m[k]={price:p.price,price_label:p.price===0?"Free":`£${p.price}`,sort_order:TIER_RANK[p.provider]?.[p.tier]??p.price};}});return m;},[allPerks]);
 
   /* Auth listener */
   useEffect(()=>{

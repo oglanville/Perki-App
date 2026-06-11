@@ -7,7 +7,7 @@ export const CATEGORY_EMOJI = {
   Family:"👨‍👩‍👧",Currency:"💱",Card:"💳",Transfers:"🔄",Wellness:"🧘",Fitness:"💪",Creativity:"🎨",
   Productivity:"⚡",News:"📰",Workspace:"🖥️",Education:"📚",Sports:"⚽",Streaming:"📺",Hardware:"🖥️",
   Broadband:"📡",Automotive:"🚗",Food:"🍔",Shopping:"🛒",Energy:"⚡",EV:"🔌",Solar:"☀️",Heating:"🔥",
-  Competition:"🏆","Smart Home":"🏠",
+  Competition:"🏆","Smart Home":"🏠",Mobile:"📱",
 };
 export const categoryEmoji = (c) => CATEGORY_EMOJI[c] || "✨";
 export const providerInitials = (name) =>
@@ -29,6 +29,9 @@ export function featureThenAlpha(a, b) {
 /* Profile "Active Perks" order: perks → competitions → discounts → features. */
 export const PROFILE_FEATURE_ORDER = { perk: 0, competition: 1, discount: 2, feature: 3 };
 
+/* Earned-status tiers carry no price, so give them an explicit ladder. */
+export const TIER_RANK = { "British Airways": { Blue: 0, Bronze: 1, Silver: 2, Gold: 3 } };
+
 /* ── Tier prices: derived from perks.price (no `tiers` table exists) ───── */
 export function buildTierMap(perks) {
   const m = {};
@@ -41,7 +44,7 @@ export function buildTierMap(perks) {
   });
   Object.values(m).forEach((t) => {
     t.price_label = t.price === 0 ? "Free" : `£${t.price}`;
-    t.sort_order = t.price; // tiers ordered by price (low → high)
+    t.sort_order = TIER_RANK[t.provider]?.[t.tier] ?? t.price; // price order, with earned-status override
   });
   return m;
 }
