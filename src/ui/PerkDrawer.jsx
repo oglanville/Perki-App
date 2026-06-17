@@ -2,8 +2,8 @@ import React from "react";
 import { X, CheckCircle2, Ban, RotateCw, CalendarClock, History, ArrowUpRight } from "lucide-react";
 import { BrandLogo } from "./brand";
 import {
-  categoryLabel, categoryEmoji, resetHuman,
-  getUserPerkState, markPerkUsed, markPerkWontUse, featureThenAlpha,
+  categoryLabel, categoryEmoji, resetHuman, cadenceLabel, cadenceResetText, RENEWAL_DATES_ENABLED, statusOf,
+  getUserPerkState, markPerkUsed, markPerkWontUse, markPerkUnused, featureThenAlpha,
 } from "../data/catalog";
 import { supabase } from "../lib/supabase";
 
@@ -50,6 +50,11 @@ export function PerkDrawerProvider({ children }) {
     setBusy("wont"); setErr("");
     try { setState(await markPerkWontUse(user.id, perk.perk_id)); window.dispatchEvent(new CustomEvent("perki:perkstate")); } catch { setErr("Couldn't save. Try again."); } finally { setBusy(""); }
   }
+  async function onNotUsed() {
+    if (!user) { setErr("Sign in to track your perks."); return; }
+    setBusy("unused"); setErr("");
+    try { setState(await markPerkUnused(user.id, perk.perk_id)); window.dispatchEvent(new CustomEvent("perki:perkstate")); } catch { setErr("Couldn't save. Try again."); } finally { setBusy(""); }
+  }
 
   // Marketplace computations — DEFAULT TO CHEAPEST tier the clicked item appears in
   const marketplace = React.useMemo(() => {
@@ -82,6 +87,7 @@ export function PerkDrawerProvider({ children }) {
   }, [perk, opts]);
 
   const isProfile = opts.mode === "profile";
+  const status = statusOf(state);
   const lastUsed = state?.last_used_at || state?.used_at;
   const nextReset = state?.next_reset_date;
 
@@ -112,16 +118,12 @@ export function PerkDrawerProvider({ children }) {
                 <p className="text-sm text-muted mt-2">{perk.provider} · {perk.tier}</p>
               </section>
 
-              {/* PROFILE: renewal tracking */}
-              {isProfile && (
-                <section className="space-y-2">
-                  <h3 className="text-sm uppercase tracking-wide text-muted">Renewal</h3>
-                  <div className="flex items-center gap-2 text-snow/90"><RotateCw className="w-4 h-4 text-gold" />Renews: <span className="font-medium">{resetHuman(perk.reset_period)}</span></div>
-                  {nextReset && <div className="flex items-center gap-2 text-snow/90"><CalendarClock className="w-4 h-4 text-gold" />Next reset: <span className="font-medium">{fmt(nextReset)}</span></div>}
-                  {lastUsed && <div className="flex items-center gap-2 text-snow/90"><History className="w-4 h-4 text-gold" />Last used: <span className="font-medium">{fmt(lastUsed)}</span></div>}
-                  {state?.will_not_use && <p className="text-sm text-muted">You marked this as one you won't use.</p>}
-                </section>
-              )}
+              {/* Cadence (both modes) — no dates */}
+              <section className="space-y-2">
+                <h3 className="text-sm uppercase tracking-wide text-muted">Cadence</h3>
+                <div className="flex items-center gap-2 text-snow/90"><RotateCw className="w-4 h-4 text-gold" /><span className="rounded-full bg-snow/10 text-snow/85 text-xs font-semibold px-2.5 py-0.5">{cadenceLabel(perk.reset_period)}</span><span className="text-sm text-muted">{cadenceResetText(perk.reset_period)}</span></div>
+                {isProfile && RENEWAL_DATES_ENABLED && nextReset && <div className="flex items-center gap-2 text-snow/90"><CalendarClock className="w-4 h-4 text-gold" />Next reset: <span className="font-medium">{fmt(nextReset)}</span></div>}
+              </section>
 
               {/* MARKETPLACE: tier price (prominent) + included (same + lower tiers) */}
               {!isProfile && marketplace && (
@@ -155,11 +157,15 @@ export function PerkDrawerProvider({ children }) {
               {err && <p className="text-sm text-red-400">{err}</p>}
             </div>
 
-            {/* PROFILE: actions */}
+            {/* Status control: Have used / Have not used / Will not use */}
             {isProfile && (
-              <footer className="p-5 border-t border-snow/10 flex gap-3">
-                <button onClick={onUsed} disabled={busy === "used"} className="flex-1 inline-flex items-center justify-center gap-2 bg-purple text-white font-semibold px-4 min-h-[48px] rounded-btn cursor-pointer transition-all duration-200 hover:opacity-90 disabled:opacity-60 focus:outline-none focus:ring-[3px] focus:ring-purple/50"><CheckCircle2 className="w-5 h-5" />{busy === "used" ? "Saving…" : "Mark as Used"}</button>
-                <button onClick={onWont} disabled={busy === "wont"} className="flex-1 inline-flex items-center justify-center gap-2 bg-transparent border-2 border-snow/20 text-snow/90 font-semibold px-4 min-h-[48px] rounded-btn cursor-pointer transition-all duration-200 hover:bg-snow/5 disabled:opacity-60 focus:outline-none focus:ring-[3px] focus:ring-snow/20"><Ban className="w-5 h-5" />{busy === "wont" ? "Saving…" : "Will Not Use"}</button>
+              <footer className="p-5 border-t border-snow/10">
+                <h3 className="text-xs uppercase tracking-wide text-muted mb-2">Status</h3>
+                <div className="grid grid-cols-3 gap-2">
+                  <button onClick={onUsed} disabled={busy === "used"} className={`inline-flex items-center justify-center text-sm font-semibold px-2 min-h-[48px] rounded-btn cursor-pointer transition-colors duration-200 disabled:opacity-60 ${status === "used" ? "bg-purple text-white" : "glass text-snow/85 hover:text-snow"}`}>Have used</button>
+                  <button onClick={onNotUsed} disabled={busy === "unused"} className={`inline-flex items-center justify-center text-sm font-semibold px-2 min-h-[48px] rounded-btn cursor-pointer transition-colors duration-200 disabled:opacity-60 ${status === "unused" ? "bg-purple text-white" : "glass text-snow/85 hover:text-snow"}`}>Have not used</button>
+                  <button onClick={onWont} disabled={busy === "wont"} className={`inline-flex items-center justify-center text-sm font-semibold px-2 min-h-[48px] rounded-btn cursor-pointer transition-colors duration-200 disabled:opacity-60 ${status === "wontuse" ? "bg-purple text-white" : "glass text-snow/85 hover:text-snow"}`}>Will not use</button>
+                </div>
               </footer>
             )}
           </aside>

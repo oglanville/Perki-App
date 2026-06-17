@@ -112,6 +112,37 @@ export async function requestMembership({ userId, name, description }) {
   if (error) throw new Error("REQUEST_ERROR");
 }
 
+/* ── Cadence + status (the live system) ──────────────────────────────── */
+/* Renewal dates are dormant; the UI runs on cadence + status only. Flip this
+   to re-expose renewal-date displays later without a data migration. */
+export const RENEWAL_DATES_ENABLED = false;
+
+/* Cadence is derived from reset_period: Weekly, Monthly, or One-off. */
+export const cadenceLabel = (resetPeriod) => {
+  const p = (resetPeriod || "").toUpperCase();
+  if (p === "WEEKLY") return "Weekly";
+  if (p === "MONTHLY") return "Monthly";
+  return "One-off";
+};
+export const cadenceResetText = (resetPeriod) => {
+  const p = (resetPeriod || "").toUpperCase();
+  if (p === "WEEKLY") return "Resets every Monday";
+  if (p === "MONTHLY") return "Resets on the 1st";
+  return "One-off, never resets";
+};
+
+/* Status is derived from the existing user_perk_state flags. */
+export const statusOf = (state) => state?.will_not_use || state?.dismissed ? "wontuse" : state?.used ? "used" : "unused";
+export const STATUS_LABEL = { used: "Have used", unused: "Have not used", wontuse: "Will not use" };
+
+/* Bundles group items into use-case moments by category. Presentation only. */
+export const BUNDLES = [
+  { key: "holiday", name: "Holiday", icon: "✈️", categories: ["Travel", "Insurance", "Currency"] },
+  { key: "cinema", name: "Cinema", icon: "🎬", categories: ["Entertainment", "Streaming"] },
+  { key: "sports", name: "Sports", icon: "⚽", categories: ["Sports"] },
+  { key: "workday", name: "Workday", icon: "💼", categories: ["Productivity", "Insurance", "Food"] },
+];
+
 /* ── Perk detail / usage (slide-out drawer) ──────────────────────────── */
 const RESET_HUMAN = { WEEKLY: "Weekly", MONTHLY: "Monthly", ANNUALLY: "Annually", YEARLY: "Annually", NONE: "Doesn't reset" };
 export const resetHuman = (p) => RESET_HUMAN[p] || (p ? p : "Doesn't reset");
@@ -162,5 +193,18 @@ export async function markPerkWontUse(userId, perkId) {
   };
   const { error } = await supabase.from("user_perk_state").upsert(row, { onConflict: "user_id,perk_id" });
   if (error) throw new Error("WONT_USE_ERROR");
+  return row;
+}
+
+/** Reset to "Have not used": clear used + will-not-use flags. Renewal date left untouched (dormant). */
+export async function markPerkUnused(userId, perkId) {
+  const row = {
+    user_id: userId, perk_id: perkId,
+    used: false, will_not_use: false, dismissed: false,
+    used_at: null, last_used_at: null,
+    updated_at: new Date().toISOString(),
+  };
+  const { error } = await supabase.from("user_perk_state").upsert(row, { onConflict: "user_id,perk_id" });
+  if (error) throw new Error("UNUSED_ERROR");
   return row;
 }

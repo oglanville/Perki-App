@@ -1,3 +1,4 @@
+import { cadenceLabel } from "../data/catalog";
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -48,7 +49,7 @@ export function ProviderMark({ provider, className = "w-5 h-5 text-gold" }) {
 
 /* ── Perk card ───────────────────────────────────────────────────────── */
 export function PerkCard({ perk, onClick }) {
-  const reset = RESET_LABEL[perk.reset_period] || "Ongoing";
+  const reset = cadenceLabel(perk.reset_period);
   const ResetIcon = perk.reset_period && perk.reset_period !== "NONE" ? RotateCw : InfinityIcon;
   return (
     <GlassCard interactive role="button" tabIndex={0} onClick={onClick}

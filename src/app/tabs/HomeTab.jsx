@@ -30,11 +30,11 @@ export default function HomeTab({perks,onToggle,onDismiss,tierPrices,allPerks}){
   const used=countable.filter(p=>p.used).length;
 
   /* For competitions & discounts: group by closing date; for perks & features: group by reset/category */
-  const useClosingDate=subTab==="competitions"||subTab==="discounts";
+  const useClosingDate=false; /* cadence/category only — no date-based grouping */
   const groups=useMemo(()=>{
     if(useClosingDate)return groupByClosingDate(displayPerks);
     if(groupBy==="category"){const g={};displayPerks.forEach(p=>{const cat=CATEGORIES[p.category];if(!cat)return;(g[cat.label]=g[cat.label]||[]).push(p);});return g;}
-    const g={Weekly:[],Monthly:[],Annually:[],"Always On":[]};displayPerks.forEach(p=>{g[{WEEKLY:"Weekly",MONTHLY:"Monthly",ANNUALLY:"Annually",YEARLY:"Annually",NONE:"Always On"}[p.reset_period]||"Always On"].push(p);});return g;
+    const g={Weekly:[],Monthly:[],"One-off":[]};displayPerks.forEach(p=>{const u=(p.reset_period||"").toUpperCase();g[u==="WEEKLY"?"Weekly":u==="MONTHLY"?"Monthly":"One-off"].push(p);});return g;
   },[displayPerks,groupBy,useClosingDate]);
 
   return(

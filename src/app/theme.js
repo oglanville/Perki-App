@@ -13,6 +13,11 @@ export const TABS=[{id:"home",label:"Home",icon:"🏠"},{id:"marketplace",label:
 
 
 export function resetLabel(p){return{WEEKLY:"Weekly",MONTHLY:"Monthly",ANNUALLY:"Annually",YEARLY:"Annually",NONE:"Always on"}[p]||p;}
+export const RENEWAL_DATES_ENABLED = false;
+export function cadenceLabel(p){const u=(p||"").toUpperCase();if(u==="WEEKLY")return"Weekly";if(u==="MONTHLY")return"Monthly";return"One-off";}
+export function cadenceResetText(p){const u=(p||"").toUpperCase();if(u==="WEEKLY")return"Resets every Monday";if(u==="MONTHLY")return"Resets on the 1st";return"One-off, never resets";}
+export const STATUS_LABEL={used:"Have used",unused:"Have not used",wontuse:"Will not use"};
+export const BUNDLES=[{key:"holiday",name:"Holiday",icon:"✈️",categories:["Travel","Insurance","Currency"]},{key:"cinema",name:"Cinema",icon:"🎬",categories:["Entertainment","Streaming"]},{key:"sports",name:"Sports",icon:"⚽",categories:["Sports"]},{key:"workday",name:"Workday",icon:"💼",categories:["Productivity","Insurance","Food"]}];
 
 export function alphaSort(a,b){return a.title.localeCompare(b.title);}
 

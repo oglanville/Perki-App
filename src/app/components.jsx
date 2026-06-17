@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { supabase } from "../lib/supabase";
-import { SB_CONFIGURED, T, PROVIDERS, CATEGORIES, resetLabel, getPerkBrand, featureThenAlpha, PROVIDER_SLUGS, PROVIDER_LOGOS } from "./theme";
+import { SB_CONFIGURED, T, PROVIDERS, CATEGORIES, resetLabel, cadenceLabel, RENEWAL_DATES_ENABLED, getPerkBrand, featureThenAlpha, PROVIDER_SLUGS, PROVIDER_LOGOS } from "./theme";
 
 export function PerkBrandIcon({perk,size=32}){
   const b=getPerkBrand(perk);
@@ -84,8 +84,8 @@ export function PerkSheet({perk,mode="owned",onToggle,onDismiss,onClose,scope,ti
         </div>
         <div style={{fontSize:13,lineHeight:1.6,color:T.textSecondary,marginBottom:12}}>{perk.description||"No description available."}</div>
         <div style={{display:"flex",gap:14,flexWrap:"wrap",fontSize:11,color:T.muted,marginBottom:16}}>
-          <span>🔄 {resetLabel(perk.reset_period)}</span>
-          {perk.next_reset_date&&<span>📅 Renews {perk.next_reset_date}</span>}
+          <span>🔄 {cadenceLabel(perk.reset_period)}</span>
+          {RENEWAL_DATES_ENABLED&&perk.next_reset_date&&<span>📅 Renews {perk.next_reset_date}</span>}
           {isMarket&&<span>📊 {perk.usage_limit||"—"}</span>}
         </div>
         {isMarket?(
@@ -115,13 +115,14 @@ export function PerkSheet({perk,mode="owned",onToggle,onDismiss,onClose,scope,ti
           </>
         ):(
           <div style={{display:"flex",flexDirection:"column",gap:10}}>
+            <div style={{fontSize:10,fontWeight:700,letterSpacing:1,textTransform:"uppercase",color:T.muted}}>Status: {perk.dismissed?"Will not use":perk.used?"Have used":"Have not used"}</div>
             <label style={{display:"flex",alignItems:"center",gap:10,cursor:"pointer",fontSize:14,fontWeight:600,color:T.textPrimary,padding:"11px 12px",borderRadius:10,border:`1px solid ${perk.used?T.success:T.border}`,background:perk.used?"#F7ECD4":T.bg}}>
               <input type="checkbox" checked={!!perk.used} onChange={()=>onToggle(perk.perk_id)} disabled={!!perk.dismissed} style={{width:18,height:18,accentColor:T.success,cursor:"pointer"}}/>
-              {perk.used?"Marked as used":"Mark as used"}
+              Have used
             </label>
             <label style={{display:"flex",alignItems:"center",gap:10,cursor:"pointer",fontSize:14,fontWeight:600,color:perk.dismissed?T.danger:T.muted,padding:"11px 12px",borderRadius:10,border:`1px solid ${perk.dismissed?T.danger:T.border}`,background:T.bg}}>
               <input type="checkbox" checked={!!perk.dismissed} onChange={()=>onDismiss(perk.perk_id)} style={{width:18,height:18,accentColor:T.danger,cursor:"pointer"}}/>
-              Will not use (exclude from count)
+              Will not use
             </label>
           </div>
         )}
