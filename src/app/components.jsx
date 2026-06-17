@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
-import { SB_CONFIGURED, T, PROVIDERS, CATEGORIES, resetLabel, cadenceLabel, RENEWAL_DATES_ENABLED, getPerkBrand, featureThenAlpha, PROVIDER_SLUGS, PROVIDER_LOGOS } from "./theme";
+import { SB_CONFIGURED, T, PROVIDERS, CATEGORIES, resetLabel, cadenceLabel, RENEWAL_DATES_ENABLED, getPerkBrand, featureThenAlpha, PROVIDER_SLUGS, PROVIDER_LOGOS, providerLogoSources } from "./theme";
 
 export function PerkBrandIcon({perk,size=32}){
   const b=getPerkBrand(perk);
@@ -133,19 +133,20 @@ export function PerkSheet({perk,mode="owned",onToggle,onDismiss,onClose,scope,ti
 
 
 export function AppBrandLogo({provider,size=28}){
-  const[failed,setFailed]=useState(false);
+  const[idx,setIdx]=useState(0);
+  useEffect(()=>{setIdx(0);},[provider]);
   if(provider==="OVO Energy"||provider==="OVO"){
     return(<div style={{width:size,height:size,borderRadius:size*0.28,background:"#fff",border:`1px solid ${T.border}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><span style={{fontSize:size*0.34,fontWeight:800,color:"#0a9d2b",letterSpacing:"-0.5px",fontFamily:"'Outfit',sans-serif"}}>OVO</span></div>);
   }
-  const slug=PROVIDER_SLUGS[provider];
-  const src=PROVIDER_LOGOS[provider]||(slug?`https://cdn.simpleicons.org/${slug}`:null);
+  const srcs=providerLogoSources(provider);
+  const src=srcs[idx];
   const pCfg=PROVIDERS[provider]||{};
   const initials=pCfg.initials||(provider||"?").slice(0,2).toUpperCase();
   const tint=pCfg.color||T.muted;
-  if(!src||failed){
+  if(!src){
     return(<div style={{width:size,height:size,borderRadius:size*0.28,background:`${tint}1A`,border:`1.5px solid ${tint}33`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:size*0.4,fontWeight:800,color:tint,flexShrink:0,fontFamily:"'Work Sans',sans-serif"}}>{initials}</div>);
   }
-  return(<div style={{width:size,height:size,borderRadius:size*0.28,background:"#fff",border:`1px solid ${T.border}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,overflow:"hidden"}}><img src={src} alt={`${provider} logo`} onError={()=>setFailed(true)} style={{width:"62%",height:"62%",objectFit:"contain"}} loading="lazy"/></div>);
+  return(<div style={{width:size,height:size,borderRadius:size*0.28,background:"#fff",border:`1px solid ${T.border}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,overflow:"hidden"}}><img src={src} alt={`${provider} logo`} onError={()=>setIdx(i=>i+1)} style={{width:"62%",height:"62%",objectFit:"contain"}} loading="lazy"/></div>);
 }
 
 export function FeatureChip({feature}){

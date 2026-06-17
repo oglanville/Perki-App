@@ -35,13 +35,12 @@ function MarketplacePane({ perks, tierMap, catalog, query, bleed = true, childre
   const [category, setCategory] = React.useState(null);
 
   const selected = React.useMemo(() => catalog.find((c) => `${c.provider}|${c.membership}` === membership) || null, [catalog, membership]);
-  React.useEffect(() => { setTier(null); setCategory(null); }, [membership]);
 
   const baseRows = React.useMemo(() => selected ? perks.filter((p) => p.provider === selected.provider && p.membership === selected.membership) : perks, [perks, selected]);
 
   const membershipChips = React.useMemo(
-    () => catalog.filter((c) => perks.some((p) => p.provider === c.provider && p.membership === c.membership && matches(p, query))),
-    [catalog, perks, query]
+    () => catalog.filter((c) => perks.some((p) => p.provider === c.provider && p.membership === c.membership && matches(p, query) && (!tier || p.tier === tier))),
+    [catalog, perks, query, tier]
   );
   const tierChips = React.useMemo(() => {
     const seen = {};

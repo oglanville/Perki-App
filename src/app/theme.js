@@ -116,6 +116,14 @@ export const PROVIDER_LOGOS={"OVO Energy":"https://logo.clearbit.com/ovoenergy.c
 
 export const TIER_RANK={"British Airways":{Blue:0,Bronze:1,Silver:2,Gold:3}};
 
+export function providerLogoSources(provider){
+  const out=[]; const logo=PROVIDER_LOGOS[provider]; const slug=PROVIDER_SLUGS[provider];
+  if(logo) out.push(logo);
+  if(slug) out.push(`https://cdn.simpleicons.org/${slug}`);
+  if(logo){ const d=logo.split("/").pop(); out.push(`https://www.google.com/s2/favicons?domain=${d}&sz=64`); }
+  return [...new Set(out)];
+}
+
 export function buildMembershipCatalog(perks, tp){
   const groups={};
   perks.forEach(p=>{const key=`${p.provider}|${p.membership}`; if(!groups[key])groups[key]={provider:p.provider,membership:p.membership,tierSet:new Set()}; groups[key].tierSet.add(p.tier);});

@@ -27,7 +27,7 @@ export default function MarketplaceTab({allPerks,tierPrices}){
   const baseRows=useMemo(()=>selCat?allPerks.filter(p=>p.provider===selCat.provider&&p.membership===selCat.membership):allPerks,[allPerks,selCat]);
 
   /* When searching, only show chips that still have a matching result. */
-  const membershipChips=useMemo(()=>catalog.filter(c=>allPerks.some(p=>p.provider===c.provider&&p.membership===c.membership&&matches(p,query))),[catalog,allPerks,query]);
+  const membershipChips=useMemo(()=>catalog.filter(c=>allPerks.some(p=>p.provider===c.provider&&p.membership===c.membership&&matches(p,query)&&(!tier||p.tier===tier))),[catalog,allPerks,query,tier]);
   const tierChips=useMemo(()=>{const seen={};baseRows.filter(p=>matches(p,query)).forEach(p=>{const k=`${p.provider}|${p.tier}`;const so=tp[k]?.sort_order??0;if(!(p.tier in seen)||so<seen[p.tier].so)seen[p.tier]={so,label:tp[k]?.price_label};});return Object.keys(seen).sort((a,b)=>seen[a].so-seen[b].so).map(t=>({tier:t,label:seen[t].label}));},[baseRows,tp,query]);
   const catChips=useMemo(()=>[...new Set(baseRows.filter(p=>matches(p,query)).map(p=>p.category).filter(Boolean))].sort(),[baseRows,query]);
 
@@ -52,7 +52,7 @@ export default function MarketplaceTab({allPerks,tierPrices}){
 
     <div style={{display:"flex",gap:8,overflowX:"auto",paddingBottom:8,marginBottom:6}}>
       <button onClick={e=>{e.stopPropagation();setMembership(null);setTier(null);setCategory(null);}} style={chip(membership==null)}>All</button>
-      {membershipChips.map(c=>{const key=`${c.provider}|${c.membership}`;return <button key={key} onClick={e=>{e.stopPropagation();setMembership(key);setTier(null);setCategory(null);}} style={chip(membership===key)}>{c.provider}</button>;})}
+      {membershipChips.map(c=>{const key=`${c.provider}|${c.membership}`;return <button key={key} onClick={e=>{e.stopPropagation();setMembership(key);}} style={chip(membership===key)}>{c.provider}</button>;})}
     </div>
 
     <div style={{display:"flex",gap:8,overflowX:"auto",paddingBottom:8,marginBottom:6}}>
