@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import { T, PROVIDERS, featureThenAlpha, buildMembershipCatalog } from "../theme";
 import { SectionHeader, TabDesc, CollapsibleSection, AppBrandLogo, PerkTile } from "../components";
 
@@ -56,6 +56,7 @@ export default function ProfileTab({perks,activeMemberships,rawMemberships,onRem
     });
   },[activeMemberships,perks]);
 
+  const [addOpen,setAddOpen]=useState(false);
   const unusedList=useMemo(()=>{
     const tp=tierPrices||{};
     const cat=buildMembershipCatalog(allPerks||[],tp);
@@ -68,6 +69,10 @@ export default function ProfileTab({perks,activeMemberships,rawMemberships,onRem
       return unused.length?{...c,unusedTiers:unused}:null;
     }).filter(Boolean);
   },[allPerks,tierPrices,rawMemberships]);
+
+  const fullCatalog=useMemo(()=>buildMembershipCatalog(allPerks||[],tierPrices||{}),[allPerks,tierPrices]);
+  const heldKeys=useMemo(()=>new Set((rawMemberships||[]).map(m=>`${m.provider}|${m.membership}`)),[rawMemberships]);
+  async function handleAdd(provider,membership,tier){ try{ await onAddMembership?.(provider,membership,tier); } finally { setAddOpen(false); } }
 
   const handlePic=e=>{const f=e.target.files?.[0];if(f){const r=new FileReader();r.onload=ev=>setProfilePic(ev.target.result);r.readAsDataURL(f);}};
 
@@ -132,7 +137,10 @@ export default function ProfileTab({perks,activeMemberships,rawMemberships,onRem
     </div>
 
     {/* Active Memberships */}
-    <SectionHeader count={activeMemberships.length}>Active Memberships</SectionHeader>
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}>
+      <SectionHeader count={activeMemberships.length}>Active Memberships</SectionHeader>
+      <button onClick={e=>{e.stopPropagation();setAddOpen(true);}} style={{display:"inline-flex",alignItems:"center",gap:5,fontSize:11,fontWeight:700,color:"#fff",background:T.primary,border:"none",borderRadius:10,padding:"8px 12px",cursor:"pointer",fontFamily:"'Work Sans',sans-serif",flexShrink:0}}>+ Add Membership</button>
+    </div>
     {providerGroups.map(pg=>{
       const pCfg=PROVIDERS[pg.provider]||{color:T.muted,bg:"#f1f5f9"};
       return(
@@ -187,5 +195,65 @@ export default function ProfileTab({perks,activeMemberships,rawMemberships,onRem
     {TYPE_ROWS.map(([t,at,it])=>{const list=inactiveOf(t); if(q&&list.length===0)return null; return(
       <CollapsibleSection key={`i-${t}-${q?1:0}`} title={it} count={list.length} defaultOpen={!!q}>{renderList(list)}</CollapsibleSection>
     );})}
+
+    {addOpen&&<AppAddMembershipModal catalog={fullCatalog} heldKeys={heldKeys} onAdd={handleAdd} onClose={()=>setAddOpen(false)}/>}
   </div>);
+}
+
+function AppAddMembershipModal({catalog,heldKeys,onAdd,onClose}){
+  const[step,setStep]=useState(1);
+  const[q,setQ]=useState("");
+  const[sel,setSel]=useState(null);
+  const[busy,setBusy]=useState(false);
+  const ql=q.trim().toLowerCase();
+  const list=[...catalog].sort((a,b)=>(a.provider||"").localeCompare(b.provider)||(a.membership||"").localeCompare(b.membership)).filter(c=>!ql||`${c.provider} ${c.membership}`.toLowerCase().includes(ql));
+  const add=async(tier)=>{ if(busy)return; setBusy(true); try{ await onAdd(sel.provider,sel.membership,tier); }finally{ setBusy(false); } };
+  return(
+    <div onClick={onClose} style={{position:"fixed",inset:0,zIndex:200,background:"rgba(35,32,42,0.5)",backdropFilter:"blur(2px)",display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
+      <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:440,maxHeight:"85vh",display:"flex",flexDirection:"column",background:T.surface,borderRadius:"20px 20px 0 0",boxShadow:"0 -12px 40px rgba(43,42,40,0.22)",padding:"12px 16px 20px",fontFamily:"'Work Sans',sans-serif",animation:"perkiSheetUp 0.26s cubic-bezier(.4,0,.2,1)",boxSizing:"border-box"}}>
+        <style>{`@keyframes perkiSheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}`}</style>
+        <div style={{width:38,height:4,borderRadius:2,background:T.border,margin:"0 auto 12px",flexShrink:0}}/>
+        {step===1?(<>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+            <div style={{fontSize:16,fontWeight:800,color:T.textPrimary,fontFamily:"'Outfit',sans-serif"}}>Add membership</div>
+            <button onClick={onClose} style={{width:30,height:30,borderRadius:15,border:`1px solid ${T.border}`,background:T.bg,color:T.muted,fontSize:15,fontWeight:700,cursor:"pointer"}}>✕</button>
+          </div>
+          <input autoFocus value={q} onChange={e=>setQ(e.target.value)} placeholder="Search memberships..." style={{width:"100%",padding:"10px 14px",borderRadius:10,border:`1.5px solid ${T.border}`,background:T.bg,fontSize:13,fontFamily:"'Work Sans',sans-serif",color:T.textPrimary,boxSizing:"border-box",outline:"none",marginBottom:10}}/>
+          <div style={{overflowY:"auto",display:"flex",flexDirection:"column",gap:6}}>
+            {list.length===0?<p style={{textAlign:"center",color:T.muted,fontSize:12,padding:"16px 0"}}>No memberships match.</p>:
+              list.map(c=>{const held=heldKeys.has(`${c.provider}|${c.membership}`);return(
+                <button key={`${c.provider}|${c.membership}`} onClick={()=>{setSel(c);setStep(2);}} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",borderRadius:12,background:T.bg,border:`1px solid ${T.border}`,cursor:"pointer",textAlign:"left",width:"100%"}}>
+                  <AppBrandLogo provider={c.provider} size={28}/>
+                  <span style={{flex:1,minWidth:0}}>
+                    <span style={{display:"block",fontSize:13,fontWeight:700,color:T.textPrimary,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{c.membership}</span>
+                    {c.membership!==c.provider&&<span style={{display:"block",fontSize:10,color:T.textSecondary}}>{c.provider}</span>}
+                  </span>
+                  {held&&<span style={{fontSize:9,fontWeight:700,color:"#B07C1A",background:"#F7ECD4",borderRadius:10,padding:"2px 7px",flexShrink:0}}>Added</span>}
+                </button>
+              );})}
+          </div>
+        </>):(<>
+          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
+            <button onClick={()=>setStep(1)} style={{width:30,height:30,borderRadius:15,border:`1px solid ${T.border}`,background:T.bg,color:T.muted,fontSize:18,fontWeight:700,cursor:"pointer",lineHeight:1}}>‹</button>
+            <div style={{minWidth:0}}>
+              <div style={{fontSize:15,fontWeight:800,color:T.textPrimary,fontFamily:"'Outfit',sans-serif",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{sel.membership}</div>
+              <div style={{fontSize:11,color:T.muted}}>Choose a tier</div>
+            </div>
+          </div>
+          <div style={{overflowY:"auto",display:"flex",flexDirection:"column",gap:6}}>
+            {sel.tiers.map(t=>(
+              <button key={t.tier} disabled={busy} onClick={()=>add(t.tier)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 14px",borderRadius:12,background:T.bg,border:`1px solid ${T.border}`,cursor:"pointer",width:"100%",opacity:busy?0.6:1}}>
+                <span style={{fontSize:13,fontWeight:700,color:T.textPrimary}}>{t.tier}</span>
+                <span style={{fontSize:12,fontWeight:700,color:"#B07C1A"}}>{t.price_label}</span>
+              </button>
+            ))}
+            <button disabled={busy} onClick={()=>add("")} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 14px",borderRadius:12,background:T.surface,border:`1.5px dashed ${T.border}`,cursor:"pointer",width:"100%",opacity:busy?0.6:1}}>
+              <span style={{fontSize:13,fontWeight:700,color:T.textSecondary}}>No tier</span>
+              <span style={{fontSize:10,color:T.muted}}>Add without a tier</span>
+            </button>
+          </div>
+        </>)}
+      </div>
+    </div>
+  );
 }

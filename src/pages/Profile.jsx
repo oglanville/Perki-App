@@ -1,7 +1,8 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { AlertCircle, CalendarDays, CreditCard, CheckCircle2, ThumbsUp, LogIn, Trash2, Plus, LayoutGrid, Sparkles, ChevronDown } from "lucide-react";
+import { AlertCircle, CalendarDays, CreditCard, CheckCircle2, ThumbsUp, LogIn, Trash2, Plus, LayoutGrid, Sparkles, ChevronDown, X, ArrowLeft } from "lucide-react";
 import { GlassCard, TopNav } from "../ui/components";
+import { BrandLogo } from "../ui/brand";
 import { PerkList, MembershipRow, ConfirmModal, SearchBar } from "../ui/perkui";
 import { supabase } from "../lib/supabase";
 import {
@@ -32,6 +33,7 @@ export default function Profile() {
   const [query, setQuery] = React.useState("");
   const [confirm, setConfirm] = React.useState(null);
   const [busy, setBusy] = React.useState(false);
+  const [addOpen, setAddOpen] = React.useState(false);
 
   const load = React.useCallback(async () => {
     if (!supabase) { setErrCode("NOT_CONFIGURED"); setStatus("error"); return; }
@@ -69,6 +71,7 @@ export default function Profile() {
   const tierMap = React.useMemo(() => buildTierMap(perks), [perks]);
   const catalog = React.useMemo(() => buildMembershipCatalog(perks, tierMap), [perks, tierMap]);
   const activeMap = React.useMemo(() => Object.fromEntries(memberships.map((m) => [`${m.provider}|${m.membership}`, m.tier])), [memberships]);
+  const heldKeys = React.useMemo(() => new Set(memberships.map((m) => `${m.provider}|${m.membership}`)), [memberships]);
 
   const monthlyCost = monthlyCostOf(memberships, tierMap);
 
@@ -105,6 +108,7 @@ export default function Profile() {
 
   async function applyChange(provider, membership, tier) { setBusy(true); try { await addMembership(user.id, provider, membership, tier); await load(); } finally { setBusy(false); setConfirm(null); } }
   async function applyRemove(provider, membership) { setBusy(true); try { await removeMembership(user.id, provider, membership); await load(); } finally { setBusy(false); setConfirm(null); } }
+  async function addNew(provider, membership, tier) { setBusy(true); try { await addMembership(user.id, provider, membership, tier); await load(); setAddOpen(false); } finally { setBusy(false); } }
 
   const Sub = ({ title, type, active }) => {
     const list = ofType(type, active);
@@ -161,7 +165,10 @@ export default function Profile() {
 
             {/* Active memberships */}
             <section className="mt-8">
-              <h2 className="text-xl font-semibold mb-3">Active memberships</h2>
+              <div className="flex items-center justify-between mb-3 gap-3">
+                <h2 className="text-xl font-semibold">Active memberships</h2>
+                <button onClick={() => setAddOpen(true)} className="inline-flex items-center gap-1.5 bg-purple text-white text-sm font-semibold px-3 min-h-[40px] rounded-btn cursor-pointer hover:opacity-90 focus:outline-none focus:ring-[3px] focus:ring-purple/40 shrink-0"><Plus className="w-4 h-4" />Add Membership</button>
+              </div>
               {activeList.length === 0 ? <GlassCard className="!py-5 text-center text-sm text-muted">No active memberships yet.</GlassCard> : (
                 <div className="space-y-2">{activeList.map((c) => (
                   <MembershipRow key={`${c.provider}|${c.membership}`} membership={c} tiers={c.tiers} currentTier={activeMap[`${c.provider}|${c.membership}`]}
@@ -206,6 +213,8 @@ export default function Profile() {
         )}
       </main>
 
+      <AddMembershipModal open={addOpen} onClose={() => setAddOpen(false)} catalog={catalog} heldKeys={heldKeys} onAdd={addNew} busy={busy} />
+
       <ConfirmModal open={!!confirm} onClose={() => setConfirm(null)} title={confirm?.title || ""} message={confirm?.message || ""} confirmLabel={confirm?.label || "Confirm"} busy={busy}
         onConfirm={() => confirm?.type === "remove" ? applyRemove(confirm.provider, confirm.membership) : applyChange(confirm.provider, confirm.membership, confirm.tier)} />
     </div>
@@ -217,5 +226,84 @@ function PotentialRow({ c, onSelect }) {
   return (
     <MembershipRow membership={c} tiers={c.upgradeTiers} currentTier={tier} onTierChange={setTier}
       action={<button onClick={() => onSelect(tier)} className="inline-flex items-center gap-1.5 bg-purple text-white text-sm font-semibold px-3 min-h-[40px] rounded-btn cursor-pointer hover:opacity-90 focus:outline-none focus:ring-[3px] focus:ring-purple/40"><Plus className="w-4 h-4" />Select</button>} />
+  );
+}
+
+function AddMembershipModal({ open, onClose, catalog, heldKeys, onAdd, busy }) {
+  const [step, setStep] = React.useState(1);
+  const [q, setQ] = React.useState("");
+  const [sel, setSel] = React.useState(null);
+  React.useEffect(() => { if (open) { setStep(1); setQ(""); setSel(null); } }, [open]);
+  React.useEffect(() => {
+    if (!open) return;
+    const onKey = (e) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+  if (!open) return null;
+  const ql = q.trim().toLowerCase();
+  const list = [...catalog]
+    .sort((a, b) => (a.provider || "").localeCompare(b.provider) || (a.membership || "").localeCompare(b.membership))
+    .filter((c) => !ql || `${c.provider} ${c.membership}`.toLowerCase().includes(ql));
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center p-4" role="dialog" aria-modal="true" aria-label="Add membership">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="glass relative w-full max-w-md rounded-modal p-5 shadow-xl max-h-[85vh] flex flex-col">
+        {step === 1 ? (
+          <>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-xl font-semibold">Add membership</h2>
+              <button aria-label="Close" onClick={onClose} className="grid place-items-center w-9 h-9 rounded-btn text-muted hover:text-snow cursor-pointer"><X className="w-5 h-5" /></button>
+            </div>
+            <SearchBar value={q} onChange={setQ} placeholder="Search memberships…" />
+            <ul className="mt-3 space-y-1.5 overflow-y-auto">
+              {list.length === 0 ? (
+                <li className="text-sm text-muted text-center py-6">No memberships match.</li>
+              ) : list.map((c) => {
+                const held = heldKeys.has(`${c.provider}|${c.membership}`);
+                return (
+                  <li key={`${c.provider}|${c.membership}`}>
+                    <button onClick={() => { setSel(c); setStep(2); }} className="w-full glass rounded-btn flex items-center gap-3 px-3 py-2.5 min-h-[48px] hover:bg-snow/[0.04] cursor-pointer text-left">
+                      <BrandLogo provider={c.provider} className="w-7 h-7" />
+                      <span className="flex-1 min-w-0">
+                        <span className="font-medium truncate block">{c.membership}</span>
+                        {c.membership !== c.provider && <span className="text-xs text-muted truncate block">{c.provider}</span>}
+                      </span>
+                      {held && <span className="text-[10px] font-semibold text-golddeep bg-gold/15 rounded-full px-2 py-0.5 shrink-0">Added</span>}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </>
+        ) : (
+          <>
+            <div className="flex items-center gap-2 mb-3">
+              <button aria-label="Back" onClick={() => setStep(1)} className="grid place-items-center w-9 h-9 rounded-btn text-muted hover:text-snow cursor-pointer"><ArrowLeft className="w-5 h-5" /></button>
+              <div className="min-w-0">
+                <h2 className="text-lg font-semibold truncate">{sel.membership}</h2>
+                <p className="text-xs text-muted">Choose a tier</p>
+              </div>
+            </div>
+            <ul className="space-y-1.5 overflow-y-auto">
+              {sel.tiers.map((t) => (
+                <li key={t.tier}>
+                  <button disabled={busy} onClick={() => onAdd(sel.provider, sel.membership, t.tier)} className="w-full glass rounded-btn flex items-center justify-between px-4 py-3 min-h-[48px] hover:bg-snow/[0.04] cursor-pointer disabled:opacity-60">
+                    <span className="font-medium">{t.tier}</span>
+                    <span className="text-sm text-golddeep">{t.price_label}</span>
+                  </button>
+                </li>
+              ))}
+              <li>
+                <button disabled={busy} onClick={() => onAdd(sel.provider, sel.membership, "")} className="w-full rounded-btn flex items-center justify-between px-4 py-3 min-h-[48px] border-2 border-snow/15 hover:bg-snow/5 cursor-pointer disabled:opacity-60">
+                  <span className="font-medium text-snow/90">No tier</span>
+                  <span className="text-xs text-muted">Add without a tier</span>
+                </button>
+              </li>
+            </ul>
+          </>
+        )}
+      </div>
+    </div>
   );
 }
