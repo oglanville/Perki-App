@@ -64,13 +64,42 @@
 <body>
   <header>
     <h1>🚀 Perki — Rolling To-Do</h1>
-    <span class="north">North star: the app, website and email now share one brand — ship them, test with real people, then build the marketplace.</span>
+    <span class="north">North star: grow the Beehiiv weekly email list to 10,000 subscribers. Perki is becoming a weekly personalised engine that saves people money and tells them how to use the perks they already pay for.</span>
   </header>
   <div class="board">
 
     <section class="col today" data-horizon="Today">
       <h2>☀️ Today <span class="count"></span></h2>
       <div class="sub">App + email are redesigned. Get them live and tidy the rest.</div>
+      <div class="card" data-id="dep1"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">🚀 Deploy everything</div>
+        <span class="tag prio">Top priority</span>
+        <div class="syn">A lot is built and bundle-verified but not yet live.</div>
+        <ul><li>Front-end: del .git/index.lock → git add src/ → commit → push (Vercel auto-deploys)</li><li>Digest: supabase functions deploy daily-digest</li></ul>
+      </div></div>
+      <div class="card" data-id="watch7"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">⏰ Watch tomorrow's 7am run</div>
+        <span class="tag next">In progress</span>
+        <div class="syn">Cron is fixed and tested — confirm the automatic 06:00 UTC / 07:00 BST send lands on its own.</div>
+        <ul><li>If it does not arrive, it is Hotmail/Resend deliverability (Junk + Resend dashboard), not the cron</li></ul>
+      </div></div>
+      <div class="card" data-id="prodsend"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">🟣 Proper digest send (drop [PREVIEW])</div>
+        <div class="syn">Interim cron uses the preview path. Redeploy with --no-verify-jwt + a matching CRON_SECRET, then switch the cron back to the production path.</div>
+      </div></div>
+      <div class="card" data-id="bundles"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">🧱 Build the bundles view</div>
+        <span class="tag next">Follow-up</span>
+        <div class="syn">BUNDLES config + email prompts are done; build the grouped Holiday / Cinema / Sports / Workday surface in the app.</div>
+      </div></div>
+      <div class="card" data-id="engines"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">💸 Wire Savings + Consolidation to real data</div>
+        <div class="syn">Engine panes show placeholder numbers; compute per-user before the list grows beyond one person.</div>
+      </div></div>
+      <div class="card" data-id="nv1"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">🔍 Verify the 19 flagged rows</div>
+        <div class="syn">Confirm the NEEDS-VERIFY items (Pret 50%-off, Cineworld regional pricing, Deliveroo Gold price, Amex lounge count) — see Perki-NEEDS-VERIFY.md.</div>
+      </div></div>
       <div class="card" data-id="a1"><input type="checkbox" class="chk"><div class="body">
         <div class="t">🛒 Ingest O2 + Lidl</div>
         <span class="tag prio">Top priority</span>
@@ -149,8 +178,17 @@
 
   <!-- DONE TODAY — daily highlight -->
   <section class="donebox">
-    <h2>✅ Done recently — to 10 Jun 2026 · compare, search facets, pricing & deck</h2>
+    <h2>✅ Done recently — to 24 Jun 2026 · 7am email fixed, cadence + status, logos</h2>
     <ul>
+      <li>7am email fixed — the daily cron was firing but every call was rejected at the Supabase gateway with a 401 (stale sb_secret_ token), so the digest never ran. Rerouted the cron through the function's preview path with the project's valid anon key, targeted at Ollie, timeout raised 1s → 30s. Tested end to end: 200, sent, email arrived</li>
+      <li>Cadence + Status system built across web, app and email — reset dates replaced by Weekly / Monthly / One-off cadence; item status is Have used / Have not used / Will not use; renewal-date logic kept dormant behind a flag. No user date inputs or displays anywhere</li>
+      <li>Provider logos for every membership — both logo components fall back Clearbit → Simple Icons → Google favicon → initials, so all 24 providers resolve to a real logo on the marketplace and beyond</li>
+      <li>Marketplace tier → membership filter — selecting a tier filters the membership chips and the tier persists when you pick a compatible membership (web + app, both Compare panes)</li>
+      <li>Daily digest reworked + dashboard Active/Inactive counts — new section order, plus a gold Active row (Features, Perks, Discounts, Competitions) over an Inactive row, mirroring Profile; send now reports Resend's real result</li>
+      <li>New direction spec written — Perki-Spec-Weekly-Savings-Engine.md: the Savings, Consolidation and Smart Usage engines, the weekly email structure, Beehiiv integration, privacy, roadmap and open questions</li>
+      <li>Beehiiv-ready weekly email drafted — Perki-Beehiiv-Weekly-Email.html: clean HTML blocks, subject and preheader, the three dynamic blocks, CTA buttons and personalisation tokens, on brand</li>
+      <li>20 new memberships loaded live — 145 rows ingested into the Supabase perks catalogue and verified (counts, types, icons, apostrophes and BA tiers all check out). Tesco, Boots, IKEA, Greggs, Nando's, Pret, Deliveroo, Amazon, Spotify, Cineworld, ASOS, Nationwide, Santander, American Express, Vodafone, Costco, Blue Light Card, National Trust, Railcard, British Airways</li>
+      <li>Catalogue integration fixes (web + app) — provider logos for all 20 new brands, the Mobile category icon, and an explicit Blue to Bronze to Silver to Gold order for British Airways earned-status tiers. Bundle-verified; awaiting a front-end deploy to show</li>
       <li>Pitch deck repaired and finished: fixed the packaging corruption and added the five app-configuration screenshots to a captioned "Inside the app" slide; the "Make every perk count." close slide is restored. 16 slides, render-QA'd</li>
       <li>Marketplace search now hides empty filters (web + app): when you search, only Membership / Tier / Category chips that still have a matching result are shown, and a selected-but-emptied filter clears itself</li>
       <li>Marketplace Compare built (website, spec'd first): a Compare toggle splits the view into two independent marketplaces with one shared search at the top — each side keeps its own Memberships / Tiers / Categories, so anything can be compared against anything</li>
@@ -181,6 +219,26 @@
   <section class="timeline">
     <h2>🧭 Progress timeline</h2>
     <ul class="tl">
+      <li>
+        <div class="date">24 Jun 2026</div>
+        <div class="ttl">7am email fixed (cron gateway 401)</div>
+        <div class="desc">Diagnosed why the daily email never arrived: the cron fired reliably but every call was rejected at the Supabase gateway with a 401 "Invalid API key" (a stale sb_secret_ token in the cron header), so the function never ran. Also found the cron timeout set to 1s against a ~3.4s function. Rerouted the cron through the function's preview path authenticated with the project's valid anon key, targeted at Ollie, timeout raised to 30s. Verified end to end (200, sent, received). Interim: subject carries a [PREVIEW] prefix and only emails Ollie until the proper --no-verify-jwt production deploy.</div>
+      </li>
+      <li>
+        <div class="date">17 Jun 2026</div>
+        <div class="ttl">Cadence + status, logos, marketplace filter, digest dashboard</div>
+        <div class="desc">Global shift from reset dates to a Cadence (Weekly / Monthly / One-off) + Status (Have used / not used / will not use) system across web, app and email, with renewal-date logic kept dormant behind a flag. Gave every membership a real logo via a Clearbit → Simple Icons → favicon → initials fallback chain. Made the marketplace tier selection filter the membership chips. Reworked the daily digest order and added gold Active / Inactive per-type counts to the dashboard, and made the send report Resend's real result. Specs written for each. All bundle-verified; deploys pending.</div>
+      </li>
+      <li>
+        <div class="date">14 Jun 2026</div>
+        <div class="ttl">New direction: weekly savings &amp; smart-usage engine (Beehiiv)</div>
+        <div class="desc">Defined the next phase for Perki: a weekly personalised email that saves people money by optimising and consolidating their memberships, and tells them how to use perks they already hold, timed to upcoming events. Wrote the implementation-ready spec (three engines, email structure, Beehiiv integration, privacy, phased roadmap, open questions) and drafted a Beehiiv-ready weekly email template with the savings, consolidation and smart-usage blocks, CTAs and personalisation tokens. New north star: 10,000 Beehiiv subscribers.</div>
+      </li>
+      <li>
+        <div class="date">11 Jun 2026</div>
+        <div class="ttl">20 memberships ingested + catalogue integration</div>
+        <div class="desc">Fable populated the working sheet with 20 new UK memberships across roughly 20 industries; QA'd the 145 rows (unique IDs, valid types, consistent tier prices, every icon present, 19 NEEDS-VERIFY items flagged), then loaded them into the live Supabase perks table and verified per-provider counts. Fixed the front-end integration so the new providers render real logos rather than initials (web and app), added the Mobile category icon, and gave British Airways earned-status tiers an explicit Blue to Bronze to Silver to Gold order. The code is bundle-verified and waiting on a front-end deploy.</div>
+      </li>
       <li>
         <div class="date">10 Jun 2026</div>
         <div class="ttl">Marketplace Compare (website)</div>
@@ -287,7 +345,7 @@
   <footer>
     <p>🤝 <b>Need from you:</b> O2 + Lidl source data · install Outfit + Work Sans fonts · verify the perki.app sending domain in Resend · friends to test the app + email.</p>
     <p style="margin-top:6px">🧭 Guardrails: manual ingestion only, no scraping · accuracy over speed · brand gates deck work · auto-send is OFF (manual pulls only).</p>
-    <p style="margin-top:6px;opacity:.6">Last updated 2026-06-10 (rev 8) · mirrors daily-todo.md · tick cards to dim them (saved in your browser)</p>
+    <p style="margin-top:6px;opacity:.6">Last updated 2026-06-24 (rev 12) · mirrors daily-todo.md · tick cards to dim them (saved in your browser)</p>
   </footer>
 
 <script>

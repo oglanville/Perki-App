@@ -10,6 +10,7 @@ const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
 const FROM_EMAIL = Deno.env.get("FROM_EMAIL") ?? "Perki <digest@perki.app>";
 
+
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 const resend = new Resend(RESEND_API_KEY);
 
@@ -419,6 +420,10 @@ interface EmailData {
   available: number;
   used: number;
   willNotUse: number;
+  activeByType: Record<string, number>;
+  inactiveByType: Record<string, number>;
+  savingsMoves: { title: string; sub: string; saving: number }[];
+  consolidation: { dup: boolean; title: string; detail: string };
   memberships: { provider: string; tier: string; color: string; renewal: string }[];
   whatToUseToday: EnrichedPerk[];
   momentBoxes: MomentBox[];
@@ -441,6 +446,68 @@ function actionBox(icon: string, title: string, subtitle: string, body: string):
     ${body}
     <tr><td style="height:4px;"></td></tr>
   </table>`;
+}
+
+interface SavingsMove { title: string; sub: string; saving: number; }
+
+/* Real savings: for each held membership, the cheapest tier that still covers every
+   perk the user has actually used, and only if it is cheaper than what they hold now. */
+function buildSavingsMoves(userMemberships: UserMembership[], perks: EnrichedPerk[], allPerks: Perk[], tierPrices: TierPriceMap): SavingsMove[] {
+  const moves: SavingsMove[] = [];
+  const seen = new Set<string>();
+  for (const m of userMemberships) {
+    const key = `${m.provider}|${m.membership}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const curPrice = tierPrices[`${m.provider}|${m.tier}`]?.price ?? 0;
+    if (curPrice <= 0) continue;
+    const usedTitles = new Set(
+      perks.filter((p) => p.provider === m.provider && p.membership === m.membership && p.used)
+           .map((p) => (p.title || "").toLowerCase()),
+    );
+    const tierTitles: Record<string, Set<string>> = {};
+    for (const p of allPerks) {
+      if (p.provider !== m.provider || p.membership !== m.membership) continue;
+      (tierTitles[p.tier] ??= new Set()).add((p.title || "").toLowerCase());
+    }
+    let best: { tier: string; price: number } | null = null;
+    for (const t of Object.keys(tierTitles)) {
+      const price = tierPrices[`${m.provider}|${t}`]?.price ?? 0;
+      if (price >= curPrice) continue;
+      let covers = true;
+      for (const ut of usedTitles) { if (!tierTitles[t].has(ut)) { covers = false; break; } }
+      if (!covers) continue;
+      if (!best || price < best.price) best = { tier: t, price };
+    }
+    if (best) {
+      const saving = Math.round((curPrice - best.price) * 100) / 100;
+      if (saving > 0) {
+        const sub = usedTitles.size === 0
+          ? `You have not used any ${m.provider} perks lately.`
+          : `Keeps every ${m.provider} perk you actually use.`;
+        moves.push({ title: `Move ${m.provider} ${m.tier} to ${best.tier}`, sub, saving });
+      }
+    }
+  }
+  moves.sort((a, b) => b.saving - a.saving);
+  return moves.slice(0, 2);
+}
+
+/* Conservative consolidation: only flag genuine category overlap (insurance, travel)
+   across two or more providers. Never asserts the user is definitely paying twice. */
+function buildConsolidation(perks: EnrichedPerk[]): { dup: boolean; title: string; detail: string } {
+  const DUP = ["Insurance", "Travel"];
+  for (const cat of DUP) {
+    const providers = [...new Set(perks.filter((p) => p.category === cat && !p.dismissed).map((p) => p.provider))];
+    if (providers.length >= 2) {
+      return {
+        dup: true,
+        title: `Possible overlap in ${cat.toLowerCase()}.`,
+        detail: `You hold ${cat.toLowerCase()} cover from ${providers.slice(0, 3).join(", ")}. Worth checking you are not paying for the same thing twice.`,
+      };
+    }
+  }
+  return { dup: false, title: "No obvious duplicates.", detail: "Your line-up looks lean, nothing doubling up right now." };
 }
 
 function buildEmailHtml(d: EmailData): string {
@@ -469,12 +536,30 @@ function buildEmailHtml(d: EmailData): string {
         <div style="${h}font-size:22px;font-weight:800;color:#23202A;padding-top:3px;">${escHtml(headline)}</div>
         <div style="${b}font-size:13px;color:#6B6757;padding-top:3px;">Across your ${memCount} ${memCount === 1 ? "membership" : "memberships"}.</div>
       </td></tr>
-      <tr><td style="padding:10px 14px 18px;">
+      <tr><td style="padding:10px 14px 6px;">
         <table cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
           ${tile(String(d.available), "Available", true)}
           ${tile(String(d.used), "Used", false)}
           ${tile(String(d.willNotUse), "Set aside", false)}
           ${tile(String(memCount), memCount === 1 ? "Membership" : "Memberships", false)}
+        </tr></table>
+      </td></tr>
+      <tr><td style="padding:8px 18px 0;"><div style="${h}font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#B07C1A;">Active</div></td></tr>
+      <tr><td style="padding:6px 14px 2px;">
+        <table cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
+          ${tile(String(d.activeByType.feature ?? 0), "Features", true)}
+          ${tile(String(d.activeByType.perk ?? 0), "Perks", true)}
+          ${tile(String(d.activeByType.discount ?? 0), "Discounts", true)}
+          ${tile(String(d.activeByType.competition ?? 0), "Competitions", true)}
+        </tr></table>
+      </td></tr>
+      <tr><td style="padding:8px 18px 0;"><div style="${h}font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#6B6757;">Inactive</div></td></tr>
+      <tr><td style="padding:6px 14px 18px;">
+        <table cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
+          ${tile(String(d.inactiveByType.feature ?? 0), "Features", false)}
+          ${tile(String(d.inactiveByType.perk ?? 0), "Perks", false)}
+          ${tile(String(d.inactiveByType.discount ?? 0), "Discounts", false)}
+          ${tile(String(d.inactiveByType.competition ?? 0), "Competitions", false)}
         </tr></table>
       </td></tr>
     </table>`;
@@ -494,9 +579,7 @@ function buildEmailHtml(d: EmailData): string {
 
   /* 4. What to use today */
   const todayCard = (p: EnrichedPerk) => {
-    const reset = p.next_reset_date
-      ? `resets ${new Date(p.next_reset_date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`
-      : p.reset_period === "WEEKLY" ? "resets weekly" : p.reset_period === "MONTHLY" ? "resets monthly" : "available now";
+    const reset = p.reset_period === "WEEKLY" ? "Resets every Monday" : p.reset_period === "MONTHLY" ? "Resets on the 1st" : "One-off";
     return `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="${card}margin-bottom:10px;"><tr>
       <td width="44" style="padding:14px 0 14px 14px;vertical-align:middle;"><div style="width:34px;height:34px;border-radius:9px;background:#F7ECD4;text-align:center;line-height:34px;font-size:16px;">${categoryIcon(p.category)}</div></td>
       <td style="padding:12px;vertical-align:middle;"><div style="${b}font-size:14px;font-weight:600;color:#23202A;">${escHtml(trunc(p.title, 30))}</div><div style="${b}font-size:12px;color:#6B6757;">${escHtml(p.provider)} &middot; ${reset}</div></td>
@@ -528,21 +611,61 @@ function buildEmailHtml(d: EmailData): string {
       </tr></table>
     </td></tr>`;
 
-  /* 6. Where to use next */
-  const topCats = [...d.categoryGrouped].sort((a, b2) => b2.items.length - a.items.length).slice(0, 3);
-  const catTile = (g: { category: string; icon: string; items: EnrichedPerk[] }) => `
-    <td class="stack stack-mb" width="33.33%" style="vertical-align:top;padding:0 4px;">
-      <a href="${APP}" style="display:block;${card}padding:14px;text-align:center;">
-        <div style="font-size:22px;">${g.icon}</div>
-        <div style="${b}font-size:13px;font-weight:600;color:#23202A;padding-top:5px;">${escHtml(g.category)}</div>
-        <div style="${b}font-size:11px;color:#6B6757;">${g.items.length} ${g.items.length === 1 ? "perk" : "perks"}</div>
-      </a>
-    </td>`;
-  const whereNext = topCats.length === 0 ? "" : `
+  /* 5b. Split-screen: Savings engine (left) + Consolidation engine (right) */
+  const moveRow = (title, sub, tag, tagBg, tagCol) => `
+    <div style="border:1px solid #E4DDCB;border-radius:10px;padding:10px 12px;margin-bottom:8px;">
+      <div style="${b}font-size:13px;font-weight:700;color:#23202A;line-height:1.3;">${escHtml(title)}</div>
+      <div style="${b}font-size:11px;color:#6B6757;padding:3px 0 6px;line-height:1.5;">${escHtml(sub)}</div>
+      <span style="${b}font-size:11px;font-weight:700;color:${tagCol};background:${tagBg};border-radius:8px;padding:3px 8px;">${escHtml(tag)}</span>
+    </div>`;
+  const savingsBody = d.savingsMoves.length
+    ? d.savingsMoves.map((mv) => moveRow(mv.title, mv.sub, `Save £${mv.saving} / mo`, "#F7ECD4", "#B07C1A")).join("")
+    : `<div style="${b}font-size:13px;color:#6B6757;line-height:1.6;">Your tiers look right-sized. No easy savings spotted this week.</div>`;
+  const savingsPane = `
+    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="${card}"><tr><td style="padding:14px 16px;">
+      <div style="${h}font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#B07C1A;">Savings engine</div>
+      <div style="${h}font-size:16px;font-weight:800;color:#23202A;padding:1px 0 10px;">Move this, save that</div>
+      ${savingsBody}
+    </td></tr></table>`;
+  const consolidationPane = `
+    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#F7ECD4;border:1px solid #E0A93B;border-radius:12px;"><tr><td style="padding:14px 16px;">
+      <div style="${h}font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#B07C1A;">Consolidation engine</div>
+      <div style="${h}font-size:16px;font-weight:800;color:#23202A;padding:1px 0 10px;">Stop doubling up</div>
+      <div style="${b}font-size:13px;font-weight:700;color:#23202A;padding-bottom:6px;">${escHtml(d.consolidation.title)}</div>
+      <div style="${b}font-size:12px;color:#6B6757;line-height:1.6;">${escHtml(d.consolidation.detail)}</div>
+    </td></tr></table>`;
+  const splitEngines = `
+    <tr><td class="px" style="padding:18px 8px 6px;">
+      <table cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
+        <td class="stack stack-mb" width="50%" style="vertical-align:top;padding-right:5px;">${savingsPane}</td>
+        <td class="stack" width="50%" style="vertical-align:top;padding-left:5px;">${consolidationPane}</td>
+      </tr></table>
+    </td></tr>`;
+
+  /* 6. Where to use next — contextual prompts mapped to perks you already hold */
+  const ctx = [
+    { emoji: "✈️", q: "Going on holiday?", cats: ["Travel", "Insurance", "Currency"] },
+    { emoji: "🎬", q: "Fancy a trip to the cinema?", cats: ["Entertainment", "Streaming"] },
+    { emoji: "⚽", q: "Off to a sports game?", cats: ["Sports"] },
+  ];
+  const pick = (cats: string[]): EnrichedPerk | null => {
+    for (const c of cats) { const g = d.categoryGrouped.find((x) => x.category === c); if (g && g.items.length) return g.items[0]; }
+    return null;
+  };
+  const ctxRows = ctx.map((x) => {
+    const p = pick(x.cats);
+    if (!p) return "";
+    return `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="${card}margin-bottom:10px;"><tr>
+      <td width="44" style="padding:14px 0 14px 14px;vertical-align:middle;"><div style="width:34px;height:34px;border-radius:9px;background:#F7ECD4;text-align:center;line-height:34px;font-size:16px;">${x.emoji}</div></td>
+      <td style="padding:12px;vertical-align:middle;"><div style="${b}font-size:14px;font-weight:700;color:#23202A;">${escHtml(x.q)}</div><div style="${b}font-size:12px;color:#6B6757;">Use your ${escHtml(trunc(p.title, 26))} from ${escHtml(p.provider)}.</div></td>
+      <td align="right" style="padding:12px 14px;vertical-align:middle;"><a href="${APP}" style="${b}font-size:12px;font-weight:700;color:#FFFFFF;background:#2B2A6E;border-radius:8px;padding:8px 14px;display:inline-block;">Use this</a></td>
+    </tr></table>`;
+  }).join("");
+  const whereNext = ctxRows.trim() === "" ? "" : `
     <tr><td class="px" style="padding:18px 8px 6px;">
       <div style="${h}font-size:17px;font-weight:700;color:#23202A;padding-bottom:3px;">Where to use next</div>
-      <div style="${b}font-size:13px;color:#6B6757;padding-bottom:10px;">Browse by category, the way you would on the marketplace.</div>
-      <table cellpadding="0" cellspacing="0" border="0" width="100%"><tr>${topCats.map(catTile).join("")}</tr></table>
+      <div style="${b}font-size:13px;color:#6B6757;padding-bottom:10px;">Something coming up? Here is what you already hold for it.</div>
+      ${ctxRows}
     </td></tr>`;
 
   /* 7. All perks by category */
@@ -607,19 +730,15 @@ function buildEmailHtml(d: EmailData): string {
     ${memberships}
   </td></tr>
 
+  ${splitEngines}
+
   <tr><td class="px" style="padding:18px 8px 6px;">
     <div style="${h}font-size:17px;font-weight:700;color:#23202A;padding-bottom:3px;">What to use today</div>
     <div style="${b}font-size:13px;color:#6B6757;padding-bottom:10px;">Resetting or expiring soon. Worth a tap before they roll over.</div>
     ${today}
   </td></tr>
 
-  ${worthAdding}
   ${whereNext}
-
-  <tr><td class="px" style="padding:18px 8px 6px;">
-    <div style="${h}font-size:17px;font-weight:700;color:#23202A;padding-bottom:10px;">All your perks by category</div>
-    ${catCards}
-  </td></tr>
 
   <tr><td class="px" align="center" style="padding:22px 8px 8px;">
     <a href="${APP}" style="${b}font-size:14px;font-weight:700;color:#FFFFFF;background:#2B2A6E;border-radius:10px;padding:13px 28px;display:inline-block;">Open Perki</a>
@@ -657,6 +776,13 @@ function buildDigestForUser(
   const usedCount = countable.filter((p) => p.used).length;
   const availableCount = countable.length - usedCount;
   const willNotUseCount = perks.filter((p) => p.dismissed).length;
+  const TYPES = ["feature", "perk", "discount", "competition"] as const;
+  const activeByType: Record<string, number> = {};
+  const inactiveByType: Record<string, number> = {};
+  for (const t of TYPES) {
+    activeByType[t] = countable.filter((p) => p.feature === t && p.used).length;
+    inactiveByType[t] = countable.filter((p) => p.feature === t && !p.used).length;
+  }
 
   const providersSeen = new Set<string>();
   const membershipSummary = userMemberships
@@ -667,6 +793,9 @@ function buildDigestForUser(
       color: providerColor(m.provider),
       renewal: "",
     }));
+
+  const savingsMoves = buildSavingsMoves(userMemberships, perks, allPerks, tierPrices);
+  const consolidation = buildConsolidation(perks);
 
   const whatToUseToday = buildWhatToUseToday(perks);
   const momentBoxes = buildMomentBoxes(perks, today);
@@ -686,6 +815,10 @@ function buildDigestForUser(
     available: availableCount,
     used: usedCount,
     willNotUse: willNotUseCount,
+    activeByType,
+    inactiveByType,
+    savingsMoves,
+    consolidation,
     memberships: membershipSummary,
     whatToUseToday,
     momentBoxes,
@@ -769,12 +902,17 @@ Deno.serve(async (req: Request) => {
       const sendTo = (body.email as string) ?? authEmail;
       console.log(`[daily-digest] Preview: sending ${name}'s digest to ${sendTo}`);
       try {
-        await resend.emails.send({ from: FROM_EMAIL, to: sendTo, subject: `[PREVIEW] Perki for ${name}, ${todayFormatted(today)}`, html });
+        const result = await resend.emails.send({ from: FROM_EMAIL, to: sendTo, subject: `[PREVIEW] Perki for ${name}, ${todayFormatted(today)}`, html });
+        const rErr = (result as Record<string, unknown>)?.error;
+        if (rErr) {
+          return new Response(JSON.stringify({ mode: "preview", error: "Resend rejected the send", detail: rErr }), { status: 502, headers: { "Content-Type": "application/json" } });
+        }
+        const id = ((result as Record<string, { id?: string }>)?.data)?.id ?? null;
+        return new Response(JSON.stringify({ mode: "preview", sent: 1, sentTo: sendTo, id, userId: previewUserId, userName: name }), { headers: { "Content-Type": "application/json" } });
       } catch (sendErr: unknown) {
         const msg = sendErr instanceof Error ? sendErr.message : String(sendErr);
         return new Response(JSON.stringify({ mode: "preview", error: `Failed to send: ${msg}` }), { status: 500, headers: { "Content-Type": "application/json" } });
       }
-      return new Response(JSON.stringify({ mode: "preview", sent: 1, sentTo: sendTo, userId: previewUserId, userName: name }), { headers: { "Content-Type": "application/json" } });
     }
 
     // PRODUCTION
@@ -812,8 +950,14 @@ Deno.serve(async (req: Request) => {
       if (!email) continue;
       const { html, name } = buildDigestForUser(userId, membershipsByUser[userId], allPerks as Perk[], tierPrices, perkStatesByUser[userId] ?? [], profileNameMap[userId] ?? authNameMap[userId] ?? null, email, today);
       try {
-        await resend.emails.send({ from: FROM_EMAIL, to: email, subject: `Your Perki for ${todayFormatted(today)}`, html });
-        sentCount++;
+        const result = await resend.emails.send({ from: FROM_EMAIL, to: email, subject: `Your Perki for ${todayFormatted(today)}`, html });
+        const rErr = (result as Record<string, unknown>)?.error;
+        if (rErr) {
+          console.error(`[daily-digest] Resend rejected ${email}: ${JSON.stringify(rErr)}`);
+          errors.push(`${email}: ${JSON.stringify(rErr)}`);
+        } else {
+          sentCount++;
+        }
       } catch (sendErr: unknown) {
         const msg = sendErr instanceof Error ? sendErr.message : String(sendErr);
         console.error(`[daily-digest] Failed to send to ${email}: ${msg}`);

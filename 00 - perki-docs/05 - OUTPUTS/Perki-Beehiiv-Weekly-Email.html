@@ -1,0 +1,125 @@
+<!--
+========================================================================
+PERKI · WEEKLY SAVINGS & SMART-USAGE EMAIL  ·  Beehiiv-ready template
+========================================================================
+HOW TO USE IN BEEHIIV
+- Paste this whole file into a Beehiiv "Custom HTML" block, or split each
+  <!-- BLOCK: ... --> section into its own block in the editor.
+- Subject line and preheader are NOT part of the HTML body. Set them in
+  Beehiiv's post settings using the values below.
+- {{ tokens }} are personalisation placeholders. first_name is a native
+  Beehiiv field; the rest are custom fields you populate per subscriber
+  (segment-based today, per-subscriber once you move to custom-field
+  injection · see Perki-Spec-Weekly-Savings-Engine.md, section 10).
+- Any block with no data for a subscriber should be omitted, not left empty.
+
+SUBJECT LINE:  {{ first_name }}, you could save £{{ savings_total }} a month
+   A/B variant B:  3 money moves and a perk to use before {{ next_event }}
+PREHEADER:     Your weekly Perki: cheaper tiers, fewer duplicates, and perks worth using now.
+========================================================================
+-->
+<div style="margin:0;padding:0;background:#F4F0E6;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F4F0E6;">
+    <tr><td align="center" style="padding:24px 12px;">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:600px;max-width:600px;background:#FCFAF4;border:1px solid #E4DDCB;border-radius:16px;overflow:hidden;font-family:'Work Sans',Helvetica,Arial,sans-serif;">
+
+        <!-- BLOCK: HEADER -->
+        <tr><td style="background:#2B2A6E;padding:20px 28px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+            <td style="font-family:'Outfit',Helvetica,Arial,sans-serif;font-size:22px;font-weight:800;color:#FFFFFF;letter-spacing:-0.3px;">Perki</td>
+            <td align="right" style="font-size:12px;color:#E9E6F2;">Your week · {{ week_of }}</td>
+          </tr></table>
+        </td></tr>
+
+        <!-- BLOCK: OPENING -->
+        <tr><td style="padding:28px 28px 8px;">
+          <p style="margin:0 0 6px;font-family:'Outfit',Helvetica,Arial,sans-serif;font-size:24px;font-weight:800;color:#23202A;line-height:1.25;">Hi {{ first_name }}, you could save £{{ savings_total }} a month.</p>
+          <p style="margin:0;font-size:15px;color:#6B6757;line-height:1.6;">Three quick moves below, where you are doubling up, and a perk worth using before {{ next_event }}.</p>
+        </td></tr>
+
+        <!-- BLOCK: SAVINGS ENGINE -->
+        <tr><td style="padding:20px 28px 4px;">
+          <p style="margin:0 0 12px;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#B07C1A;">Move this, save that</p>
+
+          <!-- repeatable move card -->
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FFFFFF;border:1px solid #E4DDCB;border-radius:12px;margin-bottom:10px;"><tr><td style="padding:14px 16px;">
+            <p style="margin:0 0 4px;font-size:15px;font-weight:700;color:#23202A;">Move your phone plan to Monzo</p>
+            <p style="margin:0 0 10px;font-size:13px;color:#6B6757;line-height:1.5;">Your current SIM duplicates cover you already get. Switching keeps your number and adds Monzo perks.</p>
+            <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+              <td style="background:#F7ECD4;border-radius:8px;padding:5px 10px;font-size:13px;font-weight:700;color:#B07C1A;">Save £8 / month</td>
+              <td style="padding-left:8px;font-size:12px;color:#6B6757;">Gain: fee-free spending abroad</td>
+            </tr></table>
+          </td></tr></table>
+
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FFFFFF;border:1px solid #E4DDCB;border-radius:12px;margin-bottom:10px;"><tr><td style="padding:14px 16px;">
+            <p style="margin:0 0 4px;font-size:15px;font-weight:700;color:#23202A;">Downgrade Revolut Metal to Plus</p>
+            <p style="margin:0 0 10px;font-size:13px;color:#6B6757;line-height:1.5;">You have not used the Metal-only perks in 3 months.</p>
+            <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+              <td style="background:#F7ECD4;border-radius:8px;padding:5px 10px;font-size:13px;font-weight:700;color:#B07C1A;">Save £11 / month</td>
+              <td style="padding-left:8px;font-size:12px;color:#6B6757;">Lose: travel insurance, metal card</td>
+            </tr></table>
+          </td></tr></table>
+
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FFFFFF;border:1px solid #E4DDCB;border-radius:12px;"><tr><td style="padding:14px 16px;">
+            <p style="margin:0 0 4px;font-size:15px;font-weight:700;color:#23202A;">Upgrade Tesco Clubcard to Clubcard Plus</p>
+            <p style="margin:0 0 10px;font-size:13px;color:#6B6757;line-height:1.5;">You shop enough that two 10%-off shops a month would more than cover the fee.</p>
+            <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+              <td style="background:#2B2A6E;border-radius:8px;padding:5px 10px;font-size:13px;font-weight:700;color:#FFFFFF;">+£7.99 / month</td>
+              <td style="padding-left:8px;font-size:12px;color:#6B6757;">Unlock: 10% off two big shops</td>
+            </tr></table>
+          </td></tr></table>
+        </td></tr>
+
+        <!-- BLOCK: CONSOLIDATION ENGINE -->
+        <tr><td style="padding:22px 28px 4px;">
+          <p style="margin:0 0 12px;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#B07C1A;">Stop doubling up</p>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F7ECD4;border:1px solid #E0A93B;border-radius:12px;"><tr><td style="padding:16px;">
+            <p style="margin:0 0 6px;font-size:15px;font-weight:700;color:#23202A;">You are paying twice for travel insurance.</p>
+            <p style="margin:0 0 12px;font-size:13px;color:#6B6757;line-height:1.6;">Your Nationwide FlexPlus already covers worldwide family travel. Dropping your separate policy tidies your line-up with no loss of cover.</p>
+            <p style="margin:0;font-size:14px;font-weight:700;color:#B07C1A;">Your best line-up saves £{{ consolidation_total }} a month overall.</p>
+          </td></tr></table>
+        </td></tr>
+
+        <!-- BLOCK: SMART USAGE ENGINE -->
+        <tr><td style="padding:22px 28px 4px;">
+          <p style="margin:0 0 12px;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#B07C1A;">Use these this week</p>
+
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px;"><tr>
+            <td width="44" valign="top" style="font-size:22px;">✈️</td>
+            <td valign="top">
+              <p style="margin:0 0 2px;font-size:15px;font-weight:700;color:#23202A;">Trip to {{ trip_destination }} next week</p>
+              <p style="margin:0;font-size:13px;color:#6B6757;line-height:1.5;">Use your Amex Platinum lounge access and Revolut fee-free spending. Both are sitting unused.</p>
+            </td>
+          </tr></table>
+
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+            <td width="44" valign="top" style="font-size:22px;">🎂</td>
+            <td valign="top">
+              <p style="margin:0 0 2px;font-size:15px;font-weight:700;color:#23202A;">A birthday in your calendar</p>
+              <p style="margin:0;font-size:13px;color:#6B6757;line-height:1.5;">Your Nando's reward is ready, and your Greggs birthday treat expires soon.</p>
+            </td>
+          </tr></table>
+        </td></tr>
+
+        <!-- BLOCK: PRIMARY CTA -->
+        <tr><td align="center" style="padding:26px 28px 8px;">
+          <table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="background:#2B2A6E;border-radius:10px;">
+            <a href="{{ cta_url }}" style="display:inline-block;padding:14px 30px;font-family:'Outfit',Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#FFFFFF;text-decoration:none;">See all your moves and perks</a>
+          </td></tr></table>
+        </td></tr>
+
+        <!-- BLOCK: REFERRAL -->
+        <tr><td align="center" style="padding:4px 28px 24px;">
+          <p style="margin:0;font-size:13px;color:#6B6757;line-height:1.6;">Know someone overpaying? <a href="{{ referral_url }}" style="color:#B07C1A;font-weight:700;text-decoration:none;">Send them Perki</a> and help them find their savings.</p>
+        </td></tr>
+
+        <!-- BLOCK: FOOTER -->
+        <tr><td style="background:#F4F0E6;border-top:1px solid #E4DDCB;padding:18px 28px;">
+          <p style="margin:0 0 4px;font-size:11px;color:#8A8470;line-height:1.5;">You are getting this because you connected your memberships to Perki. Savings are estimates based on the tiers and perks you hold.</p>
+          <p style="margin:0;font-size:11px;color:#8A8470;">perki-app.vercel.app · <a href="{{ unsubscribe_url }}" style="color:#8A8470;">Unsubscribe</a> · <a href="{{ preferences_url }}" style="color:#8A8470;">Update preferences</a></p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</div>
