@@ -843,10 +843,16 @@ Deno.serve(async (req: Request) => {
     if (isPreview) {
       console.log("[daily-digest] Preview mode: skipping auth");
     } else {
-      const cronSecret = Deno.env.get("CRON_SECRET");
       const header = req.headers.get("authorization");
-      console.log("[daily-digest] Auth check — secret set:", !!cronSecret, "header set:", !!header);
-      if (!cronSecret || header !== `Bearer ${cronSecret}`) {
+      const envSecret = Deno.env.get("CRON_SECRET");
+      let authOk = !!envSecret && header === `Bearer ${envSecret}`;
+      if (!authOk && header) {
+        // Fall back to the Vault value (service-role-only RPC) so the cron and the function can never drift.
+        const { data: vaultSecret } = await supabase.rpc("get_cron_secret");
+        authOk = !!vaultSecret && header === `Bearer ${vaultSecret}`;
+      }
+      console.log("[daily-digest] Auth check — env secret set:", !!envSecret, "header set:", !!header, "ok:", authOk);
+      if (!authOk) {
         return new Response("Unauthorized", { status: 401 });
       }
     }
@@ -966,10 +972,4 @@ Deno.serve(async (req: Request) => {
     }
 
     console.log(`[daily-digest] Done. Sent: ${sentCount}, Errors: ${errors.length}`);
-    return new Response(JSON.stringify({ sent: sentCount, errors: errors.length, errorDetails: errors }), { headers: { "Content-Type": "application/json" } });
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error(`[daily-digest] Fatal error: ${msg}`);
-    return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { "Content-Type": "application/json" } });
-  }
-});
+    return new Response(JSON.stringify({ sent: sentCount, errors: errors.length, errorDetails: errors
