@@ -17,10 +17,10 @@ _Pulled manually · Last updated: 2026-07-09 (rev 14) · Scheduled auto-send: OF
 
 ---
 
-## ☀️ TODAY — ship it
-- **🚀 git push** *(needs you — 9 commits queued)* — redesign, app, onboarding, profile, photos, board. Vercel deploys on push.
-- **🧽 Digest redeploy** *(needs you, optional)* — `supabase functions deploy daily-digest --no-verify-jwt --project-ref iievmjsfpgixqdpuxbkg` fixes the two cosmetic v48 style nits from repo.
-- **📧 Supabase toggle for instant onboarding** *(needs you)* — Dashboard → Auth → Sign In / Up → turn OFF "Confirm email", otherwise new signups still see a confirm notice before onboarding.
+## ☀️ TODAY — shipped ✅, two small things left
+- ✅ **Pushed and live** — all nine commits are on Vercel and the digest is at v50, deployed from your repo (cosmetic nits fixed). Nothing queued.
+- **📧 Supabase toggle for instant onboarding** *(needs you, 30 seconds)* — Dashboard → Auth → Sign In / Up → turn OFF "Confirm email", otherwise new signups still see a confirm notice before onboarding.
+- **📱 Open perki-app.vercel.app on your phone** — the redesign is live; the homepage hero, onboarding flow and profile loop are the things to feel out.
 - **⏰ Watch the email variants** — Fri Momentum · Sat Verdict · Sun Savings · Mon Bundle.
 
 ## 📅 THIS WEEK — QA the new surfaces
