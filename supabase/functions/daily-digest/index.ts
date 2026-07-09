@@ -587,17 +587,16 @@ function ebEngines(d: EmailDataV2): string {
         <span style="${F_BODY}font-size:11px;font-weight:700;color:#B07C1A;background:#F7ECD4;border-radius:8px;padding:3px 8px;">Save £${mv.saving} / mo</span>
       </div>`).join("")
     : `<div style="${F_BODY}font-size:12px;line-height:18px;color:#6B6757;">Your tiers look right-sized. No easy savings spotted today.</div>`;
-  return `<tr><td class="px" style="padding:22px 24px 6px;">
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
-      <td class="stack stack-mb" width="50%" style="vertical-align:top;padding-right:5px;">
+  return `<tr><td class="px" style="padding:22px 24px 6px;font-size:0;text-align:center;">
+    <!--[if mso]><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td width="50%" valign="top" style="padding-right:5px;"><![endif]-->
+    <div style="display:inline-block;width:100%;max-width:270px;vertical-align:top;text-align:left;margin:0 3px 10px;">
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#FCFAF4;border:1px solid #E4DDCB;border-radius:16px;"><tr><td style="padding:16px;">
           <div style="${F_DISP}font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#B07C1A;">Savings engine</div>
           <div style="${F_DISP}font-size:30px;font-weight:900;color:#23202A;padding:6px 0 2px;">£${d.savingsTotal}<span style="font-size:14px;font-weight:600;color:#6B6757;">/mo</span></div>
           <div style="${F_BODY}font-size:13px;line-height:19px;color:#6B6757;padding-bottom:10px;">${d.savingsTotal > 0 ? "still on the table" : "nothing left on the table"}</div>
           ${movesHtml}
         </td></tr></table>
-      </td>
-      <td class="stack" width="50%" style="vertical-align:top;padding-left:5px;">
+    </div><!--[if mso]></td><td width="50%" valign="top" style="padding-left:5px;"><![endif]--><div style="display:inline-block;width:100%;max-width:270px;vertical-align:top;text-align:left;margin:0 3px 10px;">
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#F7ECD4;border:1px solid #E0A93B;border-radius:16px;"><tr><td style="padding:16px;">
           <div style="${F_DISP}font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#B07C1A;">Consolidation engine</div>
           <div style="${F_DISP}font-size:30px;font-weight:900;color:#23202A;padding:6px 0 2px;">${d.consolidation.dup ? 1 : 0}<span style="font-size:14px;font-weight:600;color:#6B6757;"> overlap${d.consolidation.dup ? "" : "s"}</span></div>
@@ -605,8 +604,9 @@ function ebEngines(d: EmailDataV2): string {
           <div style="${F_BODY}font-size:13px;font-weight:700;color:#23202A;padding-bottom:4px;">${escHtml(d.consolidation.title)}</div>
           <div style="${F_BODY}font-size:12px;line-height:18px;color:#6B6757;">${escHtml(d.consolidation.detail)}</div>
         </td></tr></table>
-      </td>
-    </tr></table></td></tr>`;
+    </div>
+    <!--[if mso]></td></tr></table><![endif]-->
+  </td></tr>`;
 }
 
 function ebWeekChart(d: EmailDataV2): string {
@@ -634,8 +634,10 @@ function ebMemberships(d: EmailDataV2): string {
   const shown = d.membershipRows.slice(0, 3);
   const extra = d.membershipRows.length - shown.length;
   const rows = shown.map((m, i) => `<tr><td style="padding:13px 16px;${i < shown.length - 1 ? "border-bottom:1px solid #EFE9DA;" : ""}">
-      <span style="${F_BODY}font-size:14px;font-weight:600;color:#23202A;">${escHtml(m.provider)} · ${escHtml(m.tier)}${i === shown.length - 1 && extra > 0 ? ` <span style="color:#6B6757;font-weight:400;">+ ${extra} more</span>` : ""}</span>
-      <span style="float:right;${F_BODY}font-size:11px;font-weight:700;color:${m.save ? "#FCFAF4" : "#B07C1A"};background:${m.save ? "#2B2A6E" : "#F7ECD4"};border-radius:20px;padding:3px 10px;">${escHtml(m.verdict)}</span>
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
+        <td style="${F_BODY}font-size:14px;font-weight:600;color:#23202A;">${escHtml(m.provider)} · ${escHtml(m.tier)}${i === shown.length - 1 && extra > 0 ? ` <span style="color:#6B6757;font-weight:400;">+ ${extra} more</span>` : ""}</td>
+        <td align="right" style="white-space:nowrap;"><span style="${F_BODY}font-size:11px;font-weight:700;color:${m.save ? "#FCFAF4" : "#B07C1A"};background:${m.save ? "#2B2A6E" : "#F7ECD4"};border-radius:20px;padding:3px 10px;">${escHtml(m.verdict)}</span></td>
+      </tr></table>
     </td></tr>`).join("");
   return ebSectionPill("Your memberships", "indigo") + `<tr><td class="px" style="padding:0 24px;">
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#FCFAF4;border:1px solid #E4DDCB;border-radius:16px;">${rows}</table></td></tr>`;
@@ -677,7 +679,11 @@ function buildEmailHtmlV2(d: EmailDataV2): string {
     default: blocks.push(summary, ebUseToday(d), ebEngines(d), ebWeekChart(d), ebMemberships(d));
   }
   const cta = `<tr><td align="center" style="padding:32px 24px 10px;">
-    <a href="https://perki.app" style="${F_BODY}font-size:15px;font-weight:700;color:#FCFAF4;background:#2B2A6E;border-radius:999px;padding:15px 34px;display:inline-block;">See today's perks</a>
+    <table role="presentation" align="center" cellpadding="0" cellspacing="0" border="0"><tr>
+      <td align="center" bgcolor="#2B2A6E" style="border-radius:999px;">
+        <a href="https://perki.app" style="${F_BODY}font-size:15px;font-weight:700;color:#FCFAF4;text-decoration:none;display:inline-block;padding:15px 34px;">See today's perks</a>
+      </td>
+    </tr></table>
   </td></tr>`;
   const footer = `<tr><td align="center" style="padding:20px 24px 8px;">
     <div style="${F_BODY}font-size:12px;color:#6B6757;line-height:18px;">Read-only, always. Perki recommends and links, never moves your money.</div>
@@ -687,13 +693,14 @@ function buildEmailHtmlV2(d: EmailDataV2): string {
   blocks.push(cta, footer);
   const preheader = d.available > 0 ? `${d.available} perks ready${d.savingsTotal > 0 ? `, £${d.savingsTotal} a month on the table` : ""}. Two minutes, ${d.name}.` : `Your daily Perki is here, ${d.name}.`;
   return `<!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <meta name="color-scheme" content="light"/>
 <meta name="supported-color-schemes" content="light"/>
 <title>Your Perki</title>
+<!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]-->
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@600;800;900&family=Work+Sans:wght@400;500;600;700&display=swap');
   body,table,td,a{-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;}
@@ -715,9 +722,11 @@ function buildEmailHtmlV2(d: EmailDataV2): string {
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#2B2A6E;"><tr>
   <td align="center" style="padding:14px;"><span style="${F_DISP}font-size:20px;font-weight:900;color:#FCFAF4;">Perki<span style="color:#E0A93B;">.</span></span></td>
 </tr></table>
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" class="container" style="width:600px;max-width:600px;">
+<!--[if mso]><table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" align="center"><tr><td><![endif]-->
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" width="100%" style="max-width:600px;">
 ${blocks.join("\n")}
 </table>
+<!--[if mso]></td></tr></table><![endif]-->
 </td></tr></table>
 </body>
 </html>`;
