@@ -89,7 +89,8 @@ export function TopNav() {
   ];
   return (
     <header className="fixed top-3 inset-x-3 z-20 max-w-content mx-auto">
-      <nav className="glass rounded-btn px-4 py-2.5 flex items-center justify-between">
+      <div className="hidden sm:block rounded-full bg-goldlight/95 border border-gold/40 text-golddeep text-xs font-semibold text-center py-1.5 mb-2">Every perk you already pay for, in one place. The daily email is free.</div>
+      <nav className="glass rounded-full px-4 py-2.5 flex items-center justify-between">
         <Brand />
         <div className="hidden md:flex items-center gap-6">
           {links.map((l) => <Link key={l.to} to={l.to} className="text-sm text-snow/80 hover:text-snow cursor-pointer transition-colors duration-200">{l.label}</Link>)}

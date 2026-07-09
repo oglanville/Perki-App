@@ -5,6 +5,7 @@ import { GlassCard, TopNav } from "../ui/components";
 import { BrandLogo } from "../ui/brand";
 import { PerkList, MembershipRow, ConfirmModal, SearchBar } from "../ui/perkui";
 import { supabase } from "../lib/supabase";
+import { VerdictCard, cheapestCoveringTier } from "../ui/kit";
 import {
   fetchAllPerks, buildTierMap, buildMembershipCatalog, fetchUserMemberships,
   addMembership, removeMembership, monthlyCostOf,
@@ -95,6 +96,18 @@ export default function Profile() {
   const totalActiveNF = nonFeature.filter((p) => usedIds.has(p.perk_id)).length;
   const activeFeaturesCount = availablePerks.filter((p) => p.feature === "feature" && usedIds.has(p.perk_id)).length;
 
+  // Savings engine: cheapest tier that still covers everything the user uses
+  const engineBadges = React.useMemo(() => {
+    const out = {};
+    Object.entries(activeMap).forEach(([key, heldTier]) => {
+      const [provider, membership] = key.split("|");
+      const r = cheapestCoveringTier(provider, membership, heldTier, perks, tierMap, usedIds);
+      if (r) out[key] = r;
+    });
+    return out;
+  }, [activeMap, perks, tierMap, usedIds]);
+  const savingsTotal = Math.round(Object.values(engineBadges).reduce((t, r) => t + r.saving, 0) * 100) / 100;
+
   // Membership lists
   const memMatch = (c) => !q || [c.provider, c.membership, ...c.tiers.map((t) => t.tier)].some((v) => (v || "").toLowerCase().includes(q));
   const activeList = catalog.filter((c) => activeMap[`${c.provider}|${c.membership}`] != null && memMatch(c));
@@ -132,8 +145,8 @@ export default function Profile() {
   return (
     <div className="min-h-screen bg-ink text-snow pb-16 overflow-x-hidden">
       <TopNav />
-      <main className="max-w-content mx-auto px-4 pt-24">
-        <h1 className="text-3xl font-bold tracking-tight mb-6">Profile</h1>
+      <main className="max-w-content mx-auto px-4 pt-24 sm:pt-32">
+        <h1 className="font-display font-extrabold text-4xl sm:text-5xl leading-[0.95] tracking-tight mb-6">Your Perki.</h1>
         {status === "loading" && <Skeleton />}
         {status === "error" && (
           <GlassCard className="text-center max-w-sm mx-auto mt-10">
@@ -145,23 +158,24 @@ export default function Profile() {
 
         {status === "ready" && profile && (
           <>
-            <header className="flex items-center gap-4 mb-8">
-              {profile.avatar_url ? <img src={profile.avatar_url} alt="" className="w-16 h-16 rounded-full object-cover" /> : <span className="grid place-items-center w-16 h-16 rounded-full bg-purple/25 text-snow font-semibold text-xl">{(profile.full_name || "?").slice(0, 1).toUpperCase()}</span>}
+            <header className="flex items-center gap-3 mb-5">
+              {profile.avatar_url ? <img src={profile.avatar_url} alt="" className="w-12 h-12 rounded-full object-cover" /> : <span className="grid place-items-center w-12 h-12 rounded-full bg-purple/20 text-snow font-bold">{(profile.full_name || "?").slice(0, 1).toUpperCase()}</span>}
               <div className="min-w-0">
-                <h2 className="text-xl font-semibold truncate">{profile.full_name}</h2>
-                <p className="text-snow/70 text-sm truncate">{profile.email || "No email on file"}</p>
-                <p className="text-muted text-xs mt-0.5 flex items-center gap-1"><CalendarDays className="w-3.5 h-3.5" />Member since {fmtDate(profile.created_at)}</p>
+                <h2 className="font-display font-bold text-lg leading-tight truncate">{profile.full_name}</h2>
+                <p className="text-muted text-xs truncate flex items-center gap-1"><CalendarDays className="w-3.5 h-3.5 shrink-0" />{profile.email || "No email on file"} · since {fmtDate(profile.created_at)}</p>
               </div>
             </header>
 
-            {/* Dashboard — single horizontal row of 5 boxes */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-              <Stat Icon={CreditCard} label="Monthly Cost" value={`£${monthlyCost.toLocaleString()}`} />
-              <Stat Icon={CheckCircle2} label="Active Plans" value={memberships.length} accent="text-purple" />
-              <Stat Icon={LayoutGrid} label="Total Available Perks / Discounts / Competitions" value={totalAvailableNF} accent="text-golddeep" />
-              <Stat Icon={ThumbsUp} label="Claimed Perks / Discounts / Competitions" value={totalActiveNF} />
-              <Stat Icon={Sparkles} label="Active Features" value={activeFeaturesCount} accent="text-golddeep" />
-            </div>
+            <VerdictCard
+              eyebrow={`Your dashboard · ${new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })}`}
+              headline={`${totalAvailableNF - totalActiveNF} perks ready to use${savingsTotal > 0 ? `, and £${savingsTotal} a month on the table.` : "."}`}
+              tiles={[
+                { value: totalAvailableNF - totalActiveNF, label: "Available" },
+                { value: totalActiveNF, label: "Have used" },
+                { value: `£${monthlyCost.toLocaleString()}`, label: "Monthly cost" },
+                { value: memberships.length ? new Set(memberships.map((m) => m.provider)).size : 0, label: "Memberships" },
+              ]}
+            />
 
             {/* Active memberships */}
             <section className="mt-8">
@@ -173,7 +187,7 @@ export default function Profile() {
                 <div className="space-y-2">{activeList.map((c) => (
                   <MembershipRow key={`${c.provider}|${c.membership}`} membership={c} tiers={c.tiers} currentTier={activeMap[`${c.provider}|${c.membership}`]}
                     onTierChange={(t) => setConfirm({ type: "change", provider: c.provider, membership: c.membership, tier: t, title: "Change tier", message: `Switch ${c.provider} to the ${t} tier?`, label: "Change tier" })}
-                    action={<button aria-label="Remove" onClick={() => setConfirm({ type: "remove", provider: c.provider, membership: c.membership, title: "Remove membership", message: `Remove ${c.provider} (${c.membership})?`, label: "Remove" })} className="grid place-items-center w-10 h-10 rounded-btn text-red-400 hover:bg-red-400/10 cursor-pointer focus:outline-none focus:ring-[3px] focus:ring-red-400/30"><Trash2 className="w-5 h-5" /></button>} />
+                    action={<div className="flex items-center gap-2">{(() => { const b = engineBadges[`${c.provider}|${c.membership}`]; return <span className={`hidden sm:inline-block text-[11px] font-bold rounded-full px-2.5 py-1 whitespace-nowrap ${b ? "bg-purple text-white" : "bg-goldlight text-golddeep"}`}>{b ? `Save £${b.saving}/mo` : "Right-sized"}</span>; })()}<button aria-label="Remove" onClick={() => setConfirm({ type: "remove", provider: c.provider, membership: c.membership, title: "Remove membership", message: `Remove ${c.provider} (${c.membership})?`, label: "Remove" })} className="grid place-items-center w-10 h-10 rounded-btn text-red-400 hover:bg-red-400/10 cursor-pointer focus:outline-none focus:ring-[3px] focus:ring-red-400/30"><Trash2 className="w-5 h-5" /></button></div>} />
                 ))}</div>
               )}
             </section>

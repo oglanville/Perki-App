@@ -1,13 +1,12 @@
 import React from "react";
 import { Plus } from "lucide-react";
-import { Button } from "../ui/components";
 import { BrandLogo } from "../ui/brand";
-import { SearchBar, RequestMembershipModal, PerkList } from "../ui/perkui";
-import { fetchAllPerks, buildTierMap, buildMembershipCatalog, categoryEmoji, requestMembership } from "../data/catalog";
+import { usePerkDrawer } from "../ui/PerkDrawer";
+import { SearchBar, RequestMembershipModal } from "../ui/perkui";
+import { Display, Eyebrow, Chip, Pill, PerkTile, TierLadder, SectionHead } from "../ui/kit";
+import { fetchAllPerks, buildTierMap, buildMembershipCatalog, categoryEmoji, requestMembership, BUNDLES } from "../data/catalog";
 import { SAMPLE_PERKS } from "../data/perks";
 import { supabase } from "../lib/supabase";
-
-const byTitle = (a, b) => (a.title || "").localeCompare(b.title || "");
 
 /* True when no query, or when the perk matches the search text. */
 const matches = (p, query) => {
@@ -23,80 +22,30 @@ function dedupeCheapest(rows, tierMap) {
   return Object.values(byKey);
 }
 
-const chipCls = (active) => `whitespace-nowrap rounded-full px-4 min-h-[40px] text-sm font-medium cursor-pointer transition-colors duration-200 ${active ? "bg-purple text-white" : "glass text-snow/80 hover:text-snow"}`;
-
-/* One self-contained marketplace: its own membership / tier / category filters + list.
-   `query` is shared from the parent so Compare can drive both panes from a single search.
-   `children` (optional) renders between the filters and the list — used to host the
-   search bar in single-pane mode. `bleed` controls full-width chip rows (off inside Compare cards). */
-function MarketplacePane({ perks, tierMap, catalog, query, bleed = true, children }) {
-  const [membership, setMembership] = React.useState(null);
-  const [tier, setTier] = React.useState(null);
-  const [category, setCategory] = React.useState(null);
-
-  const selected = React.useMemo(() => catalog.find((c) => `${c.provider}|${c.membership}` === membership) || null, [catalog, membership]);
-
-  const baseRows = React.useMemo(() => selected ? perks.filter((p) => p.provider === selected.provider && p.membership === selected.membership) : perks, [perks, selected]);
-
-  const membershipChips = React.useMemo(
-    () => catalog.filter((c) => perks.some((p) => p.provider === c.provider && p.membership === c.membership && matches(p, query) && (!tier || p.tier === tier))),
-    [catalog, perks, query, tier]
-  );
-  const tierChips = React.useMemo(() => {
-    const seen = {};
-    baseRows.filter((p) => matches(p, query)).forEach((p) => { const k = `${p.provider}|${p.tier}`; const so = tierMap[k]?.sort_order ?? 0; if (!(p.tier in seen) || so < seen[p.tier].so) seen[p.tier] = { so, label: tierMap[k]?.price_label }; });
-    return Object.keys(seen).sort((a, b) => seen[a].so - seen[b].so).map((t) => ({ tier: t, label: seen[t].label }));
-  }, [baseRows, tierMap, query]);
-  const categoryChips = React.useMemo(() => [...new Set(baseRows.filter((p) => matches(p, query)).map((p) => p.category).filter(Boolean))].sort(), [baseRows, query]);
-
-  React.useEffect(() => { if (membership && !membershipChips.some((c) => `${c.provider}|${c.membership}` === membership)) setMembership(null); }, [membershipChips, membership]);
-  React.useEffect(() => { if (tier && !tierChips.some((t) => t.tier === tier)) setTier(null); }, [tierChips, tier]);
-  React.useEffect(() => { if (category && !categoryChips.includes(category)) setCategory(null); }, [categoryChips, category]);
-
-  const visible = React.useMemo(() => {
-    let rows = baseRows;
-    if (tier) rows = rows.filter((p) => p.tier === tier);
-    if (category) rows = rows.filter((p) => p.category === category);
-    if (!tier) rows = dedupeCheapest(rows, tierMap);
-    if (query.trim()) rows = rows.filter((p) => matches(p, query));
-    return rows;
-  }, [baseRows, tier, category, query, tierMap]);
-
-  const row = `swipe flex gap-2 overflow-x-auto pb-2 mb-2${bleed ? " -mx-4 px-4" : ""}`;
-  const rowLast = `swipe flex gap-2 overflow-x-auto pb-2 mb-4${bleed ? " -mx-4 px-4" : ""}`;
-
-  return (
-    <div>
-      <div className={row}>
-        <button onClick={() => setMembership(null)} className={chipCls(membership == null)}>All</button>
-        {membershipChips.map((c) => { const key = `${c.provider}|${c.membership}`; return (
-          <button key={key} onClick={() => setMembership(key)} className={`${chipCls(membership === key)} flex items-center gap-2`}><BrandLogo provider={c.provider} className="w-6 h-6" />{c.provider}</button>
-        ); })}
-      </div>
-
-      <div className={row}>
-        <button onClick={() => setTier(null)} className={chipCls(tier == null)}>All tiers</button>
-        {tierChips.map((t) => <button key={t.tier} onClick={() => setTier(t.tier)} className={chipCls(tier === t.tier)}>{t.tier}{t.label ? ` · ${t.label}` : ""}</button>)}
-      </div>
-
-      <div className={rowLast}>
-        <button onClick={() => setCategory(null)} className={chipCls(category == null)}>All categories</button>
-        {categoryChips.map((c) => <button key={c} onClick={() => setCategory(c)} className={`${chipCls(category === c)} flex items-center gap-1.5`}><span aria-hidden="true">{categoryEmoji(c)}</span>{c}</button>)}
-      </div>
-
-      {children}
-
-      <PerkList perks={visible} comparator={byTitle} mode="marketplace" scope={perks} tierMap={tierMap} emptyLabel="No perks match your filters." />
-    </div>
-  );
+/* Titles that also exist in a cheaper tier of the same membership. */
+function cheaperTierFlags(rows, allRows, tierMap) {
+  const rank = (p) => tierMap[`${p.provider}|${p.tier}`]?.sort_order ?? (Number(p.price) || 0);
+  const cheapest = {};
+  allRows.forEach((p) => { const k = `${p.provider}|${(p.title || "").toLowerCase()}`; if (!cheapest[k] || rank(p) < rank(cheapest[k])) cheapest[k] = p; });
+  const out = {};
+  rows.forEach((p) => {
+    const c = cheapest[`${p.provider}|${(p.title || "").toLowerCase()}`];
+    if (c && c.tier !== p.tier && rank(c) < rank(p)) out[p.perk_id] = `Also in ${c.tier}`;
+  });
+  return out;
 }
 
+const rowCls = "swipe flex gap-2 overflow-x-auto pb-2.5 -mx-4 px-4 items-center";
+
 export default function Perks() {
+  const { open } = usePerkDrawer();
   const [perks, setPerks] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
   const [sample, setSample] = React.useState(false);
   const [query, setQuery] = React.useState("");
-  const [compareMode, setCompareMode] = React.useState(false);
+  const [bundle, setBundle] = React.useState(null);
+  const [membership, setMembership] = React.useState(null);
+  const [tier, setTier] = React.useState(null);
   const [reqOpen, setReqOpen] = React.useState(false);
   const [reqBusy, setReqBusy] = React.useState(false);
   const [reqDone, setReqDone] = React.useState(false);
@@ -116,6 +65,36 @@ export default function Perks() {
 
   const tierMap = React.useMemo(() => buildTierMap(perks), [perks]);
   const catalog = React.useMemo(() => buildMembershipCatalog(perks, tierMap), [perks, tierMap]);
+  const selected = React.useMemo(() => catalog.find((c) => `${c.provider}|${c.membership}` === membership) || null, [catalog, membership]);
+
+  /* Filter pipeline: search → bundle (moment) → membership → tier → dedupe */
+  const searched = React.useMemo(() => perks.filter((p) => matches(p, query)), [perks, query]);
+  const bundleDef = BUNDLES.find((b) => b.key === bundle);
+  const inBundle = React.useMemo(() => bundleDef ? searched.filter((p) => bundleDef.categories.includes(p.category)) : searched, [searched, bundleDef]);
+  const inMembership = React.useMemo(() => selected ? inBundle.filter((p) => p.provider === selected.provider && p.membership === selected.membership) : inBundle, [inBundle, selected]);
+  const visible = React.useMemo(() => {
+    let rows = tier ? inMembership.filter((p) => p.tier === tier) : dedupeCheapest(inMembership, tierMap);
+    return rows.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
+  }, [inMembership, tier, tierMap]);
+  const flags = React.useMemo(() => tier ? cheaperTierFlags(visible, perks, tierMap) : {}, [visible, perks, tierMap, tier]);
+
+  /* Chip data with live counts */
+  const bundleChips = React.useMemo(() => BUNDLES.map((b) => ({ ...b, count: dedupeCheapest(searched.filter((p) => b.categories.includes(p.category)), tierMap).length })).filter((b) => b.count > 0), [searched, tierMap]);
+  const membershipChips = React.useMemo(() => catalog.filter((c) => inBundle.some((p) => p.provider === c.provider && p.membership === c.membership)), [catalog, inBundle]);
+  const tierChips = React.useMemo(() => selected ? selected.tiers : [], [selected]);
+
+  React.useEffect(() => { if (membership && !membershipChips.some((c) => `${c.provider}|${c.membership}` === membership)) { setMembership(null); setTier(null); } }, [membershipChips, membership]);
+  React.useEffect(() => { if (tier && !tierChips.some((t) => t.tier === tier)) setTier(null); }, [tierChips, tier]);
+
+  const openPerk = (p) => open(p, { mode: "marketplace", scope: perks, tierMap });
+
+  /* Ladder helpers: what each tier ADDS over the one below (hierarchical), or contains (variant). */
+  const ladderAdds = (t) => {
+    if (!selected) return [];
+    return perks.filter((p) => p.provider === selected.provider && p.membership === selected.membership && p.tier === t.tier)
+      .sort((a, b) => (a.title || "").localeCompare(b.title || "")).map((p) => p.title);
+  };
+  const ladderKind = selected && tierMap[`${selected.provider}|${selected.tiers[0]?.tier}`]?.kind;
 
   async function submitRequest({ name, description }) {
     setReqBusy(true);
@@ -125,40 +104,67 @@ export default function Perks() {
     } catch { setReqDone(true); } finally { setReqBusy(false); }
   }
 
-  const paneProps = { perks, tierMap, catalog, query };
-
   return (
     <section className="py-6">
-      <div className="flex items-start justify-between gap-3 mb-5">
+      <div className="flex items-end justify-between gap-3 mb-2">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Marketplace</h1>
+          <Display size="lg">Every perk, one shelf.</Display>
+          <p className="text-muted text-sm mt-2">{perks.length} verified perks across {new Set(perks.map((p) => p.provider)).size} UK providers. Filter by moment, membership or tier.</p>
           {sample && <p className="text-xs text-muted mt-1">Showing sample data — connect Supabase for the live catalogue.</p>}
         </div>
-        <div className="flex flex-col items-stretch gap-2 shrink-0">
-          <Button as="button" onClick={() => { setReqDone(false); setReqOpen(true); }} className="!min-h-[44px] !px-4 text-sm"><Plus className="w-4 h-4" />Request</Button>
-          <button
-            onClick={() => setCompareMode((v) => !v)}
-            aria-pressed={compareMode}
-            className={`min-h-[44px] px-4 text-sm rounded-btn font-medium cursor-pointer transition-colors duration-200 ${compareMode ? "bg-purple text-white" : "glass text-snow/85 hover:text-snow"}`}>
-            {compareMode ? "Exit compare" : "Compare"}
-          </button>
-        </div>
+        <Pill as="button" variant="ghost" className="!min-h-[42px] !px-4 text-sm shrink-0" onClick={() => { setReqDone(false); setReqOpen(true); }}>
+          <Plus className="w-4 h-4" />Request
+        </Pill>
       </div>
 
-      {loading ? (
-        <ul className="space-y-2">{Array.from({ length: 8 }).map((_, i) => <li key={i} className="glass rounded-btn h-12 animate-pulse" />)}</ul>
-      ) : compareMode ? (
-        <div>
-          <div className="mb-5"><SearchBar value={query} onChange={setQuery} placeholder="Search both sides — perks, memberships, tiers…" /></div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="glass rounded-card p-3 sm:p-4 md:max-h-[74vh] md:overflow-y-auto"><MarketplacePane {...paneProps} bleed={false} /></div>
-            <div className="glass rounded-card p-3 sm:p-4 md:max-h-[74vh] md:overflow-y-auto"><MarketplacePane {...paneProps} bleed={false} /></div>
-          </div>
+      <div className="my-4"><SearchBar value={query} onChange={setQuery} placeholder="Search perks, memberships, tiers…" /></div>
+
+      {/* Sticky chip rows: moment → membership → tier */}
+      <div className="sticky top-[68px] z-10 bg-ink pt-1 -mx-4 px-4 border-b border-snow/10">
+        <div className={rowCls}>
+          <span className="text-[11px] font-extrabold uppercase tracking-[0.1em] text-golddeep shrink-0">Moment</span>
+          <Chip active={bundle == null} onClick={() => setBundle(null)}>All</Chip>
+          {bundleChips.map((b) => <Chip key={b.key} active={bundle === b.key} count={b.count} onClick={() => setBundle(bundle === b.key ? null : b.key)}><span aria-hidden="true">{b.icon}</span>{b.name}</Chip>)}
         </div>
+        <div className={rowCls}>
+          <span className="text-[11px] font-extrabold uppercase tracking-[0.1em] text-golddeep shrink-0">Membership</span>
+          <Chip active={membership == null} onClick={() => { setMembership(null); setTier(null); }}>All</Chip>
+          {membershipChips.map((c) => { const key = `${c.provider}|${c.membership}`; return (
+            <Chip key={key} active={membership === key} onClick={() => { setMembership(membership === key ? null : key); setTier(null); }} className="!pl-2">
+              <BrandLogo provider={c.provider} className="w-6 h-6" />{c.provider}
+            </Chip>
+          ); })}
+        </div>
+        {selected && (
+          <div className={rowCls}>
+            <span className="text-[11px] font-extrabold uppercase tracking-[0.1em] text-golddeep shrink-0">Tier</span>
+            <Chip active={tier == null} onClick={() => setTier(null)}>All tiers</Chip>
+            {tierChips.map((t) => <Chip key={t.tier} active={tier === t.tier} onClick={() => setTier(tier === t.tier ? null : t.tier)}>{t.tier}{t.price_label ? ` · ${t.price_label}` : ""}</Chip>)}
+          </div>
+        )}
+      </div>
+
+      {/* Tier ladder — replaces the old Compare mode */}
+      {selected && tierChips.length > 1 && (
+        <div className="mt-5">
+          <Eyebrow>Compare tiers</Eyebrow>
+          <h2 className="font-display font-extrabold text-xl mt-1 mb-1">{selected.provider}, laid flat</h2>
+          <p className="text-muted text-xs mb-3">{ladderKind === "variant" ? "Parallel plans — pick the one that fits, nothing is inherited." : "Each rung shows what that tier adds on top of the ones below."}</p>
+          <TierLadder provider={selected.provider} tiers={tierChips} addsFor={ladderAdds} />
+        </div>
+      )}
+
+      {/* Card grid */}
+      {loading ? (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-5">{Array.from({ length: 8 }).map((_, i) => <div key={i} className="aspect-[3/4] rounded-modal bg-ink2 border border-snow/10 animate-pulse" />)}</div>
+      ) : visible.length === 0 ? (
+        <p className="text-center text-muted text-sm py-16">No perks match your filters.</p>
       ) : (
-        <MarketplacePane {...paneProps} bleed>
-          <div className="mb-5"><SearchBar value={query} onChange={setQuery} placeholder="Search perks, memberships, tiers…" /></div>
-        </MarketplacePane>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-5">
+          {visible.map((p, i) => (
+            <PerkTile key={p.perk_id} perk={{ ...p, tier: tier ? p.tier : `from ${p.tier}` }} seed={i} flag={flags[p.perk_id]} onClick={() => openPerk(p)} className="!w-auto" />
+          ))}
+        </div>
       )}
 
       <RequestMembershipModal open={reqOpen} onClose={() => setReqOpen(false)} onSubmit={submitRequest} busy={reqBusy} done={reqDone} />

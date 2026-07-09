@@ -14,7 +14,7 @@ function MarketingLayout({ children }) {
   return (
     <div className="min-h-screen bg-ink text-snow">
       <TopNav />
-      <main className="max-w-content mx-auto px-4 pt-24">{children}</main>
+      <main className="max-w-content mx-auto px-4 pt-24 sm:pt-32">{children}</main>
       <Footer />
     </div>
   );

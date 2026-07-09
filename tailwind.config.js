@@ -17,7 +17,7 @@ export default {
         sans: ['"Work Sans"', "system-ui", "sans-serif"],
         display: ['"Outfit"', "system-ui", "sans-serif"],
       },
-      borderRadius: { btn: "8px", card: "12px", modal: "16px" },
+      borderRadius: { btn: "999px", card: "14px", modal: "16px" },
       boxShadow: {
         sm: "0 1px 2px rgba(43,42,40,.06)",
         md: "0 4px 12px rgba(43,42,40,.08)",
