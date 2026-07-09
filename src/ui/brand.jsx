@@ -51,9 +51,13 @@ export function BrandLogo({ provider, className = "w-7 h-7" }) {
   React.useEffect(() => { setIdx(0); }, [provider]);
 
   if (provider === "OVO Energy" || provider === "OVO") {
+    /* SVG so the wordmark scales with the badge box (em-based text didn't — it
+       tracked the surrounding font size, so it rendered tiny or clipped). */
     return (
-      <span className={`grid place-items-center rounded-full bg-white shrink-0 ${className}`} aria-label="OVO Energy">
-        <span className="leading-none font-extrabold tracking-tight" style={{ color: "#0a9d2b", fontSize: "0.5em" }}>OVO</span>
+      <span className={`grid place-items-center rounded-full bg-white overflow-hidden shrink-0 ${className}`} aria-label="OVO Energy">
+        <svg viewBox="0 0 40 40" className="w-full h-full" aria-hidden="true">
+          <text x="20" y="24.5" textAnchor="middle" dominantBaseline="middle" fontFamily="Outfit, system-ui, sans-serif" fontWeight="800" fontSize="14" letterSpacing="-0.5" fill="#0a9d2b">OVO</text>
+        </svg>
       </span>
     );
   }
