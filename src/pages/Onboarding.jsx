@@ -12,17 +12,17 @@ import { supabase } from "../lib/supabase";
    the rest are captured as plain memberships so Perki still knows what you hold. */
 const STEPS = [
   { key: "energy", label: "Gas & electric", icon: "⚡", question: "Who provides your gas and electric?",
-    options: [{ name: "OVO Energy", cat: "OVO Energy" }, { name: "British Gas" }, { name: "E.On Next" }, { name: "EDF" }, { name: "Octopus Energy" }, { name: "Scottish Power" }, { name: "Utilita" }, { name: "Utility Warehouse" }] },
+    options: [{ name: "OVO Energy", cat: "OVO Energy" }, { name: "British Gas", cat: "British Gas" }, { name: "E.On Next", cat: "E.On Next" }, { name: "EDF", cat: "EDF" }, { name: "Octopus Energy", cat: "Octopus Energy" }, { name: "Scottish Power", cat: "Scottish Power" }, { name: "Utilita", cat: "Utilita" }, { name: "Utility Warehouse", cat: "Utility Warehouse" }] },
   { key: "mobile", label: "Mobile", icon: "📱", question: "Who provides your mobile?",
-    options: [{ name: "O2" }, { name: "Vodafone", cat: "Vodafone" }, { name: "EE" }, { name: "Three" }, { name: "giffgaff" }, { name: "Sky Mobile" }, { name: "Tesco Mobile" }, { name: "Lebara" }, { name: "SMARTY" }] },
+    options: [{ name: "O2", cat: "O2" }, { name: "Vodafone", cat: "Vodafone" }, { name: "EE", cat: "EE" }, { name: "Three", cat: "Three" }, { name: "giffgaff", cat: "giffgaff" }, { name: "Sky Mobile", cat: "Sky Mobile" }, { name: "Tesco Mobile", cat: "Tesco Mobile" }, { name: "Lebara", cat: "Lebara" }, { name: "SMARTY" }] },
   { key: "broadband", label: "Broadband", icon: "📡", question: "Who provides your broadband?",
-    options: [{ name: "BT" }, { name: "Sky Broadband" }, { name: "Virgin Media" }, { name: "TalkTalk" }, { name: "Plusnet" }, { name: "Vodafone Broadband" }, { name: "Hyperoptic" }, { name: "Community Fibre" }] },
+    options: [{ name: "BT", cat: "BT" }, { name: "Sky Broadband", cat: "Sky Broadband" }, { name: "Virgin Media", cat: "Virgin Media" }, { name: "TalkTalk", cat: "TalkTalk" }, { name: "Plusnet", cat: "Plusnet" }, { name: "Vodafone Broadband", cat: "Vodafone Broadband" }, { name: "Hyperoptic", cat: "Hyperoptic" }, { name: "Community Fibre", cat: "Community Fibre" }] },
   { key: "tv", label: "TV & streaming", icon: "📺", question: "What TV subscriptions do you have?",
-    options: [{ name: "Sky TV", cat: "Sky TV" }, { name: "Netflix" }, { name: "Amazon Prime", cat: "Amazon" }, { name: "Disney+" }, { name: "Apple TV+" }, { name: "NOW" }, { name: "Paramount+" }, { name: "YouTube Premium" }, { name: "Virgin TV" }] },
+    options: [{ name: "Sky TV", cat: "Sky TV" }, { name: "Netflix", cat: "Netflix" }, { name: "Amazon Prime", cat: "Amazon" }, { name: "Disney+", cat: "Disney+" }, { name: "Apple TV+", cat: "Apple TV+" }, { name: "NOW", cat: "NOW" }, { name: "Paramount+", cat: "Paramount+" }, { name: "YouTube Premium", cat: "YouTube Premium" }, { name: "Virgin TV", cat: "Virgin Media" }] },
   { key: "music", label: "Music", icon: "🎧", question: "Who provides your music?",
-    options: [{ name: "Spotify", cat: "Spotify" }, { name: "Apple Music" }, { name: "Amazon Music" }, { name: "YouTube Music" }, { name: "Tidal" }, { name: "Deezer" }] },
+    options: [{ name: "Spotify", cat: "Spotify" }, { name: "Apple Music", cat: "Apple Music" }, { name: "Amazon Music", cat: "Amazon Music" }, { name: "YouTube Music", cat: "YouTube Music" }, { name: "Tidal", cat: "Tidal" }, { name: "Deezer", cat: "Deezer" }] },
   { key: "credit", label: "Credit card", icon: "💳", question: "Who provides your credit card?",
-    options: [{ name: "American Express", cat: "American Express" }, { name: "Barclaycard" }, { name: "HSBC" }, { name: "NatWest" }, { name: "Capital One" }, { name: "M&S Bank" }, { name: "John Lewis Money" }, { name: "Virgin Money" }] },
+    options: [{ name: "American Express", cat: "American Express" }, { name: "Barclaycard", cat: "Barclaycard" }, { name: "HSBC", cat: "HSBC" }, { name: "NatWest", cat: "NatWest" }, { name: "Capital One" }, { name: "M&S Bank", cat: "M&S Bank" }, { name: "John Lewis Money", cat: "John Lewis Money" }, { name: "Virgin Money", cat: "Virgin Money" }] },
 ];
 
 const selectCls = "w-full min-h-[48px] px-5 rounded-full border-[1.5px] border-snow/15 bg-white text-[15px] font-medium appearance-none cursor-pointer focus:outline-none focus:ring-[3px] focus:ring-purple/40";
