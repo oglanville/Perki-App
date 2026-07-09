@@ -122,19 +122,23 @@ export function SearchBar({ value, onChange, placeholder = "Search perks…" }) 
 
 /* ── Membership row (active + potential share this) — brand logo ─────── */
 export function MembershipRow({ membership, currentTier, tiers, onTierChange, action }) {
+  /* Wraps to two lines on phones: name row on top, tier select + actions get a full-width
+     second row so nothing truncates. Single line from sm upwards. */
   return (
-    <div className="glass rounded-card flex items-center gap-3 px-4 py-3">
+    <div className="glass rounded-card flex flex-wrap items-center gap-x-3 gap-y-2.5 px-4 py-3">
       <BrandLogo provider={membership.provider} className="w-9 h-9" />
-      <div className="min-w-0 flex-1">
-        <p className="font-medium truncate">{membership.provider} {currentTier || ""}</p>
-        <p className="text-xs text-muted truncate">{membership.membership}</p>
+      <div className="min-w-0 flex-1 basis-40">
+        <p className="font-medium truncate">{membership.provider}</p>
+        <p className="text-xs text-muted truncate">{membership.membership}{currentTier ? ` · ${currentTier}` : ""}</p>
       </div>
-      <label className="sr-only" htmlFor={`tier-${membership.provider}-${membership.membership}`}>Tier</label>
-      <select id={`tier-${membership.provider}-${membership.membership}`} value={currentTier || ""} onChange={(e) => onTierChange(e.target.value)}
-        className="bg-ink2 border border-snow/15 rounded-btn px-2 py-2 text-sm min-h-[40px] cursor-pointer focus:border-gold focus:outline-none max-w-[8rem]">
-        {tiers.map((t) => <option key={t.tier} value={t.tier}>{t.tier} · {t.price_label}</option>)}
-      </select>
-      {action}
+      <div className="flex items-center gap-2 w-full sm:w-auto">
+        <label className="sr-only" htmlFor={`tier-${membership.provider}-${membership.membership}`}>Tier</label>
+        <select id={`tier-${membership.provider}-${membership.membership}`} value={currentTier || ""} onChange={(e) => onTierChange(e.target.value)}
+          className="bg-ink2 border border-snow/15 rounded-btn px-2 py-2 text-sm min-h-[40px] cursor-pointer focus:border-gold focus:outline-none flex-1 min-w-0 sm:flex-none sm:max-w-[10rem]">
+          {tiers.map((t) => <option key={t.tier} value={t.tier}>{t.tier} · {t.price_label}</option>)}
+        </select>
+        {action}
+      </div>
     </div>
   );
 }
