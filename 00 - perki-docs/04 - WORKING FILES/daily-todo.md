@@ -1,47 +1,45 @@
 # 🚀 PERKI — ROLLING TO-DO
 
-_Pulled manually · Last updated: 2026-07-09 (rev 13) · Scheduled auto-send: OFF (update on request only)_
+_Pulled manually · Last updated: 2026-07-09 (rev 14) · Scheduled auto-send: OFF (update on request only)_
 
 > 🎯 NORTH STAR: grow the Beehiiv weekly email list to 10,000 subscribers. Perki is a weekly personalised engine that saves people money (optimise + consolidate) and tells them how to use the perks they already pay for.
 
 ---
 
-## ✅ DONE RECENTLY (25 Jun → 9 Jul)
-- **Proper digest send is LIVE** — [PREVIEW] era over. Two production cron jobs (06:00 + 07:00 UTC) authenticate against the Vault secret via a service-role-only RPC (`get_cron_secret`), so the cron and function can never drift; the 07:00 Europe/London guard makes one job a no-op, which also **fixes winter DST permanently**. Preview job unscheduled. Multi-recipient + opt-outs supported.
-- **WHOOP-style daily email (v48)** — new modular template: verdict hero, dark "Here's how it stands" summary card, gold/indigo section pills, live-text week chart (from `last_used_at`), single CTA. **Four layout variants cycle daily**: Verdict day → Savings day → Bundle day → Momentum day. Savings + Consolidation split-screen kept. Test send verified (200, sent, arrived).
-- **Bundles view shipped** in the app's Where tab — grouped moment cards, plus two new bundles: **Big shop** (Shopping/Savings/Rewards) and **Family day out** (Family/Education). Six bundles total.
-- **Catalogue expanded 442 → 536 rows** — 96 new perks verified against official pages across 20 providers (Amex credits, BA Club retiering, Railcard variant-specific discounts, National Trust extras, Amazon Fresh/Luna/First Reads, Spotify audiobooks/AI DJ, VeryMe partner deals, IKEA, Costco, Tesco fuel points and more) + 20 corrections. All 19 NEEDS-VERIFY flags resolved. `Perks_Rows.xlsx` mirrors the DB exactly.
-- **Tier data model fixed** — new `tier_kind` (hierarchical | variant) + `tier_rank` columns. Spotify, Railcard, National Trust, Amazon and Cineworld are variants: no false inheritance, savings engine skips them, add-membership no longer auto-selects "lower" plans. BA tiers finally have real backend ordering. Front-end + digest logic all rank/kind-aware.
-- **Naming reconciled** — OVO Energy / Sky TV consistent across DB, xlsx and code. Amazon "Prime Student" renamed "Students and 18-24"; Prime Gaming replaced by Amazon Luna; Boots Price Advantage restored alongside the new personalised-offers row.
-- **Redesign spec + prototypes** — `Perki-Spec-Redesign-2026-07.md` (mob.co.uk website language, WHOOP email system, component libraries, implementation notes) with 4 working prototypes in `redesign-2026-07/` (home, perks, profile, Beehiiv-compatible email).
+## ✅ DONE RECENTLY (9 Jul, second wave — the redesign is BUILT, not just specced)
+- **Website rebuilt in the mob language** — new shared UI kit (`src/ui/kit.jsx`); Home rebuilt end to end (display hero, live data tiles, bundle shelves from the catalogue, indigo proof band, engines split, email capture); Perks page rebuilt (sticky Moment → Membership → Tier chip rows with live counts, photo card grid, "from tier" + "Also in" flags, tier ladder replacing Compare); global pill buttons + announcement strip.
+- **Home hero polished** — provider logos as a 4×4 grid (15 live logos + self-counting "+N" cell) and a photo-backed **Today's pick** tile that rotates a real perk daily and opens the drawer.
+- **Profile page rebuilt** — "Worth a tap today" photo shelf (scored like the email), memberships with live Save/Right-sized engine badges, variant-aware "Upgrades on the shelf", and one perk browser (search + type chips + Still to use / Already used) replacing eight collapsibles.
+- **App redesigned to match** — indigo pill bottom nav, "Morning, Ollie." display greetings, pill chips everywhere, Moment filter in Marketplace, indigo verdict card on the Profile tab.
+- **Onboarding shipped** — signup now lands on `/onboarding` (no email detour): six category tabs (⚡📱📡📺🎧💳), curated dropdowns (OVO/British Gas/E.On/EDF/Octopus… per category), multiple adds per category, tier picker for catalogue providers, instant chips with remove. "Request another…" → modal → `membership_requests` → **Postgres trigger → `request-notify` edge function → branded email to Ollie** (tested live).
+- **Stock photography on perk tiles** — 39 categories mapped to verified Unsplash CDN images (`src/data/stockImages.js`), per-perk `image_url` override supported, emoji fallback if a URL ever dies. Website + app tiles both covered; email stays live-text by design.
+- *(Earlier today: catalogue 536 + tier model + WHOOP digest with 4 daily variants — see rev 13 / timeline.)*
 
 ---
 
-## ☀️ TODAY — confirm and ship
-- **🚀 git push** *(needs you)* — one local commit holds everything above; Vercel deploys the front-end changes on push.
-- **🧽 Redeploy digest from repo** *(needs you, optional but quick)* — v48 has a cosmetic transcription nit (header gold dot + "+n more" grey text unstyled). The repo copy is correct: `supabase functions deploy daily-digest --no-verify-jwt --project-ref iievmjsfpgixqdpuxbkg` after pushing.
-- **⏰ Watch the variants land** — tomorrow (Fri 10 Jul) is Momentum day, Sat is Verdict day, Sun Savings day, Mon Bundle day. Confirm each reads well on iPhone Mail.
-- **👀 Eyeball boots.com** — Price Advantage was restored on the strength of the official page (contradicting April press coverage); a 30-second human look settles it.
+## ☀️ TODAY — ship it
+- **🚀 git push** *(needs you — 9 commits queued)* — redesign, app, onboarding, profile, photos, board. Vercel deploys on push.
+- **🧽 Digest redeploy** *(needs you, optional)* — `supabase functions deploy daily-digest --no-verify-jwt --project-ref iievmjsfpgixqdpuxbkg` fixes the two cosmetic v48 style nits from repo.
+- **📧 Supabase toggle for instant onboarding** *(needs you)* — Dashboard → Auth → Sign In / Up → turn OFF "Confirm email", otherwise new signups still see a confirm notice before onboarding.
+- **⏰ Watch the email variants** — Fri Momentum · Sat Verdict · Sun Savings · Mon Bundle.
 
-## 📅 THIS WEEK — build the redesign
-- **🎨 Rebuild the website pages from the prototypes** — Home (new page), Perks (chip filters + tier ladder), Profile (verdict card + membership rows with engine badges). Locked brand, mobile-first 390px.
-- **🧪 QA on `npm run dev`** — six bundles in the Where tab; variant tiers behave (adding Spotify Family must NOT auto-add Student/Individual); tier ladders order correctly for BA and Cineworld.
-- **📊 Verify the week chart populates** as you tick perks used (it reads `last_used_at`, which only started accumulating meaningfully now).
+## 📅 THIS WEEK — QA the new surfaces
+- **🧪 `npm run dev` at 390px** — homepage 4×4 logo grid density; Today's pick tile; Perks moment chips ↔ tier ladder interplay; Profile worth-a-tap → Still-to-use → Already-used loop; app tab feel (4-col grid on the 13); full onboarding run with a fresh account.
+- **📸 Photo curation pass** — all category images are verified but two are compromises (broadband = cabling, mobile = flat-lay); swap freely in `stockImages.js`.
+- **👀 boots.com Price Advantage** — still awaiting your 30-second eyeball.
 
 ## 🗓️ THIS MONTH — grow + test
-- **🟣 Beehiiv setup** — the email block library is Beehiiv-ready; the weekly becomes a re-ordering of the daily's blocks, not a rebuild. Choose the personalisation route and stand up the publication + signup toward 10k.
-- **🏷️ Provider types** (life-category labels/filters) — spec ready, not built.
-- **🛒 Ingest O2 + Lidl** (awaiting your source data) · **🚪 onboarding** (reuse Add Membership screens) · **🧪 test with friends** · **📈 referral loop**.
-- **📬 Deliverability watch** — four rotating layouts is more variation than Hotmail has seen from us; keep an eye on Junk and verify SPF/DKIM/DMARC in Resend if anything slips.
+- **🟣 Beehiiv setup** — email block library is ready; weekly = re-ordering of daily blocks.
+- **🏷️ Provider types** (spec ready) · **🛒 O2 + Lidl** (awaiting data) · **🧪 test with friends — onboarding is finally show-able** · **📈 referral loop**.
+- **📬 Deliverability watch** — variants + request-notify mean more send patterns; check Junk occasionally.
 
 ## 🔭 ON THE HORIZON
-- **🔌 Partner portal + API** · **💸 Placement revenue** · **🎬 Product demo flow** · **🗓️ Calendar-driven Where-to-use-next**.
-- **🧹 Architecture debt** (from the spec): extract the triple-copied bundle/tier/cadence logic into one shared module; shared verdict generator across profile + email; lifestyle photography for the card tiles.
+- **🔌 Partner portal + API** · **💸 Placement revenue** · **🎬 Product demo flow** · **🗓️ Calendar Where-to-use-next**.
+- **🧹 Architecture debt** — shared module for the triple-copied bundle/tier/cadence logic; shared verdict generator; commissioned photography to replace stock.
 
 ## 🤝 NEED FROM YOU
-- `git push`, then optionally the digest redeploy command above
-- A look at boots.com Price Advantage
-- O2 + Lidl source data · friends to test
+- `git push` · digest redeploy (optional) · Supabase "Confirm email" OFF
+- boots.com glance · O2 + Lidl data · friends to test onboarding
 
 ## 🧭 GUARDRAILS
 Manual ingestion only, no scraping · accuracy over speed · auto-send to-do is OFF · brand locked (eggshell · indigo · gold) · Perki recommends and links, never moves money · calendar access opt-in only.
