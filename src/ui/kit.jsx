@@ -80,17 +80,17 @@ export function PerkTile({ perk, seed = 0, flag, onClick, className = "" }) {
     <article
       role="button" tabIndex={0} onClick={onClick}
       onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onClick?.(e)}
-      className={`shrink-0 snap-start w-[236px] sm:w-auto bg-ink2 border border-snow/10 rounded-modal overflow-hidden shadow-sm cursor-pointer transition-transform duration-200 ease-fluid hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-[3px] focus:ring-purple/40 ${className}`}>
-      <div className={`relative aspect-square grid place-items-center text-6xl ${tileBg(seed)}`}>
+      className={`shrink-0 snap-start w-[158px] sm:w-auto bg-ink2 border border-snow/10 rounded-modal overflow-hidden shadow-sm cursor-pointer transition-transform duration-200 ease-fluid hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-[3px] focus:ring-purple/40 ${className}`}>
+      <div className={`relative aspect-[4/3] sm:aspect-square grid place-items-center text-4xl sm:text-6xl ${tileBg(seed)}`}>
         {img && !broken
           ? <img src={img} alt="" loading="lazy" onError={() => setBroken(true)} className="absolute inset-0 w-full h-full object-cover" />
           : <span aria-hidden="true">{categoryEmoji(perk.category)}</span>}
-        <BrandLogo provider={perk.provider} className="w-9 h-9 absolute top-3 right-3 !rounded-xl border border-snow/10 shadow-sm" />
+        <BrandLogo provider={perk.provider} className="w-7 h-7 sm:w-9 sm:h-9 absolute top-2 right-2 sm:top-3 sm:right-3 !rounded-xl border border-snow/10 shadow-sm" />
       </div>
-      <div className="p-4 border-t border-snow/10">
-        <h3 className="font-display font-semibold text-[15px] leading-snug line-clamp-2">{perk.title}</h3>
-        <p className="text-muted text-xs mt-1 truncate">{perk.provider} · {perk.tier}</p>
-        <div className="flex flex-wrap gap-1.5 mt-2.5">
+      <div className="p-2.5 sm:p-4 border-t border-snow/10">
+        <h3 className="font-display font-semibold text-[13px] sm:text-[15px] leading-snug line-clamp-2">{perk.title}</h3>
+        <p className="text-muted text-[11px] sm:text-xs mt-0.5 sm:mt-1 truncate">{perk.provider} · {perk.tier}</p>
+        <div className="flex flex-wrap gap-1 sm:gap-1.5 mt-1.5 sm:mt-2.5">
           <Tag2 tone={perk.feature === "feature" ? "gold" : "plain"}>{categoryLabel(perk.feature)}</Tag2>
           <Tag2>{cadenceLabel(perk.reset_period)}</Tag2>
           {flag && <Tag2 tone="ink">{flag}</Tag2>}

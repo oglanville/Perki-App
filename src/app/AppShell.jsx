@@ -8,9 +8,30 @@ import WhereTab from "./tabs/WhereTab";
 import MarketplaceTab from "./tabs/MarketplaceTab";
 import ProfileTab from "./tabs/ProfileTab";
 
+const APP_PASSWORD="perki2026"; // Ollie-only for now; change here when opening up.
+
+function LockScreen({onUnlock}){
+  const[pw,setPw]=useState("");
+  const[err,setErr]=useState(false);
+  const submit=()=>{ if(pw===APP_PASSWORD){ try{localStorage.setItem("perki-app-unlocked","1");}catch{} onUnlock(); } else setErr(true); };
+  return(
+    <div style={{maxWidth:420,margin:"0 auto",minHeight:"100vh",background:T.bg,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:24,fontFamily:"'Work Sans',sans-serif"}}>
+      <div style={{width:44,height:44,borderRadius:12,background:T.primary,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,fontWeight:900,color:"#E0A93B",fontFamily:"'Outfit',sans-serif",marginBottom:14}}>P</div>
+      <h1 style={{fontFamily:"'Outfit',sans-serif",fontWeight:900,fontSize:24,lineHeight:.95,color:T.textPrimary,margin:"0 0 6px"}}>Members only.</h1>
+      <p style={{fontSize:13,color:T.textSecondary,margin:"0 0 18px",textAlign:"center"}}>The app is in private preview. Enter the password to continue.</p>
+      <input type="password" value={pw} autoFocus onChange={e=>{setPw(e.target.value);setErr(false);}} onKeyDown={e=>e.key==="Enter"&&submit()} placeholder="Password"
+        style={{width:"100%",maxWidth:280,padding:"13px 20px",borderRadius:999,border:`1.5px solid ${err?T.danger:T.border}`,background:T.surface,fontSize:15,fontFamily:"'Work Sans',sans-serif",color:T.textPrimary,outline:"none",boxSizing:"border-box",textAlign:"center"}}/>
+      {err&&<p style={{fontSize:12,color:T.danger,margin:"8px 0 0"}}>Not quite. Try again.</p>}
+      <button onClick={submit} style={{marginTop:14,minHeight:48,padding:"0 34px",borderRadius:999,border:"none",background:T.primary,color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:"'Work Sans',sans-serif"}}>Unlock</button>
+    </div>
+  );
+}
+
 export default function AppShell(){
   const [tab,setTab]=useState("home");
+  const [unlocked,setUnlocked]=useState(()=>{try{return localStorage.getItem("perki-app-unlocked")==="1";}catch{return false;}});
   const d=usePerksData();
+  if(!unlocked)return <LockScreen onUnlock={()=>setUnlocked(true)}/>;
   if(d.loading)return <div style={{maxWidth:420,margin:"0 auto",minHeight:"100vh",background:T.bg,display:"flex",alignItems:"center",justifyContent:"center"}}><Spinner/></div>;
   if(!d.user)return <AuthScreen onAuth={d.setUser}/>;
   const countable=d.highestTierPerks.filter(p=>!p.dismissed);

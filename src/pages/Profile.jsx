@@ -1,25 +1,18 @@
 import React from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { AlertCircle, CalendarDays, LogIn, Trash2, Plus } from "lucide-react";
 import { GlassCard, TopNav, Footer } from "../ui/components";
-import { MembershipRow, ConfirmModal, SearchBar, PerkList } from "../ui/perkui";
+import { MembershipRow, ConfirmModal, SearchBar, PerkList, Modal, RequestMembershipModal } from "../ui/perkui";
+import { BrandLogo } from "../ui/brand";
 import { usePerkDrawer } from "../ui/PerkDrawer";
-import { VerdictCard, cheapestCoveringTier, SectionHead, Pill, Chip, Shelf, PerkTile, Eyebrow } from "../ui/kit";
+import { VerdictCard, cheapestCoveringTier, SectionHead, Pill, Shelf, PerkTile } from "../ui/kit";
 import { supabase } from "../lib/supabase";
 import {
   fetchAllPerks, buildTierMap, buildMembershipCatalog, fetchUserMemberships,
-  addMembership, removeMembership, monthlyCostOf,
+  addMembership, removeMembership, monthlyCostOf, requestMembership,
 } from "../data/catalog";
 
 const fmtDate = (iso) => { try { return new Date(iso).toLocaleDateString("en-GB", { month: "long", year: "numeric" }); } catch { return "—"; } };
-
-const TYPE_CHIPS = [
-  { key: null, label: "Everything" },
-  { key: "feature", label: "Features" },
-  { key: "perk", label: "Perks" },
-  { key: "discount", label: "Discounts" },
-  { key: "competition", label: "Competitions" },
-];
 
 const PRIORITY_CATS = new Set(["Entertainment", "Lifestyle", "Food", "Wellness", "Fitness", "Streaming", "Shopping"]);
 
@@ -32,7 +25,6 @@ function Skeleton() {
 }
 
 export default function Profile() {
-  const navigate = useNavigate();
   const { open } = usePerkDrawer();
   const [status, setStatus] = React.useState("loading");
   const [errCode, setErrCode] = React.useState("");
@@ -42,7 +34,10 @@ export default function Profile() {
   const [memberships, setMemberships] = React.useState([]);
   const [stateRows, setStateRows] = React.useState([]);
   const [query, setQuery] = React.useState("");
-  const [typeFilter, setTypeFilter] = React.useState(null);
+  const [addOpen, setAddOpen] = React.useState(false);
+  const [reqOpen, setReqOpen] = React.useState(false);
+  const [reqBusy, setReqBusy] = React.useState(false);
+  const [reqDone, setReqDone] = React.useState(false);
   const [confirm, setConfirm] = React.useState(null);
   const [busy, setBusy] = React.useState(false);
 
@@ -133,12 +128,11 @@ export default function Profile() {
     return out;
   }, [availablePerks, usedIds, dismissedIds]);
 
-  // Perk browser lists
+  // Perk browser lists — Active/Inactive per type
   const q = query.trim().toLowerCase();
   const match = (p) => !q || [p.title, p.description, p.provider, p.tier, p.category].some((v) => (v || "").toString().toLowerCase().includes(q));
-  const browserBase = availablePerks.filter((p) => match(p) && (!typeFilter || (p.feature || "perk") === typeFilter));
-  const stillToUse = browserBase.filter((p) => !usedIds.has(p.perk_id));
-  const alreadyUsed = browserBase.filter((p) => usedIds.has(p.perk_id));
+  const ofType = (type, active) => availablePerks.filter((p) => (p.feature || "perk") === type && usedIds.has(p.perk_id) === active && match(p)).sort((a, b) => (a.title || "").localeCompare(b.title || ""));
+  const heldKeys = React.useMemo(() => new Set(memberships.map((m) => `${m.provider}|${m.membership}`)), [memberships]);
 
   // Membership lists
   const activeList = catalog.filter((c) => activeMap[`${c.provider}|${c.membership}`] != null);
@@ -153,6 +147,12 @@ export default function Profile() {
 
   async function applyChange(provider, membership, tier) { setBusy(true); try { await addMembership(user.id, provider, membership, tier); await load(); } finally { setBusy(false); setConfirm(null); } }
   async function applyRemove(provider, membership) { setBusy(true); try { await removeMembership(user.id, provider, membership); await load(); } finally { setBusy(false); setConfirm(null); } }
+  async function addNew(provider, membership, tier) { setBusy(true); try { await addMembership(user.id, provider, membership, tier); await load(); setAddOpen(false); } finally { setBusy(false); } }
+  async function submitRequest({ name, description }) {
+    setReqBusy(true);
+    try { await requestMembership({ userId: user?.id, name: name || profile?.full_name, description: `[Profile] ${description}` }); setReqDone(true); }
+    catch { setReqDone(true); } finally { setReqBusy(false); }
+  }
 
   const openPerk = (p) => open(p, { mode: "profile", scope: unlockedPerks, tierMap });
 
@@ -188,7 +188,7 @@ export default function Profile() {
               tiles={[
                 { value: totalAvailableNF - totalActiveNF, label: "Available" },
                 { value: totalActiveNF, label: "Have used" },
-                { value: `£${monthlyCost.toLocaleString()}`, label: "Monthly cost" },
+                { value: `£${Math.ceil(monthlyCost).toLocaleString()}`, label: "Monthly cost" },
                 { value: memberships.length ? new Set(memberships.map((m) => m.provider)).size : 0, label: "Memberships" },
               ]}
             />
@@ -206,11 +206,11 @@ export default function Profile() {
             {/* Memberships */}
             <section className="mt-10">
               <SectionHead title="Your memberships" count={activeList.length} sub="The engine badge shows whether each one is right-sized for how you actually use it."
-                action={<Pill as="button" onClick={() => navigate("/onboarding")} className="!min-h-[42px] !px-4 text-sm"><Plus className="w-4 h-4" />Add membership</Pill>} />
+                action={<Pill as="button" onClick={() => setAddOpen(true)} className="!min-h-[42px] !px-4 text-sm"><Plus className="w-4 h-4" />Add membership</Pill>} />
               {activeList.length === 0 ? (
                 <GlassCard className="!py-8 text-center">
                   <p className="text-sm text-muted mb-4">No memberships yet — add what you already pay for and the perks appear.</p>
-                  <Pill as="button" onClick={() => navigate("/onboarding")}><Plus className="w-4 h-4" />Set up my memberships</Pill>
+                  <Pill as="button" onClick={() => setAddOpen(true)}><Plus className="w-4 h-4" />Add your first membership</Pill>
                 </GlassCard>
               ) : (
                 <div className="space-y-2">{activeList.map((c) => (
@@ -235,21 +235,24 @@ export default function Profile() {
               </section>
             )}
 
-            {/* Perk browser */}
+            {/* Every perk you hold — Active / Inactive per type */}
             <section className="mt-10">
-              <SectionHead title="Every perk you hold" count={browserBase.length} sub="Search, filter by type, and tick things off as you use them." />
-              <div className="mb-3"><SearchBar value={query} onChange={setQuery} placeholder="Search perks, features, memberships, tiers…" /></div>
-              <div className="swipe flex gap-2 overflow-x-auto pb-3 -mx-4 px-4">
-                {TYPE_CHIPS.map((t) => <Chip key={t.label} active={typeFilter === t.key} onClick={() => setTypeFilter(t.key)}>{t.label}</Chip>)}
-              </div>
-              <div className="grid md:grid-cols-2 gap-x-8 gap-y-6 mt-2">
+              <SectionHead title="Every perk you hold" sub="Gold means you're using it. Grey means it's waiting." />
+              <div className="mb-4"><SearchBar value={query} onChange={setQuery} placeholder="Search perks, features, memberships, tiers…" /></div>
+              <div className="grid md:grid-cols-2 gap-x-8 gap-y-2">
                 <div>
-                  <Eyebrow className="mb-3">Still to use · {stillToUse.length}</Eyebrow>
-                  <PerkList perks={stillToUse} mode="profile" scope={unlockedPerks} tierMap={tierMap} emptyLabel="Nothing left — you're on top of it." />
+                  <h2 className="font-display font-extrabold text-xl mb-4 text-golddeep">Active</h2>
+                  <TypeBank title="Active Features" list={ofType("feature", true)} active scope={unlockedPerks} tierMap={tierMap} forceOpen={!!q} />
+                  <TypeBank title="Active Perks" list={ofType("perk", true)} active scope={unlockedPerks} tierMap={tierMap} forceOpen={!!q} />
+                  <TypeBank title="Used Discounts" list={ofType("discount", true)} active scope={unlockedPerks} tierMap={tierMap} forceOpen={!!q} />
+                  <TypeBank title="Entered Competitions" list={ofType("competition", true)} active scope={unlockedPerks} tierMap={tierMap} forceOpen={!!q} />
                 </div>
                 <div>
-                  <Eyebrow className="mb-3 !text-muted">Already used · {alreadyUsed.length}</Eyebrow>
-                  <PerkList perks={alreadyUsed} mode="profile" scope={unlockedPerks} tierMap={tierMap} emptyLabel="Nothing ticked off yet. Start above." />
+                  <h2 className="font-display font-extrabold text-xl mb-4 text-muted">Inactive</h2>
+                  <TypeBank title="Inactive Features" list={ofType("feature", false)} scope={unlockedPerks} tierMap={tierMap} forceOpen={!!q} />
+                  <TypeBank title="Inactive Perks" list={ofType("perk", false)} scope={unlockedPerks} tierMap={tierMap} forceOpen={!!q} />
+                  <TypeBank title="Unused Discounts" list={ofType("discount", false)} scope={unlockedPerks} tierMap={tierMap} forceOpen={!!q} />
+                  <TypeBank title="Unentered Competitions" list={ofType("competition", false)} scope={unlockedPerks} tierMap={tierMap} forceOpen={!!q} />
                 </div>
               </div>
             </section>
@@ -257,10 +260,77 @@ export default function Profile() {
         )}
       </main>
 
+      <AddMembershipModal open={addOpen} onClose={() => setAddOpen(false)} catalog={catalog} heldKeys={heldKeys} onAdd={addNew} busy={busy}
+        onRequest={() => { setReqDone(false); setReqOpen(true); }} />
+      <RequestMembershipModal open={reqOpen} onClose={() => setReqOpen(false)} onSubmit={submitRequest} busy={reqBusy} done={reqDone} />
       <ConfirmModal open={!!confirm} onClose={() => setConfirm(null)} title={confirm?.title || ""} message={confirm?.message || ""} confirmLabel={confirm?.label || "Confirm"} busy={busy}
         onConfirm={() => confirm?.type === "remove" ? applyRemove(confirm.provider, confirm.membership) : applyChange(confirm.provider, confirm.membership, confirm.tier)} />
       <Footer />
     </div>
+  );
+}
+
+function TypeBank({ title, list, active = false, scope, tierMap, forceOpen = false }) {
+  const [open, setOpen] = React.useState(false);
+  const isOpen = forceOpen ? true : open;
+  return (
+    <div className={`rounded-modal border-2 ${active ? "border-gold/40 bg-gold/[0.05]" : "border-snow/15 bg-snow/[0.02]"} p-3 sm:p-4 mb-3`}>
+      <button onClick={() => setOpen((o) => !o)} aria-expanded={isOpen}
+        className="w-full flex items-center gap-2 cursor-pointer min-h-[44px] focus:outline-none focus:ring-[3px] focus:ring-purple/40 rounded-full">
+        <span className={`text-sm transition-transform duration-200 inline-block ${active ? "text-golddeep" : "text-muted"} ${isOpen ? "" : "-rotate-90"}`}>▾</span>
+        <h4 className="font-display font-bold text-[15px]">{title}</h4>
+        <span className={`rounded-full text-xs font-bold px-2 py-0.5 ${active ? "bg-goldlight text-golddeep" : "bg-snow/10 text-muted"}`}>{list.length}</span>
+      </button>
+      {isOpen && <div className="mt-3"><PerkList perks={list} mode="profile" scope={scope} tierMap={tierMap} emptyLabel="None." /></div>}
+    </div>
+  );
+}
+
+function AddMembershipModal({ open, onClose, catalog, heldKeys, onAdd, busy, onRequest }) {
+  const [q, setQ] = React.useState("");
+  const [selKey, setSelKey] = React.useState("");
+  const [tier, setTier] = React.useState("");
+  React.useEffect(() => { if (open) { setQ(""); setSelKey(""); setTier(""); } }, [open]);
+  const ql = q.trim().toLowerCase();
+  const list = catalog
+    .filter((c) => !heldKeys.has(`${c.provider}|${c.membership}`))
+    .filter((c) => !ql || `${c.provider} ${c.membership}`.toLowerCase().includes(ql))
+    .sort((a, b) => (a.provider || "").localeCompare(b.provider));
+  const sel = catalog.find((c) => `${c.provider}|${c.membership}` === selKey) || null;
+  React.useEffect(() => { if (selKey && !list.some((c) => `${c.provider}|${c.membership}` === selKey)) setSelKey(""); }, [ql]); // eslint-disable-line
+  const tiers = sel?.tiers || [];
+  const chosenTier = tier || tiers[0]?.tier || "";
+  return (
+    <Modal open={open} onClose={onClose} title="Add membership"
+      footer={<>
+        <button onClick={onRequest} className="inline-flex items-center justify-center min-h-[44px] px-5 rounded-full border-[1.5px] border-snow/20 text-sm font-semibold cursor-pointer hover:border-snow/40">Request a membership</button>
+        <button onClick={() => sel && onAdd(sel.provider, sel.membership, chosenTier)} disabled={!sel || busy}
+          className="inline-flex items-center justify-center min-h-[44px] px-6 rounded-full bg-purple text-white text-sm font-semibold cursor-pointer hover:opacity-90 disabled:opacity-50">{busy ? "Adding…" : "Add"}</button>
+      </>}>
+      <div className="space-y-3">
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search memberships…" autoFocus
+          className="w-full min-h-[48px] px-5 rounded-full border-[1.5px] border-snow/15 bg-ink2 text-[15px] focus:outline-none focus:ring-[3px] focus:ring-purple/40" />
+        <div className="relative">
+          <select value={selKey} onChange={(e) => { setSelKey(e.target.value); setTier(""); }} size={Math.min(Math.max(list.length, 3), 7)}
+            className="w-full rounded-modal border-[1.5px] border-snow/15 bg-ink2 text-[14px] p-2 focus:outline-none focus:ring-[3px] focus:ring-purple/40">
+            {list.length === 0 && <option disabled value="">No memberships match — try Request below.</option>}
+            {list.map((c) => { const key = `${c.provider}|${c.membership}`; return <option key={key} value={key} className="py-1.5">{c.provider} — {c.membership}</option>; })}
+          </select>
+        </div>
+        {sel && (
+          <div className="flex items-center gap-2.5">
+            <BrandLogo provider={sel.provider} className="w-8 h-8" />
+            <span className="text-sm font-semibold flex-1 truncate">{sel.provider}</span>
+            {tiers.length > 1 ? (
+              <select value={chosenTier} onChange={(e) => setTier(e.target.value)}
+                className="min-h-[40px] rounded-full border-[1.5px] border-snow/15 bg-ink2 text-sm px-3 focus:outline-none max-w-[10rem]">
+                {tiers.map((t) => <option key={t.tier} value={t.tier}>{t.tier}{t.price_label ? ` · ${t.price_label}` : ""}</option>)}
+              </select>
+            ) : <span className="text-xs text-muted">{tiers[0]?.tier || "No tier"}</span>}
+          </div>
+        )}
+      </div>
+    </Modal>
   );
 }
 

@@ -102,12 +102,15 @@ export default function Home() {
         </div>
         <div className="grid grid-cols-2 gap-3">
           <HeroTile tone="ink" cap="Found for members" big="£31/mo" sub="in savings, on average, across ten memberships" />
-          <HeroTile cap="Your providers">
-            <div className="grid grid-cols-4 gap-1.5 content-center flex-1 py-1">
-              {(gridProviders.length ? gridProviders : HERO_LOGOS).slice(0, 15).map((p) => <BrandLogo key={p} provider={p} className="w-full aspect-square !rounded-lg border border-snow/10" />)}
-              <span className="grid place-items-center w-full aspect-square rounded-lg bg-purple text-gold font-display font-extrabold text-[11px]">+{Math.max((providerCount || 24) - 15, 0)}</span>
+          <div className="aspect-square rounded-modal border border-snow/10 bg-ink2 p-4 flex flex-col overflow-hidden">
+            <span className="text-xs font-semibold text-muted mb-2 shrink-0">Your providers</span>
+            <div className="grid grid-cols-4 grid-rows-4 gap-1.5 flex-1 min-h-0">
+              {(gridProviders.length ? gridProviders : HERO_LOGOS).slice(0, 15).map((p) => (
+                <span key={p} className="relative min-h-0 min-w-0"><BrandLogo provider={p} className="!absolute !inset-0.5 !w-auto !h-auto !rounded-lg border border-snow/10" /></span>
+              ))}
+              <span className="relative min-h-0 min-w-0"><span className="absolute inset-0.5 grid place-items-center rounded-lg bg-purple text-gold font-display font-extrabold text-[11px]">+{Math.max((providerCount || 24) - 15, 0)}</span></span>
             </div>
-          </HeroTile>
+          </div>
           {todaysPick ? (
             <button onClick={() => openPerk(todaysPick)} className="relative aspect-square rounded-modal border border-gold overflow-hidden text-left cursor-pointer group focus:outline-none focus:ring-[3px] focus:ring-purple/40">
               <img src={perkImage(todaysPick)} alt="" loading="lazy" className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 ease-fluid group-hover:scale-105" />
