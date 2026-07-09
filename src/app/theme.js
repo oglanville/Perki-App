@@ -19,6 +19,13 @@ export function cadenceResetText(p){const u=(p||"").toUpperCase();if(u==="WEEKLY
 export const STATUS_LABEL={used:"Have used",unused:"Have not used",wontuse:"Will not use"};
 export const BUNDLES=[{key:"holiday",name:"Holiday",icon:"✈️",categories:["Travel","Insurance","Currency"]},{key:"cinema",name:"Cinema",icon:"🎬",categories:["Entertainment","Streaming"]},{key:"sports",name:"Sports",icon:"⚽",categories:["Sports"]},{key:"workday",name:"Workday",icon:"💼",categories:["Productivity","Insurance","Food"]},{key:"bigshop",name:"Big shop",icon:"🛒",categories:["Shopping","Savings","Rewards"]},{key:"famday",name:"Family day out",icon:"👨‍👩‍👧",categories:["Family","Education"]}];
 
+/* ── Mob-style type + pill helpers ── */
+export const FONT_DISP="'Outfit',sans-serif";
+export const FONT_BODY="'Work Sans',sans-serif";
+export const disp=(size=24,weight=900)=>({fontFamily:FONT_DISP,fontWeight:weight,lineHeight:.95,letterSpacing:"-0.01em",fontSize:size,color:T.textPrimary,margin:0});
+export const chipStyle=(on)=>({whiteSpace:"nowrap",borderRadius:999,minHeight:38,padding:"0 15px",display:"inline-flex",alignItems:"center",gap:6,fontSize:12.5,fontWeight:600,cursor:"pointer",border:`1.5px solid ${on?T.primary:T.border}`,background:on?T.primary:T.surface,color:on?"#fff":T.textSecondary,flexShrink:0,fontFamily:FONT_BODY});
+export const eyebrowStyle={fontSize:10.5,fontWeight:800,letterSpacing:"1.8px",textTransform:"uppercase",color:"#B07C1A",fontFamily:FONT_BODY};
+
 export function alphaSort(a,b){return a.title.localeCompare(b.title);}
 
 

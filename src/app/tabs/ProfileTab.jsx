@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
-import { T, PROVIDERS, featureThenAlpha, buildMembershipCatalog } from "../theme";
+import { T, PROVIDERS, featureThenAlpha, buildMembershipCatalog, disp } from "../theme";
 import { SectionHeader, TabDesc, CollapsibleSection, AppBrandLogo, PerkTile } from "../components";
 
 /* Profile order: Feature -> Perk -> Discount -> Competition.  [type, activeLabel, inactiveLabel] */
@@ -87,7 +87,7 @@ export default function ProfileTab({perks,activeMemberships,rawMemberships,onRem
     : <p style={{fontSize:11,color:T.muted,fontStyle:"italic",fontFamily:"'Work Sans',sans-serif"}}>None.</p>;
 
   return(<div onClick={()=>setSelectedPerk(null)}>
-    <h1 style={{fontSize:22,fontWeight:800,color:T.textPrimary,margin:0,fontFamily:"'Outfit',sans-serif"}}>Profile</h1>
+    <h1 style={disp(28)}>Your Perki.</h1>
     <TabDesc>Your value at a glance, and the perks behind it.</TabDesc>
 
     {/* Identity */}
@@ -102,14 +102,20 @@ export default function ProfileTab({perks,activeMemberships,rawMemberships,onRem
       <button onClick={onLogout} style={{padding:"7px 22px",borderRadius:10,border:`1.5px solid ${T.border}`,background:T.bg,color:T.textSecondary,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"'Work Sans',sans-serif"}}>Log Out</button>
     </div>
 
-    {/* Dashboard stats */}
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
-      {statTile(activePlans,"Active plans","#2B2A6E")}
-      {statTile(`£${totalMonthlyCost.toFixed(0)}`,"Monthly cost","#2B2A6E")}
-      {statTile(totalAvailable,"Available perks, discounts, comps","#B07C1A")}
-      {statTile(totalActive,"Claimed perks, discounts, comps","#2B2A6E")}
+    {/* Verdict card */}
+    <div style={{background:T.primary,borderRadius:16,padding:"22px 18px",marginBottom:14,color:"#fff"}}>
+      <div style={{fontSize:10.5,fontWeight:800,letterSpacing:"1.8px",textTransform:"uppercase",color:"#E0A93B",fontFamily:"'Work Sans',sans-serif"}}>Your dashboard · {new Date().toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"})}</div>
+      <div style={{fontFamily:"'Outfit',sans-serif",fontWeight:800,fontSize:22,lineHeight:1.15,margin:"8px 0 16px"}}>{totalAvailable-totalActive} perks ready to use.</div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8}}>
+        {[[totalAvailable-totalActive,"Available"],[totalActive,"Have used"],[totalMonthlyCost===0?"Free":`£${totalMonthlyCost.toFixed(0)}`,"Monthly cost"],[activePlans,"Plans"]].map(([v,l])=>(
+          <div key={l} style={{background:"rgba(255,255,255,.07)",border:"1px solid rgba(255,255,255,.14)",borderRadius:12,textAlign:"center",padding:"12px 2px"}}>
+            <div style={{fontFamily:"'Outfit',sans-serif",fontWeight:900,fontSize:20,color:"#E0A93B"}}>{v}</div>
+            <div style={{fontSize:9,fontWeight:600,opacity:.75,marginTop:2,fontFamily:"'Work Sans',sans-serif"}}>{l}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{fontSize:10.5,opacity:.75,marginTop:10,fontFamily:"'Work Sans',sans-serif"}}>{activeFeatures} features switched on across your plans.</div>
     </div>
-    <div style={{marginBottom:14}}>{statTile(activeFeatures,"Active features","#B07C1A")}</div>
 
     {/* Monthly cost breakdown */}
     <div style={{marginBottom:14,background:T.surface,borderRadius:12,border:`1px solid ${T.border}`,boxShadow:T.shadow,overflow:"hidden"}}>

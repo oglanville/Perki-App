@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { T, CATEGORIES, BUNDLES, alphaSort, featureThenAlpha, cadenceLabel, isHigherTier } from "../theme";
+import { T, CATEGORIES, BUNDLES, alphaSort, featureThenAlpha, cadenceLabel, isHigherTier, disp } from "../theme";
 import { PerkBrandIcon, ProviderOverlay, TabDesc, SectionHeader, PerkSheet, AppBrandLogo, FeatureChip } from "../components";
 
 /* Compact item row used inside expanded bundle and category panels.
@@ -62,7 +62,7 @@ export default function WhereTab({perks,onToggle,onDismiss,tierPrices}){
   const catGroups=useMemo(()=>{const g={};dedupedPerks.forEach(p=>{const c=p.category;if(!c||!CATEGORIES[c])return;if(!g[c])g[c]={perks:[],providers:new Set()};g[c].perks.push(p);g[c].providers.add(p.provider);});return g;},[dedupedPerks]);
   return(
     <div onClick={()=>setSp(null)}>
-      <h1 style={{fontSize:22,fontWeight:800,color:T.textPrimary,margin:0,fontFamily:"'Outfit',sans-serif"}}>Where to Use</h1>
+      <h1 style={disp(28)}>Where to use.</h1>
       <TabDesc>Your perks grouped by moment and by category. Tap to expand.</TabDesc>
       {bundleGroups.length>0&&(<>
         <SectionHeader count={bundleGroups.length}>Bundles</SectionHeader>
