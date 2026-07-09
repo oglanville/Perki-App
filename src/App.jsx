@@ -7,6 +7,7 @@ import Perks from "./pages/Perks";
 import Pricing from "./pages/Pricing";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
+import Onboarding from "./pages/Onboarding";
 import AppShell from "./app/AppShell";
 import { PerkDrawerProvider } from "./ui/PerkDrawer";
 
@@ -37,6 +38,9 @@ export default function App() {
         <Route path="/pricing" element={<MarketingLayout><Pricing /></MarketingLayout>} />
         <Route path="/signup" element={<MarketingLayout><Auth mode="signup" /></MarketingLayout>} />
         <Route path="/login" element={<MarketingLayout><Auth mode="login" /></MarketingLayout>} />
+
+        {/* Post-signup onboarding — captures memberships, no email detour */}
+        <Route path="/onboarding" element={<Onboarding />} />
 
         {/* New design-system Profile page (live Supabase data) */}
         <Route path="/app/account" element={<Profile />} />

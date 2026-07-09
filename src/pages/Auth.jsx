@@ -27,6 +27,9 @@ export default function Auth({ mode = "signup" }) {
         if (error) throw error;
         // If email confirmation is on, there's no active session yet.
         if (!data.session) { setNotice("Account created — check your inbox to confirm, then log in."); setLoading(false); return; }
+        // Straight into onboarding — no email detour.
+        navigate("/onboarding");
+        return;
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
