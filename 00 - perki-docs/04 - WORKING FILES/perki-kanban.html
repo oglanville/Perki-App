@@ -70,107 +70,117 @@
 
     <section class="col today" data-horizon="Today">
       <h2>☀️ Today <span class="count"></span></h2>
-      <div class="sub">App + email are redesigned. Get them live and tidy the rest.</div>
-      <div class="card" data-id="dep1"><input type="checkbox" class="chk"><div class="body">
-        <div class="t">🚀 Deploy everything</div>
-        <span class="tag prio">Top priority</span>
-        <div class="syn">A lot is built and bundle-verified but not yet live.</div>
-        <ul><li>Front-end: del .git/index.lock → git add src/ → commit → push (Vercel auto-deploys)</li><li>Digest: supabase functions deploy daily-digest</li></ul>
+      <div class="sub">Everything is built and live. Push, glance, done.</div>
+      <div class="card" data-id="push"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">🚀 git push</div>
+        <span class="tag prio">Top priority — needs you</span>
+        <div class="syn">One local commit holds the catalogue expansion, tier model, redesigned digest and spec. Vercel deploys on push.</div>
+        
       </div></div>
-      <div class="card" data-id="watch7"><input type="checkbox" class="chk"><div class="body">
-        <div class="t">⏰ Watch tomorrow's 7am run</div>
-        <span class="tag next">In progress</span>
-        <div class="syn">Cron is fixed and tested — confirm the automatic 06:00 UTC / 07:00 BST send lands on its own.</div>
-        <ul><li>If it does not arrive, it is Hotmail/Resend deliverability (Junk + Resend dashboard), not the cron</li></ul>
+      <div class="card" data-id="redeploy"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">🧽 Redeploy digest from repo</div>
+        <span class="tag next">Quick, optional</span>
+        <div class="syn">v48 has a cosmetic nit (header gold dot + "+n more" styling). Repo copy is correct.</div>
+        <ul><li>supabase functions deploy daily-digest --no-verify-jwt --project-ref iievmjsfpgixqdpuxbkg</li></ul>
       </div></div>
-      <div class="card" data-id="prodsend"><input type="checkbox" class="chk"><div class="body">
-        <div class="t">🟣 Proper digest send (drop [PREVIEW])</div>
-        <div class="syn">Interim cron uses the preview path. Redeploy with --no-verify-jwt + a matching CRON_SECRET, then switch the cron back to the production path.</div>
+      <div class="card" data-id="variants"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">⏰ Watch the four email variants land</div>
+        
+        <div class="syn">Fri Momentum · Sat Verdict · Sun Savings · Mon Bundle. Confirm each reads well on iPhone Mail.</div>
+        
       </div></div>
-      <div class="card" data-id="bundles"><input type="checkbox" class="chk"><div class="body">
-        <div class="t">🧱 Build the bundles view</div>
-        <span class="tag next">Follow-up</span>
-        <div class="syn">BUNDLES config + email prompts are done; build the grouped Holiday / Cinema / Sports / Workday surface in the app.</div>
-      </div></div>
-      <div class="card" data-id="engines"><input type="checkbox" class="chk"><div class="body">
-        <div class="t">💸 Wire Savings + Consolidation to real data</div>
-        <div class="syn">Engine panes show placeholder numbers; compute per-user before the list grows beyond one person.</div>
-      </div></div>
-      <div class="card" data-id="nv1"><input type="checkbox" class="chk"><div class="body">
-        <div class="t">🔍 Verify the 19 flagged rows</div>
-        <div class="syn">Confirm the NEEDS-VERIFY items (Pret 50%-off, Cineworld regional pricing, Deliveroo Gold price, Amex lounge count) — see Perki-NEEDS-VERIFY.md.</div>
-      </div></div>
-      <div class="card" data-id="a1"><input type="checkbox" class="chk"><div class="body">
-        <div class="t">🛒 Ingest O2 + Lidl</div>
-        <span class="tag prio">Top priority</span>
-        <div class="syn">Add the two providers so the catalogue and deck reflect full coverage.</div>
-        <ul><li>Add O2 + Lidl rows to Perks_Rows.xlsx (awaiting source data)</li><li>Run the validation checklist → ingestion scripts</li></ul>
-      </div></div>
-      <div class="card" data-id="a2"><input type="checkbox" class="chk"><div class="body">
-        <div class="t">📄 Deck polish</div>
-        <div class="syn">Make the deck send-ready.</div>
-        <ul><li>Export a PDF for sharing</li><li>Install Outfit + Work Sans so type renders exactly</li><li>Swap illustrative stats for Perki-specific numbers</li></ul>
-      </div></div>
-      <div class="card" data-id="e1"><input type="checkbox" class="chk"><div class="body">
-        <div class="t">🔁 Sort out renewal logic</div>
-        <div class="syn">Make perk reset and renewal dates compute correctly across the app.</div>
+      <div class="card" data-id="boots"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">👀 Eyeball boots.com Price Advantage</div>
+        
+        <div class="syn">Restored on the strength of the official page, contradicting April press coverage. 30 seconds settles it.</div>
+        
       </div></div>
     </section>
 
     <section class="col week" data-horizon="This Week">
       <h2>📅 This Week <span class="count"></span></h2>
-      <div class="sub">Strengthen the MVP and get it in front of people.</div>
-      <div class="card" data-id="i1"><input type="checkbox" class="chk"><div class="body">
-        <div class="t">📧 Finish email automation</div>
-        <div class="syn">Wire the 7am send end to end (template + function are done).</div>
-        <ul><li>Run the cron migration 003 (06:00 + 07:00 UTC jobs)</li><li>Verify the perki.app sending domain in Resend (SPF/DKIM/DMARC)</li><li>Confirm one send fires at 7am London</li></ul>
+      <div class="sub">Turn the prototypes into the real site.</div>
+      <div class="card" data-id="rebuild"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">🎨 Rebuild website pages from prototypes</div>
+        
+        <div class="syn">Home (new), Perks (chip filters + tier ladder), Profile (verdict card + engine badges). Locked brand, 390px-first.</div>
+        
       </div></div>
-      <div class="card" data-id="f1"><input type="checkbox" class="chk"><div class="body">
-        <div class="t">🤝 Seek founder advice (weekly)</div>
-        <span class="tag prio" style="background:rgba(47,182,168,.18);color:#2fb6a8">Weekly</span>
-        <div class="syn">Message each contact once a week for input.</div>
-        <ul><li>Tori Prew (HUUR)</li><li>Tom Standen (Sylvi)</li><li>George Gazzard (Solskin)</li></ul>
+      <div class="card" data-id="qa"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">🧪 QA on npm run dev</div>
+        
+        <div class="syn">Six bundles in Where; variant tiers behave; tier ladders order correctly.</div>
+        <ul><li>Adding Spotify Family must NOT auto-add Student/Individual</li><li>BA + Cineworld ladders use tier_rank</li></ul>
+      </div></div>
+      <div class="card" data-id="chart"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">📊 Verify the week chart populates</div>
+        
+        <div class="syn">It reads last_used_at, which only starts accumulating meaningfully now that you tick perks used.</div>
+        
       </div></div>
     </section>
 
     <section class="col month" data-horizon="This Month">
       <h2>🗓️ This Month <span class="count"></span></h2>
-      <div class="sub">Turn the core loop into something sticky.</div>
-      <div class="card" data-id="g1"><input type="checkbox" class="chk"><div class="body">
-        <div class="t">🚪 Build out the onboarding process</div>
-        <div class="syn">A clean first-run flow that gets people to their perks fast.</div>
+      <div class="sub">Grow and test.</div>
+      <div class="card" data-id="beehiiv"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">🟣 Beehiiv setup</div>
+        
+        <div class="syn">Email block library is Beehiiv-ready — the weekly is a re-ordering of daily blocks, not a rebuild. Pick the personalisation route, stand up the publication toward 10k.</div>
+        
       </div></div>
-      <div class="card" data-id="b2"><input type="checkbox" class="chk"><div class="body">
-        <div class="t">📚 Deepen the catalogue</div>
-        <div class="syn">Add as many brands and tiers as possible to strengthen the MVP.</div>
-        <ul><li>Expand beyond the current four providers</li><li>Keep ingestion manual and accurate</li></ul>
+      <div class="card" data-id="provtypes"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">🏷️ Provider types</div>
+        
+        <div class="syn">Life-category labels and filters. Spec ready, not built.</div>
+        
       </div></div>
-      <div class="card" data-id="b3"><input type="checkbox" class="chk"><div class="body">
-        <div class="t">🧪 Test with friends</div>
-        <div class="syn">Real users on the website, app, and email blast.</div>
-        <ul><li>Share the live site and app</li><li>Run a first email blast and gather reactions</li></ul>
+      <div class="card" data-id="ingest"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">🛒 Ingest O2 + Lidl</div>
+        
+        <div class="syn">Awaiting source data.</div>
+        
       </div></div>
-      <div class="card" data-id="c2"><input type="checkbox" class="chk"><div class="body">
-        <div class="t">🔍 Validate UX vs the brand</div>
-        <div class="syn">Pressure-test Marketplace + Profile against the finalised identity.</div>
-        <ul><li>Log any drift and fix</li></ul>
+      <div class="card" data-id="onboard"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">🚪 Onboarding + friends testing</div>
+        
+        <div class="syn">Reuse the Add Membership screens; get real users in; start the referral loop.</div>
+        
+      </div></div>
+      <div class="card" data-id="deliver"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">📬 Deliverability watch</div>
+        
+        <div class="syn">Four rotating layouts is new variation for Hotmail — watch Junk; verify SPF/DKIM/DMARC in Resend if anything slips.</div>
+        
       </div></div>
     </section>
 
     <section class="col horizon" data-horizon="On the Horizon">
       <h2>🔭 On the Horizon <span class="count"></span></h2>
-      <div class="sub">The monetisation and partnership layer.</div>
-      <div class="card" data-id="d1"><input type="checkbox" class="chk"><div class="body">
+      <div class="sub">The bigger bets.</div>
+      <div class="card" data-id="portal"><input type="checkbox" class="chk"><div class="body">
         <div class="t">🔌 Partner portal + API</div>
-        <div class="syn">Let companies integrate their perks directly.</div>
+        
+        <div class="syn">Let providers manage their own perk data.</div>
+        
       </div></div>
-      <div class="card" data-id="d2"><input type="checkbox" class="chk"><div class="body">
+      <div class="card" data-id="revenue"><input type="checkbox" class="chk"><div class="body">
         <div class="t">💸 Placement revenue</div>
-        <div class="syn">Natural ranking, boosted-on-search, and pay-to-rank slots.</div>
+        
+        <div class="syn">Paid placement in Worth adding once traffic justifies it.</div>
+        
       </div></div>
-      <div class="card" data-id="d3"><input type="checkbox" class="chk"><div class="body">
+      <div class="card" data-id="demo"><input type="checkbox" class="chk"><div class="body">
         <div class="t">🎬 Product demo flow</div>
+        
         <div class="syn">A crisp walkthrough for prospects and investors.</div>
+        
+      </div></div>
+      <div class="card" data-id="arch"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">🧹 Architecture debt</div>
+        
+        <div class="syn">Extract triple-copied bundle/tier/cadence logic into one shared module; shared verdict generator across profile + email; lifestyle photography for card tiles.</div>
+        
       </div></div>
     </section>
 
@@ -178,40 +188,15 @@
 
   <!-- DONE TODAY — daily highlight -->
   <section class="donebox">
-    <h2>✅ Done recently — to 24 Jun 2026 · 7am email fixed, cadence + status, logos</h2>
+    <h2>✅ Done recently — to 9 Jul 2026 · digest live + 4 variants, catalogue 536, tier model</h2>
     <ul>
-      <li>7am email fixed — the daily cron was firing but every call was rejected at the Supabase gateway with a 401 (stale sb_secret_ token), so the digest never ran. Rerouted the cron through the function's preview path with the project's valid anon key, targeted at Ollie, timeout raised 1s → 30s. Tested end to end: 200, sent, email arrived</li>
-      <li>Cadence + Status system built across web, app and email — reset dates replaced by Weekly / Monthly / One-off cadence; item status is Have used / Have not used / Will not use; renewal-date logic kept dormant behind a flag. No user date inputs or displays anywhere</li>
-      <li>Provider logos for every membership — both logo components fall back Clearbit → Simple Icons → Google favicon → initials, so all 24 providers resolve to a real logo on the marketplace and beyond</li>
-      <li>Marketplace tier → membership filter — selecting a tier filters the membership chips and the tier persists when you pick a compatible membership (web + app, both Compare panes)</li>
-      <li>Daily digest reworked + dashboard Active/Inactive counts — new section order, plus a gold Active row (Features, Perks, Discounts, Competitions) over an Inactive row, mirroring Profile; send now reports Resend's real result</li>
-      <li>New direction spec written — Perki-Spec-Weekly-Savings-Engine.md: the Savings, Consolidation and Smart Usage engines, the weekly email structure, Beehiiv integration, privacy, roadmap and open questions</li>
-      <li>Beehiiv-ready weekly email drafted — Perki-Beehiiv-Weekly-Email.html: clean HTML blocks, subject and preheader, the three dynamic blocks, CTA buttons and personalisation tokens, on brand</li>
-      <li>20 new memberships loaded live — 145 rows ingested into the Supabase perks catalogue and verified (counts, types, icons, apostrophes and BA tiers all check out). Tesco, Boots, IKEA, Greggs, Nando's, Pret, Deliveroo, Amazon, Spotify, Cineworld, ASOS, Nationwide, Santander, American Express, Vodafone, Costco, Blue Light Card, National Trust, Railcard, British Airways</li>
-      <li>Catalogue integration fixes (web + app) — provider logos for all 20 new brands, the Mobile category icon, and an explicit Blue to Bronze to Silver to Gold order for British Airways earned-status tiers. Bundle-verified; awaiting a front-end deploy to show</li>
-      <li>Pitch deck repaired and finished: fixed the packaging corruption and added the five app-configuration screenshots to a captioned "Inside the app" slide; the "Make every perk count." close slide is restored. 16 slides, render-QA'd</li>
-      <li>Marketplace search now hides empty filters (web + app): when you search, only Membership / Tier / Category chips that still have a matching result are shown, and a selected-but-emptied filter clears itself</li>
-      <li>Marketplace Compare built (website, spec'd first): a Compare toggle splits the view into two independent marketplaces with one shared search at the top — each side keeps its own Memberships / Tiers / Categories, so anything can be compared against anything</li>
-      <li>Perk pop-out price now follows the tier you clicked (web + app): the headline shows the clicked tier's price, with "also available in a cheaper tier — get it from…" beneath it; All tiers still resolves to the cheapest</li>
-      <li>App fully redesigned to the brand (Phases 1–5): re-skin, single slide-out drawer, real provider logos + brand rows, lowest-tier pricing</li>
-      <li>Monolithic LegacyApp split into a clean src/app/ module tree (AppShell, tabs, hooks); legacy file retired</li>
-      <li>Homepage "How it works" button added above "See my perks"</li>
-      <li>Profile mobile fixed: dropdowns collapsed by default, no zoom, old bottom nav removed, "App" added to the menu</li>
-      <li>Daily email redesigned on the brand: responsive 7-section template + full brief</li>
-      <li>daily-digest edge function ported to the new email, with a 7am Europe/London guard + cron migration (003); JWT/header bugs fixed</li>
-      <li>Daily email deployed + previewed (new design confirmed in inbox)</li>
-      <li>App redesign pushed live to Vercel</li>
-      <li>OVO Energy badge fixed — now loads the real OVO logo (was falling back to "OV" initials)</li>
-      <li>Unified Web + App product spec written (decisions, glossary, component map, implementation notes)</li>
-      <li>Spec implemented across web + app: splitter order, "Unused Tiers" rename, typed Active/Inactive split, no Inactive Feature, search auto-expands every box</li>
-      <li>App Marketplace flattened to mirror the website (individual perks, type-sorted); add-membership moved to Profile → Unused Tiers</li>
-      <li>App tooltip now matches the website: cheapest tier, higher tiers, and everything included at that tier and below</li>
-      <li>Home grid icons: trialled a brand SVG set, then reverted to emoji on the gold-tint tile (image_url support kept for real photos later)</li>
-      <li>Marketplace finalised (web + app): permanent Memberships → Tiers → Categories filter rows, flat A–Z list, deduped to the cheapest tier, tier chips show price</li>
-      <li>Pitch deck updated: removed the Opportunity slide, added a "See it in action" email-screenshots slide with an app placeholder, founder origin story on Team, and a live Vercel link</li>
-      <li>Spec written + built: Profile order (Feature → Perk → Discount → Competition), terminology (Used/Unused, Entered/Unentered), Unused Tiers = upgrades only, membership shows active tier not a count</li>
-      <li>Features now toggle Active/Inactive like Perks across web + app; dashboard "Active" aggregate renamed "Claimed"</li>
-      <li>OVO badge unified to a green "OVO" wordmark across website, app and email (reliable, no broken images)</li>
+      <li>Proper digest send LIVE — [PREVIEW] retired. Two production crons (06:00 + 07:00 UTC) authenticate against the Vault secret via a service-role-only RPC, so cron and function can never drift; the 07:00 London guard makes one a no-op and fixes winter DST permanently. Multi-recipient + opt-outs supported</li>
+      <li>WHOOP-style daily email (v48) — verdict hero, dark summary card, section pills, live-text week chart, single CTA. Four layout variants cycle daily: Verdict → Savings → Bundle → Momentum. Savings + Consolidation split-screen kept</li>
+      <li>Bundles view shipped in the Where tab, plus two new bundles: Big shop and Family day out (six total)</li>
+      <li>Catalogue 442 → 536 rows — 96 new perks verified on official pages across 20 providers + 20 corrections; all 19 NEEDS-VERIFY flags resolved; Perks_Rows.xlsx mirrors the DB exactly</li>
+      <li>Tier data model fixed — tier_kind (hierarchical | variant) + tier_rank columns; Spotify, Railcard, National Trust, Amazon and Cineworld are variants with no false inheritance; BA tiers get real backend ordering; front-end + digest logic rank/kind-aware</li>
+      <li>Naming reconciled — OVO Energy / Sky TV everywhere; Amazon tier renamed Students and 18-24; Prime Gaming → Amazon Luna; Boots Price Advantage restored alongside personalised offers</li>
+      <li>Redesign spec + 4 working prototypes — mob.co.uk website language, WHOOP email system, component libraries, implementation notes (00 - perki-docs/02 - PRODUCT + 04 - WORKING FILES/redesign-2026-07)</li>
     </ul>
   </section>
 
@@ -219,6 +204,7 @@
   <section class="timeline">
     <h2>🧭 Progress timeline</h2>
     <ul class="tl">
+      <li><span class="date">9 Jul 2026</span><div class="ttl">Digest live with 4 daily variants · catalogue 536 · tier model fixed</div><div class="desc">Production cron via Vault auth (DST solved), WHOOP-style email cycling four layouts, +96 verified perks, tier_kind/tier_rank across DB, xlsx, front-end and digest, redesign spec + prototypes delivered.</div></li>
       <li>
         <div class="date">24 Jun 2026</div>
         <div class="ttl">7am email fixed (cron gateway 401)</div>
@@ -345,7 +331,7 @@
   <footer>
     <p>🤝 <b>Need from you:</b> O2 + Lidl source data · install Outfit + Work Sans fonts · verify the perki.app sending domain in Resend · friends to test the app + email.</p>
     <p style="margin-top:6px">🧭 Guardrails: manual ingestion only, no scraping · accuracy over speed · brand gates deck work · auto-send is OFF (manual pulls only).</p>
-    <p style="margin-top:6px;opacity:.6">Last updated 2026-06-24 (rev 12) · mirrors daily-todo.md · tick cards to dim them (saved in your browser)</p>
+    <p style="margin-top:6px;opacity:.6">Last updated 2026-07-09 (rev 13) · mirrors daily-todo.md · tick cards to dim them (saved in your browser)</p>
   </footer>
 
 <script>
