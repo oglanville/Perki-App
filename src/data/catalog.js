@@ -39,12 +39,13 @@ export function buildTierMap(perks) {
     const key = `${p.provider}|${p.tier}`;
     const price = typeof p.price === "number" ? p.price : Number(p.price ?? 0) || 0;
     if (!(key in m) || price > m[key].price) {
-      m[key] = { provider: p.provider, tier: p.tier, price };
+      m[key] = { provider: p.provider, tier: p.tier, price, tier_rank: p.tier_rank ?? null, kind: p.tier_kind || "hierarchical" };
     }
   });
   Object.values(m).forEach((t) => {
     t.price_label = t.price === 0 ? "Free" : `£${t.price}`;
-    t.sort_order = TIER_RANK[t.provider]?.[t.tier] ?? t.price; // price order, with earned-status override
+    // Explicit catalogue rank first (perks.tier_rank), then the legacy override, then price order.
+    t.sort_order = t.tier_rank ?? TIER_RANK[t.provider]?.[t.tier] ?? t.price;
   });
   return m;
 }
@@ -141,6 +142,8 @@ export const BUNDLES = [
   { key: "cinema", name: "Cinema", icon: "🎬", categories: ["Entertainment", "Streaming"] },
   { key: "sports", name: "Sports", icon: "⚽", categories: ["Sports"] },
   { key: "workday", name: "Workday", icon: "💼", categories: ["Productivity", "Insurance", "Food"] },
+  { key: "bigshop", name: "Big shop", icon: "🛒", categories: ["Shopping", "Savings", "Rewards"] },
+  { key: "famday", name: "Family day out", icon: "👨‍👩‍👧", categories: ["Family", "Education"] },
 ];
 
 /* ── Perk detail / usage (slide-out drawer) ──────────────────────────── */

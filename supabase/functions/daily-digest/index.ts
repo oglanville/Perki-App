@@ -31,6 +31,8 @@ interface Perk {
   next_reset_date: string | null;
   description: string | null;
   price: number | null;
+  tier_rank: number | null;
+  tier_kind: "hierarchical" | "variant" | null;
 }
 
 interface EnrichedPerk extends Perk {
@@ -48,6 +50,7 @@ interface PerkState {
   perk_id: string;
   used: boolean;
   dismissed: boolean;
+  last_used_at?: string | null;
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -116,13 +119,13 @@ function categoryIcon(cat: string | null): string {
    TIER HIERARCHY
    ═══════════════════════════════════════════════════════ */
 
-type TierPriceMap = Record<string, { price: number }>;
+type TierPriceMap = Record<string, { price: number; rank: number; kind: string }>;
 
 function buildTierPriceMap(perks: Perk[]): TierPriceMap {
   const m: TierPriceMap = {};
   for (const p of perks) {
     const key = `${p.provider}|${p.tier}`;
-    if (!m[key]) m[key] = { price: p.price ?? 999 };
+    if (!m[key]) m[key] = { price: p.price ?? 999, rank: p.tier_rank ?? p.price ?? 999, kind: p.tier_kind ?? "hierarchical" };
   }
   return m;
 }
@@ -130,8 +133,8 @@ function buildTierPriceMap(perks: Perk[]): TierPriceMap {
 function getProviderTierOrder(provider: string, tp: TierPriceMap): string[] {
   return Object.entries(tp)
     .filter(([k]) => k.startsWith(`${provider}|`))
-    .map(([k, v]) => ({ tier: k.split("|")[1], price: v.price }))
-    .sort((a, b) => a.price - b.price)
+    .map(([k, v]) => ({ tier: k.split("|")[1], rank: v.rank ?? v.price }))
+    .sort((a, b) => a.rank - b.rank)
     .map((e) => e.tier);
 }
 
@@ -147,6 +150,8 @@ function getHighestTier(provider: string, tiers: string[], tp: TierPriceMap): st
 }
 
 function getEffectiveTiers(provider: string, tier: string, tp: TierPriceMap): string[] {
+  // Variant tiers are parallel products and never inherit from cheaper siblings.
+  if (tp[`${provider}|${tier}`]?.kind === "variant") return [tier];
   const order = getProviderTierOrder(provider, tp);
   const idx = order.indexOf(tier);
   if (idx < 0) return [tier];
@@ -412,41 +417,7 @@ function perkRow(p: EnrichedPerk, showDate = false): string {
   </td></tr>`;
 }
 
-/* ── EMAIL TEMPLATE ── */
-
-interface EmailData {
-  name: string;
-  dateStr: string;
-  available: number;
-  used: number;
-  willNotUse: number;
-  activeByType: Record<string, number>;
-  inactiveByType: Record<string, number>;
-  savingsMoves: { title: string; sub: string; saving: number }[];
-  consolidation: { dup: boolean; title: string; detail: string };
-  memberships: { provider: string; tier: string; color: string; renewal: string }[];
-  whatToUseToday: EnrichedPerk[];
-  momentBoxes: MomentBox[];
-  categoryGrouped: { category: string; icon: string; items: EnrichedPerk[] }[];
-  missingMemberships: MissingMembership[];
-  topUnselectedMemberships: TopUnselectedMembership[];
-}
-
-/** Shared card wrapper — both action boxes use this */
-function actionBox(icon: string, title: string, subtitle: string, body: string): string {
-  return `
-  <table cellpadding="0" cellspacing="0" border="0" width="100%"
-         style="border-radius:10px;overflow:hidden;border:1.5px solid #FDE68A;background:linear-gradient(180deg,#FFFBEB,#FFFFFF 28px);">
-    <tr>
-      <td style="padding:8px 8px 3px;">
-        <div style="font-size:12px;font-weight:900;color:#92400E;">${icon} ${escHtml(title)}</div>
-        <div style="font-size:9px;color:#B45309;margin-top:1px;">${escHtml(subtitle)}</div>
-      </td>
-    </tr>
-    ${body}
-    <tr><td style="height:4px;"></td></tr>
-  </table>`;
-}
+/* ── ENGINES ── */
 
 interface SavingsMove { title: string; sub: string; saving: number; }
 
@@ -459,6 +430,8 @@ function buildSavingsMoves(userMemberships: UserMembership[], perks: EnrichedPer
     const key = `${m.provider}|${m.membership}`;
     if (seen.has(key)) continue;
     seen.add(key);
+    // Variant providers (Spotify plans, Railcards etc) are parallel products; tier moves do not apply.
+    if (tierPrices[`${m.provider}|${m.tier}`]?.kind === "variant") continue;
     const curPrice = tierPrices[`${m.provider}|${m.tier}`]?.price ?? 0;
     if (curPrice <= 0) continue;
     const usedTitles = new Set(
@@ -510,188 +483,220 @@ function buildConsolidation(perks: EnrichedPerk[]): { dup: boolean; title: strin
   return { dup: false, title: "No obvious duplicates.", detail: "Your line-up looks lean, nothing doubling up right now." };
 }
 
-function buildEmailHtml(d: EmailData): string {
-  const APP = "https://perki.app";
-  const card = "background:#FFFFFF;border:1px solid #E4DDCB;border-radius:12px;";
-  const h = "font-family:'Outfit','Helvetica Neue',Arial,sans-serif;";
-  const b = "font-family:'Work Sans','Helvetica Neue',Arial,sans-serif;";
-  const tileInner = (provider: string) => (provider === "OVO Energy" || provider === "OVO")
-    ? `<span style="${h}font-size:9px;font-weight:800;color:#0a9d2b;letter-spacing:-0.3px;">OVO</span>`
-    : `<span style="${h}font-size:11px;font-weight:800;color:#2B2A6E;">${escHtml(providerInitials(provider))}</span>`;
+/* ═══════════════════════════════════════════════════════
+   EMAIL TEMPLATE V2 — WHOOP-style modular blocks.
+   Four daily variants cycle by date:
+   0 Verdict day · 1 Savings day · 2 Bundle day · 3 Momentum day
+   ═══════════════════════════════════════════════════════ */
 
-  /* 2. Dashboard */
-  const headline = d.available > 0 ? `${d.available} ${d.available === 1 ? "perk" : "perks"} ready to use` : "You are all caught up";
-  const memCount = d.memberships.length;
-  const tile = (val: string, label: string, hi: boolean) => `
-    <td width="25%" style="padding:4px;vertical-align:top;">
-      <div style="background:${hi ? "#F7ECD4" : "#FCFAF4"};border:1px solid ${hi ? "#E0A93B" : "#E4DDCB"};border-radius:10px;text-align:center;padding:12px 4px;">
-        <div style="${h}font-size:22px;font-weight:800;color:${hi ? "#B07C1A" : "#2B2A6E"};">${val}</div>
-        <div style="${b}font-size:10px;font-weight:600;color:#6B6757;padding-top:2px;">${label}</div>
-      </div>
-    </td>`;
-  const dashboard = `
-    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="${card}">
-      <tr><td style="padding:18px 18px 4px;">
-        <div style="${h}font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#B07C1A;">Your dashboard</div>
-        <div style="${h}font-size:22px;font-weight:800;color:#23202A;padding-top:3px;">${escHtml(headline)}</div>
-        <div style="${b}font-size:13px;color:#6B6757;padding-top:3px;">Across your ${memCount} ${memCount === 1 ? "membership" : "memberships"}.</div>
-      </td></tr>
-      <tr><td style="padding:10px 14px 6px;">
-        <table cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
-          ${tile(String(d.available), "Available", true)}
-          ${tile(String(d.used), "Used", false)}
-          ${tile(String(d.willNotUse), "Set aside", false)}
-          ${tile(String(memCount), memCount === 1 ? "Membership" : "Memberships", false)}
-        </tr></table>
-      </td></tr>
-      <tr><td style="padding:8px 18px 0;"><div style="${h}font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#B07C1A;">Active</div></td></tr>
-      <tr><td style="padding:6px 14px 2px;">
-        <table cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
-          ${tile(String(d.activeByType.feature ?? 0), "Features", true)}
-          ${tile(String(d.activeByType.perk ?? 0), "Perks", true)}
-          ${tile(String(d.activeByType.discount ?? 0), "Discounts", true)}
-          ${tile(String(d.activeByType.competition ?? 0), "Competitions", true)}
-        </tr></table>
-      </td></tr>
-      <tr><td style="padding:8px 18px 0;"><div style="${h}font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#6B6757;">Inactive</div></td></tr>
-      <tr><td style="padding:6px 14px 18px;">
-        <table cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
-          ${tile(String(d.inactiveByType.feature ?? 0), "Features", false)}
-          ${tile(String(d.inactiveByType.perk ?? 0), "Perks", false)}
-          ${tile(String(d.inactiveByType.discount ?? 0), "Discounts", false)}
-          ${tile(String(d.inactiveByType.competition ?? 0), "Competitions", false)}
-        </tr></table>
-      </td></tr>
-    </table>`;
+const F_DISP = "font-family:'Outfit','Helvetica Neue',Arial,sans-serif;";
+const F_BODY = "font-family:'Work Sans','Helvetica Neue',Arial,sans-serif;";
+const gold = (s: string) => `<strong style="color:#E0A93B;">${s}</strong>`;
 
-  /* 3. Your memberships */
-  const memRows = d.memberships.map((m, i) => `
-    <tr><td style="padding:12px 16px;${i < d.memberships.length - 1 ? "border-bottom:1px solid #EFE9DA;" : ""}">
-      <table cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
-        <td width="34" style="vertical-align:middle;"><div style="width:30px;height:30px;border-radius:8px;background:#FFFFFF;border:1px solid #E4DDCB;text-align:center;line-height:30px;">${tileInner(m.provider)}</div></td>
-        <td style="padding-left:10px;vertical-align:middle;"><span style="${b}font-size:14px;font-weight:600;color:#23202A;">${escHtml(m.provider)}</span><span style="${b}font-size:12px;color:#6B6757;"> &middot; ${escHtml(m.tier)}</span></td>
-        <td align="right" style="vertical-align:middle;"><span style="${b}font-size:10px;font-weight:700;color:#B07C1A;background:#F7ECD4;border-radius:20px;padding:3px 10px;">Active</span></td>
-      </tr></table>
+interface WeekDayUsage { label: string; count: number; }
+
+interface EmailDataV2 {
+  name: string;
+  dateStr: string;
+  variant: number;
+  available: number;
+  used: number;
+  willNotUse: number;
+  membershipCount: number;
+  resettingSoon: number;
+  savingsMoves: SavingsMove[];
+  savingsTotal: number;
+  consolidation: { dup: boolean; title: string; detail: string };
+  membershipRows: { provider: string; tier: string; verdict: string; save: boolean }[];
+  useToday: EnrichedPerk[];
+  featuredBundle: MomentBox | null;
+  weekUsage: WeekDayUsage[];
+  weekTotal: number;
+}
+
+function cadenceWord(p: EnrichedPerk): string {
+  return p.reset_period === "WEEKLY" ? "Weekly" : p.reset_period === "MONTHLY" ? "Monthly" : "One-off";
+}
+
+function ebHero(eyebrow: string, headline: string, intro: string): string {
+  return `<tr><td class="px" align="center" style="padding:34px 24px 8px;">
+    <div style="${F_BODY}font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#B07C1A;">${escHtml(eyebrow)}</div>
+    <div class="hero-h" style="${F_DISP}font-size:32px;line-height:36px;font-weight:900;color:#23202A;padding-top:10px;">${headline}</div>
+    <div style="${F_BODY}font-size:15px;line-height:23px;color:#6B6757;padding-top:10px;">${intro}</div>
+  </td></tr>`;
+}
+
+function ebSectionPill(label: string, tone: "gold" | "indigo"): string {
+  const bg = tone === "gold" ? "#E0A93B" : "#2B2A6E";
+  const col = tone === "gold" ? "#23202A" : "#FCFAF4";
+  return `<tr><td class="px" style="padding:24px 24px 12px;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${bg};border-radius:999px;"><tr>
+      <td align="center" style="padding:10px;"><span style="${F_DISP}font-size:16px;font-weight:800;color:${col};">${escHtml(label)}</span></td>
+    </tr></table></td></tr>`;
+}
+
+function ebSummaryCard(rows: { icon: string; html: string }[]): string {
+  const items = rows.map((r, i) => `<tr><td align="center" style="padding:${i === 0 ? "4px" : "12px"} 26px ${i === rows.length - 1 ? "16px" : "0"};">
+      <div style="font-size:20px;padding-bottom:2px;">${r.icon}</div>
+      <div style="${F_BODY}font-size:14.5px;line-height:22px;color:#E8E6F4;">${r.html}</div>
     </td></tr>`).join("");
-  const memberships = d.memberships.length > 0
-    ? `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="${card}">${memRows}</table>`
-    : `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="${card}"><tr><td style="padding:18px;text-align:center;${b}font-size:13px;color:#6B6757;">No memberships added yet. Add one and your perks appear here.</td></tr></table>`;
+  return `<tr><td class="px" style="padding:22px 24px 6px;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#2B2A6E;border-radius:16px;">
+      <tr><td align="center" style="padding:24px 22px 6px;"><span style="${F_DISP}font-size:20px;font-weight:800;color:#FCFAF4;">Here's how it stands</span></td></tr>
+      ${items}
+    </table></td></tr>`;
+}
 
-  /* 4. What to use today */
-  const todayCard = (p: EnrichedPerk) => {
-    const reset = p.reset_period === "WEEKLY" ? "Resets every Monday" : p.reset_period === "MONTHLY" ? "Resets on the 1st" : "One-off";
-    return `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="${card}margin-bottom:10px;"><tr>
-      <td width="44" style="padding:14px 0 14px 14px;vertical-align:middle;"><div style="width:34px;height:34px;border-radius:9px;background:#F7ECD4;text-align:center;line-height:34px;font-size:16px;">${categoryIcon(p.category)}</div></td>
-      <td style="padding:12px;vertical-align:middle;"><div style="${b}font-size:14px;font-weight:600;color:#23202A;">${escHtml(trunc(p.title, 30))}</div><div style="${b}font-size:12px;color:#6B6757;">${escHtml(p.provider)} &middot; ${reset}</div></td>
-      <td align="right" style="padding:12px 14px;vertical-align:middle;"><a href="${APP}" style="${b}font-size:12px;font-weight:700;color:#FFFFFF;background:#2B2A6E;border-radius:8px;padding:8px 14px;display:inline-block;">Open</a></td>
-    </tr></table>`;
-  };
-  const today = d.whatToUseToday.length > 0
-    ? d.whatToUseToday.slice(0, 6).map(todayCard).join("")
-    : `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="${card}"><tr><td style="padding:18px;text-align:center;${b}font-size:13px;color:#6B6757;">Nothing urgent today. You are on top of it.</td></tr></table>`;
-
-  /* 5. Worth adding */
-  const wa = d.topUnselectedMemberships.slice(0, 2);
-  const waCard = (m: TopUnselectedMembership) => `
-    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="${card}"><tr><td style="padding:14px;">
-      <table cellpadding="0" cellspacing="0" border="0"><tr>
-        <td style="vertical-align:middle;"><div style="width:30px;height:30px;border-radius:8px;background:#FFFFFF;border:1px solid #E4DDCB;text-align:center;line-height:30px;">${tileInner(m.provider)}</div></td>
-        <td style="padding-left:9px;vertical-align:middle;"><span style="${b}font-size:14px;font-weight:600;color:#23202A;">${escHtml(m.provider)}</span></td>
-      </tr></table>
-      <div style="${b}font-size:12px;color:#6B6757;padding:10px 0 6px;">Adds ${m.perkCount} ${m.perkCount === 1 ? "perk" : "perks"} you would actually use.</div>
-      <a href="${APP}" style="${b}font-size:12px;font-weight:700;color:#2B2A6E;background:#F7ECD4;border:1px solid #E0A93B;border-radius:8px;padding:8px 14px;display:inline-block;">Add membership</a>
-    </td></tr></table>`;
-  const worthAdding = wa.length === 0 ? "" : `
-    <tr><td class="px" style="padding:18px 8px 6px;">
-      <div style="${h}font-size:17px;font-weight:700;color:#23202A;padding-bottom:3px;">Worth adding</div>
-      <div style="${b}font-size:13px;color:#6B6757;padding-bottom:10px;">Memberships that would unlock more of what you already use.</div>
-      <table cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
-        <td class="stack stack-mb" width="50%" style="vertical-align:top;padding-right:5px;">${waCard(wa[0])}</td>
-        <td class="stack" width="50%" style="vertical-align:top;padding-left:5px;">${wa[1] ? waCard(wa[1]) : ""}</td>
-      </tr></table>
+function ebMetricRow(icon: string, mainHtml: string, meta: string): string {
+  return `<tr>
+    <td width="52" style="vertical-align:top;padding:8px 0;"><div style="width:42px;height:42px;border-radius:21px;background:#F7ECD4;border:1px solid #E0A93B;text-align:center;line-height:42px;font-size:18px;">${icon}</div></td>
+    <td style="vertical-align:middle;padding:8px 0 8px 12px;">
+      <div style="${F_BODY}font-size:14.5px;line-height:21px;color:#23202A;">${mainHtml}</div>
+      <div style="${F_BODY}font-size:12px;color:#6B6757;padding-top:2px;">${escHtml(meta)}</div>
     </td></tr>`;
+}
 
-  /* 5b. Split-screen: Savings engine (left) + Consolidation engine (right) */
-  const moveRow = (title, sub, tag, tagBg, tagCol) => `
-    <div style="border:1px solid #E4DDCB;border-radius:10px;padding:10px 12px;margin-bottom:8px;">
-      <div style="${b}font-size:13px;font-weight:700;color:#23202A;line-height:1.3;">${escHtml(title)}</div>
-      <div style="${b}font-size:11px;color:#6B6757;padding:3px 0 6px;line-height:1.5;">${escHtml(sub)}</div>
-      <span style="${b}font-size:11px;font-weight:700;color:${tagCol};background:${tagBg};border-radius:8px;padding:3px 8px;">${escHtml(tag)}</span>
-    </div>`;
-  const savingsBody = d.savingsMoves.length
-    ? d.savingsMoves.map((mv) => moveRow(mv.title, mv.sub, `Save £${mv.saving} / mo`, "#F7ECD4", "#B07C1A")).join("")
-    : `<div style="${b}font-size:13px;color:#6B6757;line-height:1.6;">Your tiers look right-sized. No easy savings spotted this week.</div>`;
-  const savingsPane = `
-    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="${card}"><tr><td style="padding:14px 16px;">
-      <div style="${h}font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#B07C1A;">Savings engine</div>
-      <div style="${h}font-size:16px;font-weight:800;color:#23202A;padding:1px 0 10px;">Move this, save that</div>
-      ${savingsBody}
-    </td></tr></table>`;
-  const consolidationPane = `
-    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#F7ECD4;border:1px solid #E0A93B;border-radius:12px;"><tr><td style="padding:14px 16px;">
-      <div style="${h}font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#B07C1A;">Consolidation engine</div>
-      <div style="${h}font-size:16px;font-weight:800;color:#23202A;padding:1px 0 10px;">Stop doubling up</div>
-      <div style="${b}font-size:13px;font-weight:700;color:#23202A;padding-bottom:6px;">${escHtml(d.consolidation.title)}</div>
-      <div style="${b}font-size:12px;color:#6B6757;line-height:1.6;">${escHtml(d.consolidation.detail)}</div>
-    </td></tr></table>`;
-  const splitEngines = `
-    <tr><td class="px" style="padding:18px 8px 6px;">
-      <table cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
-        <td class="stack stack-mb" width="50%" style="vertical-align:top;padding-right:5px;">${savingsPane}</td>
-        <td class="stack" width="50%" style="vertical-align:top;padding-left:5px;">${consolidationPane}</td>
-      </tr></table>
-    </td></tr>`;
+function ebRowsBlock(rowsHtml: string): string {
+  return `<tr><td class="px" style="padding:0 24px;"><table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">${rowsHtml}</table></td></tr>`;
+}
 
-  /* 6. Where to use next — contextual prompts mapped to perks you already hold */
-  const ctx = [
-    { emoji: "✈️", q: "Going on holiday?", cats: ["Travel", "Insurance", "Currency"] },
-    { emoji: "🎬", q: "Fancy a trip to the cinema?", cats: ["Entertainment", "Streaming"] },
-    { emoji: "⚽", q: "Off to a sports game?", cats: ["Sports"] },
-  ];
-  const pick = (cats: string[]): EnrichedPerk | null => {
-    for (const c of cats) { const g = d.categoryGrouped.find((x) => x.category === c); if (g && g.items.length) return g.items[0]; }
-    return null;
-  };
-  const ctxRows = ctx.map((x) => {
-    const p = pick(x.cats);
-    if (!p) return "";
-    return `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="${card}margin-bottom:10px;"><tr>
-      <td width="44" style="padding:14px 0 14px 14px;vertical-align:middle;"><div style="width:34px;height:34px;border-radius:9px;background:#F7ECD4;text-align:center;line-height:34px;font-size:16px;">${x.emoji}</div></td>
-      <td style="padding:12px;vertical-align:middle;"><div style="${b}font-size:14px;font-weight:700;color:#23202A;">${escHtml(x.q)}</div><div style="${b}font-size:12px;color:#6B6757;">Use your ${escHtml(trunc(p.title, 26))} from ${escHtml(p.provider)}.</div></td>
-      <td align="right" style="padding:12px 14px;vertical-align:middle;"><a href="${APP}" style="${b}font-size:12px;font-weight:700;color:#FFFFFF;background:#2B2A6E;border-radius:8px;padding:8px 14px;display:inline-block;">Use this</a></td>
-    </tr></table>`;
+function ebUseToday(d: EmailDataV2): string {
+  if (d.useToday.length === 0) return "";
+  const rows = d.useToday.slice(0, 5).map((p) => {
+    const status = p.used ? "Have used" : p.dismissed ? "Will not use" : "Have not used";
+    return ebMetricRow(categoryIcon(p.category), `<strong>${escHtml(trunc(p.title, 40))}</strong> from ${escHtml(p.provider)}. ${escHtml(trunc(p.description ?? "", 70))}`, `${p.membership} · ${cadenceWord(p)} · ${status}`);
   }).join("");
-  const whereNext = ctxRows.trim() === "" ? "" : `
-    <tr><td class="px" style="padding:18px 8px 6px;">
-      <div style="${h}font-size:17px;font-weight:700;color:#23202A;padding-bottom:3px;">Where to use next</div>
-      <div style="${b}font-size:13px;color:#6B6757;padding-bottom:10px;">Something coming up? Here is what you already hold for it.</div>
-      ${ctxRows}
-    </td></tr>`;
+  return ebSectionPill("Use today", "gold") + ebRowsBlock(rows);
+}
 
-  /* 7. All perks by category */
-  const catCards = d.categoryGrouped.map((g) => `
-    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="${card}margin-bottom:10px;">
-      <tr><td style="padding:12px 16px;border-bottom:1px solid #EFE9DA;">
-        <span style="font-size:15px;">${g.icon}</span><span style="${h}font-size:14px;font-weight:700;color:#23202A;padding-left:8px;">${escHtml(g.category)}</span><span style="${b}font-size:11px;font-weight:700;color:#B07C1A;background:#F7ECD4;border-radius:20px;padding:2px 9px;margin-left:8px;">${g.items.length}</span>
-      </td></tr>
-      ${g.items.map((p) => perkRow(p, true)).join("")}
-      <tr><td style="height:6px;"></td></tr>
-    </table>`).join("");
+function ebBundle(d: EmailDataV2): string {
+  const b = d.featuredBundle;
+  if (!b || b.items.length === 0) return "";
+  const rows = b.items.slice(0, 4).map((p) => {
+    const status = p.used ? "Have used" : p.dismissed ? "Will not use" : "Have not used";
+    return ebMetricRow(categoryIcon(p.category), `<strong>${escHtml(trunc(p.title, 40))}</strong> from ${escHtml(p.provider)}.`, `${p.membership} · ${cadenceWord(p)} · ${status}`);
+  }).join("");
+  return ebSectionPill(`${b.emoji} ${b.question}`, "gold") + ebRowsBlock(rows);
+}
 
-  /* Assembly */
+function ebEngines(d: EmailDataV2): string {
+  const movesHtml = d.savingsMoves.length
+    ? d.savingsMoves.slice(0, 1).map((mv) => `<div style="border:1px solid #E4DDCB;border-radius:10px;padding:10px 12px;">
+        <div style="${F_BODY}font-size:13px;font-weight:700;color:#23202A;">${escHtml(mv.title)}</div>
+        <div style="${F_BODY}font-size:11.5px;line-height:17px;color:#6B6757;padding:3px 0 6px;">${escHtml(mv.sub)}</div>
+        <span style="${F_BODY}font-size:11px;font-weight:700;color:#B07C1A;background:#F7ECD4;border-radius:8px;padding:3px 8px;">Save £${mv.saving} / mo</span>
+      </div>`).join("")
+    : `<div style="${F_BODY}font-size:12px;line-height:18px;color:#6B6757;">Your tiers look right-sized. No easy savings spotted today.</div>`;
+  return `<tr><td class="px" style="padding:22px 24px 6px;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
+      <td class="stack stack-mb" width="50%" style="vertical-align:top;padding-right:5px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#FCFAF4;border:1px solid #E4DDCB;border-radius:16px;"><tr><td style="padding:16px;">
+          <div style="${F_DISP}font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#B07C1A;">Savings engine</div>
+          <div style="${F_DISP}font-size:30px;font-weight:900;color:#23202A;padding:6px 0 2px;">£${d.savingsTotal}<span style="font-size:14px;font-weight:600;color:#6B6757;">/mo</span></div>
+          <div style="${F_BODY}font-size:13px;line-height:19px;color:#6B6757;padding-bottom:10px;">${d.savingsTotal > 0 ? "still on the table" : "nothing left on the table"}</div>
+          ${movesHtml}
+        </td></tr></table>
+      </td>
+      <td class="stack" width="50%" style="vertical-align:top;padding-left:5px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#F7ECD4;border:1px solid #E0A93B;border-radius:16px;"><tr><td style="padding:16px;">
+          <div style="${F_DISP}font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#B07C1A;">Consolidation engine</div>
+          <div style="${F_DISP}font-size:30px;font-weight:900;color:#23202A;padding:6px 0 2px;">${d.consolidation.dup ? 1 : 0}<span style="font-size:14px;font-weight:600;color:#6B6757;"> overlap${d.consolidation.dup ? "" : "s"}</span></div>
+          <div style="${F_BODY}font-size:13px;line-height:19px;color:#6B6757;padding-bottom:10px;">${d.consolidation.dup ? "worth a look" : "all clear"}</div>
+          <div style="${F_BODY}font-size:13px;font-weight:700;color:#23202A;padding-bottom:4px;">${escHtml(d.consolidation.title)}</div>
+          <div style="${F_BODY}font-size:12px;line-height:18px;color:#6B6757;">${escHtml(d.consolidation.detail)}</div>
+        </td></tr></table>
+      </td>
+    </tr></table></td></tr>`;
+}
+
+function ebWeekChart(d: EmailDataV2): string {
+  if (d.weekUsage.length === 0) return "";
+  const max = Math.max(1, ...d.weekUsage.map((w) => w.count));
+  const bars = d.weekUsage.map((w) => {
+    const width = w.count === 0 ? 6 : Math.max(10, Math.round((w.count / max) * 94));
+    const colr = w.count === 0 ? "#EAD9AE" : "#E0A93B";
+    return `<tr>
+      <td width="34" style="${F_BODY}font-size:11px;font-weight:700;color:#6B6757;padding:4px 0;">${escHtml(w.label)}</td>
+      <td style="padding:4px 0;"><table cellpadding="0" cellspacing="0" border="0" width="${width}%"><tr><td style="background:${colr};border-radius:6px;height:14px;font-size:1px;line-height:1px;">&nbsp;</td></tr></table></td>
+      <td width="26" align="right" style="${F_DISP}font-size:13px;font-weight:800;color:#23202A;">${w.count}</td>
+    </tr>`;
+  }).join("");
+  return ebSectionPill("Your week so far", "indigo") + `<tr><td class="px" style="padding:0 24px;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#FCFAF4;border:1px solid #E4DDCB;border-radius:16px;"><tr><td style="padding:20px 18px 14px;">
+      <div style="${F_BODY}font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#B07C1A;padding-bottom:12px;">Perks ticked off, by day</div>
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">${bars}</table>
+      <div style="${F_BODY}font-size:12px;line-height:18px;color:#6B6757;padding-top:12px;">${d.weekTotal > 0 ? `${d.weekTotal} ticked off in the last week. Weekly perks reset on Mondays, so early week is the time to grab them.` : "Nothing ticked off yet this week. Today's a good day to start."}</div>
+    </td></tr></table></td></tr>`;
+}
+
+function ebMemberships(d: EmailDataV2): string {
+  if (d.membershipRows.length === 0) return "";
+  const shown = d.membershipRows.slice(0, 3);
+  const extra = d.membershipRows.length - shown.length;
+  const rows = shown.map((m, i) => `<tr><td style="padding:13px 16px;${i < shown.length - 1 ? "border-bottom:1px solid #EFE9DA;" : ""}">
+      <span style="${F_BODY}font-size:14px;font-weight:600;color:#23202A;">${escHtml(m.provider)} · ${escHtml(m.tier)}${i === shown.length - 1 && extra > 0 ? ` <span style="color:#6B6757;font-weight:400;">+ ${extra} more</span>` : ""}</span>
+      <span style="float:right;${F_BODY}font-size:11px;font-weight:700;color:${m.save ? "#FCFAF4" : "#B07C1A"};background:${m.save ? "#2B2A6E" : "#F7ECD4"};border-radius:20px;padding:3px 10px;">${escHtml(m.verdict)}</span>
+    </td></tr>`).join("");
+  return ebSectionPill("Your memberships", "indigo") + `<tr><td class="px" style="padding:0 24px;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#FCFAF4;border:1px solid #E4DDCB;border-radius:16px;">${rows}</table></td></tr>`;
+}
+
+function buildVerdict(d: EmailDataV2): { headline: string; intro: string } {
+  const first = escHtml(d.name);
+  switch (d.variant) {
+    case 1:
+      return d.savingsTotal > 0
+        ? { headline: `£${d.savingsTotal} a month,<br>hiding in plain sight.`, intro: `Morning, ${first}. The savings engine went through all ${d.membershipCount} of your memberships overnight. ${gold(`£${d.savingsTotal} a month`)} is sitting there without losing a single perk you use.` }
+        : { headline: `Your tiers look<br>right-sized.`, intro: `Morning, ${first}. The savings engine went through all ${d.membershipCount} of your memberships overnight and found nothing to trim. That is the goal.` };
+    case 2: {
+      const b = d.featuredBundle;
+      if (b) return { headline: escHtml(b.question), intro: `Morning, ${first}. Your memberships hold ${gold(`${b.items.length} ${b.items.length === 1 ? "perk" : "perks"}`)} for exactly this moment. Here they are, lined up.` };
+      return { headline: `${d.available} perks ready<br>this morning.`, intro: `Morning, ${first}. Two minutes now, real value back.` };
+    }
+    case 3:
+      return d.weekTotal > 0
+        ? { headline: `${d.weekTotal} ${d.weekTotal === 1 ? "perk" : "perks"} ticked off<br>this week.`, intro: `Morning, ${first}. Momentum counts. You have used ${gold(`${d.used} perks`)} overall, with ${gold(`${d.available} still ready`)} to go.` }
+        : { headline: `A clean slate<br>this week.`, intro: `Morning, ${first}. Nothing ticked off in the last seven days, and ${gold(`${d.available} perks`)} are sitting ready. Start with one.` };
+    default:
+      return { headline: `${d.available} ${d.available === 1 ? "perk" : "perks"} ready<br>this morning.`, intro: `Morning, ${first}. Across your ${d.membershipCount} memberships there ${d.available === 1 ? "is" : "are"} ${gold(`${d.available} ${d.available === 1 ? "perk" : "perks"}`)} waiting${d.resettingSoon > 0 ? `, and ${gold(`${d.resettingSoon} reset`)} this week` : ""}. Two minutes now, real value back.` };
+  }
+}
+
+function buildEmailHtmlV2(d: EmailDataV2): string {
+  const verdict = buildVerdict(d);
+  const summary = ebSummaryCard([
+    { icon: "🎁", html: `You have ${gold(`${d.available} ${d.available === 1 ? "perk" : "perks"} available`)} across ${gold(`${d.membershipCount} memberships`)}${d.resettingSoon > 0 ? `, with ${gold(`${d.resettingSoon} resetting`)} this week` : ""}.` },
+    { icon: "✅", html: `You have used ${gold(`${d.used} ${d.used === 1 ? "perk" : "perks"}`)} so far, and set aside ${gold(String(d.willNotUse))} you will not use.` },
+    { icon: "💷", html: d.savingsTotal > 0 ? `The savings engine sees ${gold(`£${d.savingsTotal} a month`)} you could keep without losing a perk you use.` : `The savings engine finds your tiers ${gold("right-sized")} today.` },
+  ]);
+  const blocks: string[] = [ebHero(`${d.dateStr} · Your daily Perki`, verdict.headline, verdict.intro)];
+  switch (d.variant) {
+    case 1: blocks.push(ebEngines(d), ebUseToday(d), summary, ebMemberships(d)); break;
+    case 2: blocks.push(ebBundle(d), summary, ebEngines(d), ebMemberships(d)); break;
+    case 3: blocks.push(ebWeekChart(d), summary, ebUseToday(d), ebEngines(d)); break;
+    default: blocks.push(summary, ebUseToday(d), ebEngines(d), ebWeekChart(d), ebMemberships(d));
+  }
+  const cta = `<tr><td align="center" style="padding:32px 24px 10px;">
+    <a href="https://perki.app" style="${F_BODY}font-size:15px;font-weight:700;color:#FCFAF4;background:#2B2A6E;border-radius:999px;padding:15px 34px;display:inline-block;">See today's perks</a>
+  </td></tr>`;
+  const footer = `<tr><td align="center" style="padding:20px 24px 8px;">
+    <div style="${F_BODY}font-size:12px;color:#6B6757;line-height:18px;">Read-only, always. Perki recommends and links, never moves your money.</div>
+    <div style="${F_BODY}font-size:12px;color:#6B6757;line-height:20px;padding-top:8px;"><a href="https://perki.app" style="color:#B07C1A;font-weight:600;text-decoration:none;">Manage preferences</a> &nbsp;·&nbsp; <a href="https://perki.app" style="color:#B07C1A;font-weight:600;text-decoration:none;">Unsubscribe</a></div>
+    <div style="${F_BODY}font-size:11px;color:#9A9482;padding-top:10px;">Perki · London, UK</div>
+  </td></tr>`;
+  blocks.push(cta, footer);
+  const preheader = d.available > 0 ? `${d.available} perks ready${d.savingsTotal > 0 ? `, £${d.savingsTotal} a month on the table` : ""}. Two minutes, ${d.name}.` : `Your daily Perki is here, ${d.name}.`;
   return `<!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <meta name="color-scheme" content="light"/>
 <meta name="supported-color-schemes" content="light"/>
 <title>Your Perki</title>
-<!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]-->
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Work+Sans:wght@400;500;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@600;800;900&family=Work+Sans:wght@400;500;600;700&display=swap');
   body,table,td,a{-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;}
-  table,td{mso-table-lspace:0pt;mso-table-rspace:0pt;}
   img{-ms-interpolation-mode:bicubic;border:0;}
   body{margin:0;padding:0;width:100%!important;background:#F4F0E6;}
   a{text-decoration:none;}
@@ -700,60 +705,37 @@ function buildEmailHtml(d: EmailData): string {
     .px{padding-left:18px!important;padding-right:18px!important;}
     .stack{display:block!important;width:100%!important;box-sizing:border-box;}
     .stack-mb{margin-bottom:10px!important;}
+    .hero-h{font-size:28px!important;line-height:32px!important;}
   }
 </style>
 </head>
 <body style="margin:0;padding:0;background:#F4F0E6;">
-<span style="display:none!important;visibility:hidden;opacity:0;color:transparent;height:0;width:0;overflow:hidden;mso-hide:all;">Here is what is worth a tap this morning.</span>
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#F4F0E6;"><tr><td align="center" style="padding:20px 12px;">
+<span style="display:none!important;visibility:hidden;opacity:0;color:transparent;height:0;width:0;overflow:hidden;">${escHtml(preheader)}</span>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#F4F0E6;"><tr><td align="center" style="padding:0 0 28px;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#2B2A6E;"><tr>
+  <td align="center" style="padding:14px;"><span style="${F_DISP}font-size:20px;font-weight:900;color:#FCFAF4;">Perki<span style="color:#E0A93B;">.</span></span></td>
+</tr></table>
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" class="container" style="width:600px;max-width:600px;">
-
-  <tr><td class="px" style="padding:4px 8px 14px;">
-    <table cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
-      <td align="left" style="vertical-align:middle;"><table cellpadding="0" cellspacing="0" border="0"><tr>
-        <td style="vertical-align:middle;"><div style="width:30px;height:30px;border-radius:8px;background:#2B2A6E;text-align:center;line-height:30px;"><span style="${h}color:#E0A93B;font-size:16px;font-weight:800;">P</span></div></td>
-        <td style="vertical-align:middle;padding-left:9px;"><span style="${h}font-size:19px;font-weight:800;color:#23202A;">Perki</span></td>
-      </tr></table></td>
-      <td align="right" style="vertical-align:middle;"><span style="${b}font-size:12px;color:#6B6757;">${escHtml(d.dateStr)}</span></td>
-    </tr></table>
-  </td></tr>
-
-  <tr><td class="px" style="padding:0 8px 16px;">
-    <div style="${h}font-size:26px;line-height:32px;font-weight:800;color:#23202A;margin-bottom:8px;">Morning, ${escHtml(d.name)}.</div>
-    <div style="${b}font-size:15px;line-height:23px;color:#6B6757;">Here is everything you are already paying for, lined up and ready. A few perks reset this week, so they are the ones worth grabbing first. Two minutes now, real value back.</div>
-  </td></tr>
-
-  <tr><td class="px" style="padding:0 8px 10px;">${dashboard}</td></tr>
-
-  <tr><td class="px" style="padding:16px 8px 6px;">
-    <div style="${h}font-size:17px;font-weight:700;color:#23202A;padding-bottom:10px;">Your memberships</div>
-    ${memberships}
-  </td></tr>
-
-  ${splitEngines}
-
-  <tr><td class="px" style="padding:18px 8px 6px;">
-    <div style="${h}font-size:17px;font-weight:700;color:#23202A;padding-bottom:3px;">What to use today</div>
-    <div style="${b}font-size:13px;color:#6B6757;padding-bottom:10px;">Resetting or expiring soon. Worth a tap before they roll over.</div>
-    ${today}
-  </td></tr>
-
-  ${whereNext}
-
-  <tr><td class="px" align="center" style="padding:22px 8px 8px;">
-    <a href="${APP}" style="${b}font-size:14px;font-weight:700;color:#FFFFFF;background:#2B2A6E;border-radius:10px;padding:13px 28px;display:inline-block;">Open Perki</a>
-  </td></tr>
-
-  <tr><td class="px" align="center" style="padding:18px 8px 8px;">
-    <div style="${b}font-size:12px;color:#6B6757;line-height:18px;">Read-only. We never move your money.</div>
-    <div style="${b}font-size:12px;color:#6B6757;line-height:20px;padding-top:8px;"><a href="${APP}" style="color:#B07C1A;font-weight:600;">Manage preferences</a> &nbsp;&middot;&nbsp; <a href="${APP}" style="color:#B07C1A;font-weight:600;">Unsubscribe</a></div>
-    <div style="${b}font-size:11px;color:#9A9482;padding-top:10px;">Perki &middot; London, UK</div>
-  </td></tr>
-
+${blocks.join("\n")}
 </table>
 </td></tr></table>
 </body>
 </html>`;
+}
+
+/* Per-day usage counts for the last seven days (today last). Uses last_used_at,
+   which records the most recent tick per perk. */
+function buildWeekUsage(states: PerkState[], today: Date): WeekDayUsage[] {
+  const out: WeekDayUsage[] = [];
+  for (let i = 6; i >= 0; i--) {
+    const day = new Date(today);
+    day.setDate(day.getDate() - i);
+    const key = day.toISOString().slice(0, 10);
+    const label = day.toLocaleDateString("en-GB", { weekday: "short" });
+    const count = states.filter((s) => s.used && s.last_used_at && s.last_used_at.slice(0, 10) === key).length;
+    out.push({ label, count });
+  }
+  return out;
 }
 
 /* ── PER-USER BUILDER ── */
@@ -800,31 +782,40 @@ function buildDigestForUser(
   const whatToUseToday = buildWhatToUseToday(perks);
   const momentBoxes = buildMomentBoxes(perks, today);
 
-  const byCat: Record<string, EnrichedPerk[]> = {};
-  for (const p of perks) { const cat = p.category ?? "Other"; (byCat[cat] ??= []).push(p); }
-  const categoryGrouped = Object.entries(byCat)
-    .map(([category, items]) => ({ category, icon: categoryIcon(category), items: items.sort(featureRankSort) }))
-    .sort((a, b) => a.category.localeCompare(b.category));
+  /* V2 assembly */
+  const savingsTotal = Math.round(savingsMoves.reduce((s, m) => s + m.saving, 0) * 100) / 100;
+  const saveByProvider: Record<string, number> = {};
+  for (const mv of savingsMoves) {
+    const prov = mv.title.replace(/^Move /, "").split(" ")[0];
+    saveByProvider[prov] = mv.saving;
+  }
+  const membershipRows = membershipSummary.map((m) => {
+    const save = saveByProvider[m.provider];
+    return { provider: m.provider, tier: m.tier, verdict: save ? `Save £${save}/mo` : "Right-sized", save: !!save };
+  }).sort((a, b) => (b.save ? 1 : 0) - (a.save ? 1 : 0));
+  const resettingSoon = perks.filter((p) => !p.used && !p.dismissed && p.reset_period === "WEEKLY").length;
+  const weekUsage = buildWeekUsage(perkStates, today);
+  const weekTotal = weekUsage.reduce((s, w) => s + w.count, 0);
+  const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 864e5);
+  const variant = dayOfYear % 4;
 
-  const missingMemberships = buildMissingMemberships(userMemberships, allPerks, tierPrices);
-  const topUnselectedMemberships = buildTopUnselectedMemberships(userMemberships, perks, allPerks, tierPrices);
-
-  const html = buildEmailHtml({
+  const html = buildEmailHtmlV2({
     name,
     dateStr: todayFormatted(today),
+    variant,
     available: availableCount,
     used: usedCount,
     willNotUse: willNotUseCount,
-    activeByType,
-    inactiveByType,
+    membershipCount: membershipSummary.length,
+    resettingSoon,
     savingsMoves,
+    savingsTotal,
     consolidation,
-    memberships: membershipSummary,
-    whatToUseToday,
-    momentBoxes,
-    categoryGrouped,
-    missingMemberships,
-    topUnselectedMemberships,
+    membershipRows,
+    useToday: whatToUseToday,
+    featuredBundle: momentBoxes[0] ?? null,
+    weekUsage,
+    weekTotal,
   });
 
   return { html, name };
@@ -901,8 +892,8 @@ Deno.serve(async (req: Request) => {
         if (meta?.full_name) authName = meta.full_name;
       } catch { /* ok */ }
       const fullName = profileRow?.full_name ?? authName ?? null;
-      const { data: perkStatesRaw } = await supabase.from("user_perk_state").select("perk_id, used, dismissed").eq("user_id", previewUserId);
-      const perkStates: PerkState[] = (perkStatesRaw ?? []).map((r) => ({ perk_id: r.perk_id, used: r.used ?? false, dismissed: r.dismissed ?? false }));
+      const { data: perkStatesRaw } = await supabase.from("user_perk_state").select("perk_id, used, dismissed, last_used_at").eq("user_id", previewUserId);
+      const perkStates: PerkState[] = (perkStatesRaw ?? []).map((r) => ({ perk_id: r.perk_id, used: r.used ?? false, dismissed: r.dismissed ?? false, last_used_at: r.last_used_at ?? null }));
 
       const { html, name } = buildDigestForUser(previewUserId, userMemberships, allPerks as Perk[], tierPrices, perkStates, fullName, authEmail, today);
       const sendTo = (body.email as string) ?? authEmail;
@@ -943,10 +934,10 @@ Deno.serve(async (req: Request) => {
       if (meta?.full_name) authNameMap[u.id] = meta.full_name;
     }
 
-    const { data: perkStatesRaw } = await supabase.from("user_perk_state").select("user_id, perk_id, used, dismissed").in("user_id", eligibleUserIds);
+    const { data: perkStatesRaw } = await supabase.from("user_perk_state").select("user_id, perk_id, used, dismissed, last_used_at").in("user_id", eligibleUserIds);
     const perkStatesByUser: Record<string, PerkState[]> = {};
     for (const row of perkStatesRaw ?? []) {
-      (perkStatesByUser[row.user_id] ??= []).push({ perk_id: row.perk_id, used: row.used ?? false, dismissed: row.dismissed ?? false });
+      (perkStatesByUser[row.user_id] ??= []).push({ perk_id: row.perk_id, used: row.used ?? false, dismissed: row.dismissed ?? false, last_used_at: row.last_used_at ?? null });
     }
 
     let sentCount = 0;
@@ -972,4 +963,10 @@ Deno.serve(async (req: Request) => {
     }
 
     console.log(`[daily-digest] Done. Sent: ${sentCount}, Errors: ${errors.length}`);
-    return new Response(JSON.stringify({ sent: sentCount, errors: errors.length, errorDetails: errors
+    return new Response(JSON.stringify({ sent: sentCount, errors: errors.length, errorDetails: errors }), { headers: { "Content-Type": "application/json" } });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`[daily-digest] Fatal error: ${msg}`);
+    return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { "Content-Type": "application/json" } });
+  }
+});

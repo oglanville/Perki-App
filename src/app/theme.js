@@ -17,7 +17,7 @@ export const RENEWAL_DATES_ENABLED = false;
 export function cadenceLabel(p){const u=(p||"").toUpperCase();if(u==="WEEKLY")return"Weekly";if(u==="MONTHLY")return"Monthly";return"One-off";}
 export function cadenceResetText(p){const u=(p||"").toUpperCase();if(u==="WEEKLY")return"Resets every Monday";if(u==="MONTHLY")return"Resets on the 1st";return"One-off, never resets";}
 export const STATUS_LABEL={used:"Have used",unused:"Have not used",wontuse:"Will not use"};
-export const BUNDLES=[{key:"holiday",name:"Holiday",icon:"✈️",categories:["Travel","Insurance","Currency"]},{key:"cinema",name:"Cinema",icon:"🎬",categories:["Entertainment","Streaming"]},{key:"sports",name:"Sports",icon:"⚽",categories:["Sports"]},{key:"workday",name:"Workday",icon:"💼",categories:["Productivity","Insurance","Food"]}];
+export const BUNDLES=[{key:"holiday",name:"Holiday",icon:"✈️",categories:["Travel","Insurance","Currency"]},{key:"cinema",name:"Cinema",icon:"🎬",categories:["Entertainment","Streaming"]},{key:"sports",name:"Sports",icon:"⚽",categories:["Sports"]},{key:"workday",name:"Workday",icon:"💼",categories:["Productivity","Insurance","Food"]},{key:"bigshop",name:"Big shop",icon:"🛒",categories:["Shopping","Savings","Rewards"]},{key:"famday",name:"Family day out",icon:"👨‍👩‍👧",categories:["Family","Education"]}];
 
 export function alphaSort(a,b){return a.title.localeCompare(b.title);}
 
@@ -60,13 +60,16 @@ export function groupByClosingDate(items){
 export function getProviderTierOrder(provider, tierPrices) {
   const entries = Object.entries(tierPrices)
     .filter(([k]) => k.startsWith(`${provider}|`))
-    .map(([k, v]) => ({ tier: k.split("|")[1], price: v.price ?? 999 }))
-    .sort((a, b) => a.price - b.price);
+    .map(([k, v]) => ({ tier: k.split("|")[1], rank: v.sort_order ?? v.price ?? 999 }))
+    .sort((a, b) => a.rank - b.rank);
   return entries.map(e => e.tier);
 }
 
 
 export function getEffectiveTiers(provider, tier, tierPrices) {
+  /* Variant tiers (Spotify plans, Railcard types, National Trust, Amazon, Cineworld groups)
+     are parallel products: they never inherit from cheaper siblings. */
+  if (tierPrices[`${provider}|${tier}`]?.kind === "variant") return [tier];
   const order = getProviderTierOrder(provider, tierPrices);
   const idx = order.indexOf(tier);
   if (idx < 0) return [tier];
@@ -86,6 +89,8 @@ export function getHighestTier(provider, tiers, tierPrices) {
 
 
 export function isHierarchicalProvider(provider, tierPrices) {
+  const entry = Object.entries(tierPrices).find(([k]) => k.startsWith(`${provider}|`));
+  if (entry && entry[1].kind === "variant") return false;
   return getProviderTierOrder(provider, tierPrices).length > 1;
 }
 

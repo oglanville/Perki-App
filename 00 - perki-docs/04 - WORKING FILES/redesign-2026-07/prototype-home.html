@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Perki — Your memberships, working harder</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;800;900&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F4F0E6; --raised:#FCFAF4; --indigo:#2B2A6E; --indigo-hover:#3A388F;
+    --gold:#E0A93B; --gold-deep:#B07C1A; --gold-tint:#F7ECD4;
+    --ink:#23202A; --muted:#6B6757; --border:#E4DDCB;
+    --disp:'Outfit',sans-serif; --body:'Work Sans',sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5}
+  img{display:block}
+  a{text-decoration:none;color:inherit}
+
+  /* ── Type system: weight does the shouting, sentence case everywhere ── */
+  .display{font-family:var(--disp);font-weight:900;line-height:.95;letter-spacing:-.01em}
+  .h2{font-family:var(--disp);font-weight:800;font-size:26px;line-height:1.1}
+  .sub{color:var(--muted);font-size:15px;line-height:1.55}
+  .label{font-family:var(--disp);font-weight:600;font-size:15px}
+
+  /* ── Pills ── */
+  .pill{display:inline-flex;align-items:center;justify-content:center;height:48px;padding:0 26px;border-radius:999px;font-family:var(--body);font-weight:700;font-size:15px;cursor:pointer;border:none}
+  .pill-primary{background:var(--indigo);color:#fff}
+  .pill-primary:hover{background:var(--indigo-hover)}
+  .pill-ghost{background:transparent;color:var(--ink);border:1.5px solid var(--border)}
+  .pill-gold{background:var(--gold);color:var(--ink)}
+  .chip{display:inline-flex;align-items:center;height:38px;padding:0 16px;border-radius:999px;font-size:13px;font-weight:600;border:1.5px solid var(--border);background:var(--raised);white-space:nowrap}
+  .chip.on{background:var(--indigo);color:#fff;border-color:var(--indigo)}
+
+  .container{max-width:1280px;margin:0 auto;padding:0 20px}
+
+  /* ── Header ── */
+  .strip{background:var(--gold-tint);border-bottom:1px solid var(--border);text-align:center;padding:8px 16px;font-size:12.5px;font-weight:600;color:var(--gold-deep)}
+  header.main{position:sticky;top:0;z-index:50;background:var(--bg);border-bottom:1px solid var(--border)}
+  .nav{display:flex;align-items:center;gap:14px;height:64px}
+  .logo{display:flex;align-items:center;gap:9px}
+  .logo-mark{width:32px;height:32px;border-radius:9px;background:var(--indigo);display:flex;align-items:center;justify-content:center;color:var(--gold);font-family:var(--disp);font-weight:900;font-size:17px}
+  .logo-word{font-family:var(--disp);font-weight:800;font-size:20px}
+  .nav-links{display:none;gap:22px;margin-left:18px}
+  .nav-links a{font-family:var(--disp);font-weight:600;font-size:15px;color:var(--ink)}
+  .nav-spacer{flex:1}
+  .nav .pill{height:40px;padding:0 20px;font-size:14px}
+
+  /* ── Hero ── */
+  .hero{padding:44px 0 36px}
+  .hero .display{font-size:44px;max-width:10ch}
+  .hero .sub{margin:16px 0 6px;max-width:34ch;font-size:16px}
+  .checks{list-style:none;margin:14px 0 22px;display:flex;flex-direction:column;gap:9px}
+  .checks li{display:flex;gap:10px;align-items:flex-start;font-weight:500;font-size:15px}
+  .checks .tick{flex-shrink:0;width:22px;height:22px;border-radius:50%;background:var(--gold-tint);border:1.5px solid var(--gold);color:var(--gold-deep);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800}
+  .hero-cta{display:flex;gap:10px;flex-wrap:wrap}
+  .hero-visual{margin-top:34px;display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  .hv-tile{border-radius:16px;overflow:hidden;background:var(--raised);border:1px solid var(--border);aspect-ratio:1;display:flex;flex-direction:column;justify-content:space-between;padding:16px}
+  .hv-tile.ink{background:var(--indigo);border-color:var(--indigo);color:#fff}
+  .hv-tile.goldbg{background:var(--gold-tint);border-color:var(--gold)}
+  .hv-big{font-family:var(--disp);font-weight:900;font-size:38px;line-height:.95}
+  .hv-cap{font-size:12.5px;font-weight:600;opacity:.75}
+  .logo-row{display:flex;gap:6px;flex-wrap:wrap}
+  .plogo{width:34px;height:34px;border-radius:10px;background:#fff;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .plogo img{width:62%;height:62%;object-fit:contain}
+
+  /* ── Shelf (rail) ── */
+  .shelf{padding:26px 0 8px}
+  .shelf-head{display:flex;align-items:baseline;gap:12px;margin-bottom:4px}
+  .shelf-head .count{font-size:12px;font-weight:700;color:var(--gold-deep);background:var(--gold-tint);border-radius:999px;padding:3px 10px}
+  .shelf .sub{margin-bottom:14px}
+  .rail{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;padding:2px 20px 18px;margin:0 -20px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .rail::-webkit-scrollbar{display:none}
+  .card{scroll-snap-align:start;flex:0 0 236px;background:var(--raised);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(43,42,40,.06)}
+  .card-img{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:56px;position:relative}
+  .card-img .plogo{position:absolute;top:12px;right:12px}
+  .card-body{padding:14px 16px 16px;border-top:1px solid var(--border)}
+  .card-title{font-family:var(--disp);font-weight:600;font-size:16px;line-height:1.25}
+  .card-meta{font-size:12.5px;color:var(--muted);margin-top:4px}
+  .card-tags{display:flex;gap:6px;margin-top:10px}
+  .tag{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:999px;border:1px solid var(--border);color:var(--muted)}
+  .tag.gold{background:var(--gold-tint);border-color:var(--gold);color:var(--gold-deep)}
+
+  /* ── Editorial interstitial ── */
+  .editorial{padding:44px 0}
+  .editorial .display{font-size:34px;max-width:16ch}
+  .editorial .sub{margin-top:12px;max-width:44ch}
+
+  /* ── Ink band (high contrast) ── */
+  .ink-band{background:var(--indigo);color:#fff;padding:52px 0;margin:26px 0}
+  .ink-band .display{font-size:38px;color:#fff;max-width:14ch}
+  .ink-band .statline{display:flex;gap:34px;flex-wrap:wrap;margin-top:26px}
+  .stat .n{font-family:var(--disp);font-weight:900;font-size:40px;color:var(--gold)}
+  .stat .l{font-size:13px;opacity:.75;margin-top:2px}
+  .quotes{display:flex;gap:14px;overflow-x:auto;margin:30px -20px 0;padding:0 20px 6px;scrollbar-width:none}
+  .quotes::-webkit-scrollbar{display:none}
+  .quote{flex:0 0 300px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:20px}
+  .quote p{font-size:14.5px;line-height:1.55}
+  .quote .who{margin-top:12px;font-weight:700;font-size:13px;color:var(--gold)}
+
+  /* ── Engines split ── */
+  .engines{display:grid;gap:14px;padding:10px 0 30px}
+  .engine{border-radius:16px;padding:26px 22px;border:1px solid var(--border);background:var(--raised)}
+  .engine.goldbg{background:var(--gold-tint);border-color:var(--gold)}
+  .eyebrow{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-deep);margin-bottom:8px}
+  .engine .h2{font-size:22px;margin-bottom:8px}
+
+  /* ── Email capture ── */
+  .capture{background:var(--raised);border:1px solid var(--border);border-radius:16px;padding:30px 22px;margin:20px 0 40px}
+  .capture form{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+  .capture input{flex:1;min-width:200px;height:48px;border-radius:999px;border:1.5px solid var(--border);background:#fff;padding:0 20px;font-family:var(--body);font-size:15px}
+  .capture .fine{font-size:12px;color:var(--muted);margin-top:10px}
+
+  footer{border-top:1px solid var(--border);padding:36px 0 46px;color:var(--muted);font-size:13.5px}
+  footer .cols{display:flex;gap:40px;flex-wrap:wrap;margin:18px 0 26px}
+  footer h4{font-family:var(--disp);font-weight:700;font-size:14px;color:var(--ink);margin-bottom:8px}
+  footer li{list-style:none;margin:5px 0}
+
+  @media (min-width:768px){
+    .nav-links{display:flex}
+    .hero{display:grid;grid-template-columns:1.05fr .95fr;gap:44px;align-items:center;padding:64px 0 56px}
+    .hero .display{font-size:64px}
+    .hero-visual{margin-top:0}
+    .h2{font-size:30px}
+    .editorial .display{font-size:48px}
+    .ink-band .display{font-size:52px}
+    .engines{grid-template-columns:1fr 1fr}
+    .card{flex-basis:264px}
+  }
+</style>
+</head>
+<body>
+
+<div class="strip">Every perk you already pay for, in one place. The daily email is free.</div>
+<header class="main"><div class="container nav">
+  <a class="logo" href="#"><span class="logo-mark">P</span><span class="logo-word">Perki</span></a>
+  <nav class="nav-links">
+    <a href="prototype-perks.html">Perks</a><a href="#bundles">Bundles</a><a href="#email">The email</a><a href="prototype-profile.html">Profile</a>
+  </nav>
+  <div class="nav-spacer"></div>
+  <a class="pill pill-ghost" href="#" style="height:40px;padding:0 18px;font-size:14px">Log in</a>
+  <a class="pill pill-primary" href="#">Join Perki</a>
+</div></header>
+
+<main class="container">
+
+  <!-- HERO: benefit + 3 checks + CTA, visual = data tiles not stock photos -->
+  <section class="hero">
+    <div>
+      <h1 class="display">Your memberships, working harder.</h1>
+      <p class="sub">Perki finds every perk, discount and freebie inside the memberships you already pay for, then tells you each morning which ones to use.</p>
+      <ul class="checks">
+        <li><span class="tick">✓</span>See all 442 perks across 24 UK providers</li>
+        <li><span class="tick">✓</span>Save money by right-sizing your tiers</li>
+        <li><span class="tick">✓</span>One free email at 7am, no app required</li>
+      </ul>
+      <div class="hero-cta">
+        <a class="pill pill-primary" href="#email">Get the daily email</a>
+        <a class="pill pill-ghost" href="prototype-perks.html">Browse the perks</a>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hv-tile ink"><span class="hv-cap" style="color:var(--gold)">Found this month</span><span class="hv-big">£31<span style="font-size:18px;font-weight:600">/mo</span></span><span class="hv-cap">in savings across 10 memberships</span></div>
+      <div class="hv-tile"><span class="hv-cap">Your providers</span>
+        <div class="logo-row">
+          <span class="plogo"><img src="https://logo.clearbit.com/monzo.com" alt="Monzo"></span>
+          <span class="plogo"><img src="https://logo.clearbit.com/revolut.com" alt="Revolut"></span>
+          <span class="plogo"><img src="https://logo.clearbit.com/amazon.co.uk" alt="Amazon"></span>
+          <span class="plogo"><img src="https://logo.clearbit.com/spotify.com" alt="Spotify"></span>
+          <span class="plogo"><img src="https://logo.clearbit.com/deliveroo.co.uk" alt="Deliveroo"></span>
+          <span class="plogo"><img src="https://logo.clearbit.com/tesco.com" alt="Tesco"></span>
+        </div>
+        <span class="hv-cap">+ 18 more UK providers</span></div>
+      <div class="hv-tile goldbg"><span class="hv-cap" style="color:var(--gold-deep)">Ready today</span><span class="hv-big" style="color:var(--gold-deep)">7</span><span class="hv-cap" style="color:var(--gold-deep)">perks worth a tap before they reset</span></div>
+      <div class="hv-tile"><span class="hv-cap">Doubling up?</span><span class="hv-big" style="font-size:22px;line-height:1.2">Travel cover from 2 providers</span><span class="hv-cap">We flag it. You decide.</span></div>
+    </div>
+  </section>
+
+  <!-- SHELF 1: instant utility -->
+  <section class="shelf" id="bundles">
+    <div class="shelf-head"><h2 class="h2">Tonight, sorted</h2><span class="count">Cinema bundle</span></div>
+    <p class="sub">Perks you already hold for a night in front of a screen.</p>
+    <div class="rail">
+      <article class="card"><div class="card-img" style="background:var(--gold-tint)">🎬<span class="plogo"><img src="https://logo.clearbit.com/cineworld.co.uk" alt=""></span></div>
+        <div class="card-body"><div class="card-title">Unlimited standard films</div><div class="card-meta">Cineworld · Group 1</div>
+        <div class="card-tags"><span class="tag gold">Feature</span><span class="tag">One-off</span></div></div></article>
+      <article class="card"><div class="card-img" style="background:#EEF2FF">📺<span class="plogo"><img src="https://logo.clearbit.com/sky.com" alt=""></span></div>
+        <div class="card-body"><div class="card-title">Sky Cinema included</div><div class="card-meta">Sky TV · Silver</div>
+        <div class="card-tags"><span class="tag gold">Feature</span><span class="tag">One-off</span></div></div></article>
+      <article class="card"><div class="card-img" style="background:#ECFDF5">🍿<span class="plogo"><img src="https://logo.clearbit.com/vodafone.co.uk" alt=""></span></div>
+        <div class="card-body"><div class="card-title">2-for-1 cinema tickets</div><div class="card-meta">Vodafone · VeryMe</div>
+        <div class="card-tags"><span class="tag">Perk</span><span class="tag">Weekly</span></div></div></article>
+      <article class="card"><div class="card-img" style="background:#FFF1F2">🎵<span class="plogo"><img src="https://logo.clearbit.com/spotify.com" alt=""></span></div>
+        <div class="card-body"><div class="card-title">AI DJ personalised sessions</div><div class="card-meta">Spotify · Individual</div>
+        <div class="card-tags"><span class="tag gold">Feature</span><span class="tag">One-off</span></div></div></article>
+    </div>
+  </section>
+
+  <!-- Editorial interstitial -->
+  <section class="editorial">
+    <h2 class="display">You are already paying for more than you think.</h2>
+    <p class="sub">The average Perki member holds ten memberships. Banks, supermarkets, streaming, energy. Each one quietly bundles perks most people never open. We surface them, one morning at a time.</p>
+  </section>
+
+  <!-- SHELF 2: holiday bundle -->
+  <section class="shelf">
+    <div class="shelf-head"><h2 class="h2">Going away, covered</h2><span class="count">Holiday bundle</span></div>
+    <p class="sub">Lounge passes, travel cover and currency perks you already hold.</p>
+    <div class="rail">
+      <article class="card"><div class="card-img" style="background:#F7ECD4">✈️<span class="plogo"><img src="https://logo.clearbit.com/americanexpress.com" alt=""></span></div>
+        <div class="card-body"><div class="card-title">Airport lounge passes</div><div class="card-meta">Amex · Gold</div>
+        <div class="card-tags"><span class="tag">Perk</span><span class="tag">4 visits/yr</span></div></div></article>
+      <article class="card"><div class="card-img" style="background:#EEF2FF">🛡️<span class="plogo"><img src="https://logo.clearbit.com/monzo.com" alt=""></span></div>
+        <div class="card-body"><div class="card-title">Worldwide travel insurance</div><div class="card-meta">Monzo · Max</div>
+        <div class="card-tags"><span class="tag gold">Feature</span><span class="tag">One-off</span></div></div></article>
+      <article class="card"><div class="card-img" style="background:#ECFDF5">💱<span class="plogo"><img src="https://logo.clearbit.com/revolut.com" alt=""></span></div>
+        <div class="card-body"><div class="card-title">Fee-free currency exchange</div><div class="card-meta">Revolut · Standard</div>
+        <div class="card-tags"><span class="tag gold">Feature</span><span class="tag">Monthly</span></div></div></article>
+      <article class="card"><div class="card-img" style="background:#FFF1F2">🚂<span class="plogo"><img src="https://logo.clearbit.com/railcard.co.uk" alt=""></span></div>
+        <div class="card-body"><div class="card-title">One third off rail fares</div><div class="card-meta">Railcard · 26-30</div>
+        <div class="card-tags"><span class="tag">Discount</span><span class="tag">One-off</span></div></div></article>
+    </div>
+  </section>
+
+  <!-- INK BAND: proof -->
+  <section class="ink-band"><div class="container">
+    <h2 class="display">Built for people who hate wasting money.</h2>
+    <div class="statline">
+      <div class="stat"><div class="n">442</div><div class="l">verified perks tracked</div></div>
+      <div class="stat"><div class="n">24</div><div class="l">UK providers</div></div>
+      <div class="stat"><div class="n">7am</div><div class="l">daily email, every day</div></div>
+    </div>
+    <div class="quotes">
+      <div class="quote"><p>"I moved my Revolut tier down and kept every perk I actually use. Perki paid for itself in week one, and it's free."</p><div class="who">Sam, London</div></div>
+      <div class="quote"><p>"The 7am email is the only newsletter I open every single day. Two minutes, and I know what to grab."</p><div class="who">Priya, Manchester</div></div>
+      <div class="quote"><p>"Found out my bank and my energy provider both cover my boiler. Cancelled one. Dinner's on Perki."</p><div class="who">Josh, Leeds</div></div>
+    </div>
+  </div></section>
+
+  <!-- ENGINES: the split-screen pair, same as the email -->
+  <section>
+    <h2 class="h2" style="margin-bottom:4px">Two engines, one job</h2>
+    <p class="sub" style="margin-bottom:16px">Every morning we run your memberships through both.</p>
+    <div class="engines">
+      <div class="engine">
+        <div class="eyebrow">Savings engine</div>
+        <h3 class="h2">Move this, save that</h3>
+        <p class="sub">We find the cheapest tier that still covers every perk you actually use, and tell you exactly what to move. Never generic. Always your data.</p>
+      </div>
+      <div class="engine goldbg">
+        <div class="eyebrow">Consolidation engine</div>
+        <h3 class="h2">Stop doubling up</h3>
+        <p class="sub">Two providers covering the same thing? We flag genuine overlaps in insurance and travel cover, so you never pay twice for one umbrella.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- EMAIL CAPTURE -->
+  <section class="capture" id="email">
+    <h2 class="h2">Mornings, sorted</h2>
+    <p class="sub" style="margin-top:6px">One email at 7am. Your perks, your savings, your day. Free forever.</p>
+    <form onsubmit="return false">
+      <input type="email" placeholder="you@email.co.uk" aria-label="Email address">
+      <button class="pill pill-primary" type="submit">Get the daily email</button>
+    </form>
+    <p class="fine">Your email address is safe with us. Read-only, always: Perki recommends and links, never moves your money.</p>
+  </section>
+
+</main>
+
+<footer><div class="container">
+  <div class="logo"><span class="logo-mark">P</span><span class="logo-word" style="font-size:17px">Perki</span></div>
+  <div class="cols">
+    <div><h4>Product</h4><ul><li><a href="prototype-perks.html">Perks</a></li><li><a href="#bundles">Bundles</a></li><li><a href="#email">The daily email</a></li></ul></div>
+    <div><h4>Company</h4><ul><li><a href="#">About</a></li><li><a href="#">Contact</a></li></ul></div>
+    <div><h4>Legal</h4><ul><li><a href="#">Privacy</a></li><li><a href="#">Terms</a></li></ul></div>
+  </div>
+  <a class="pill pill-gold" href="#email">Try Perki for free</a>
+  <p style="margin-top:22px">Perki · London, UK · We never move your money.</p>
+</div></footer>
+
+</body>
+</html>

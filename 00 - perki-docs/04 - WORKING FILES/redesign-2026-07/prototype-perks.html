@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Perki — Browse perks</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;800;900&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F4F0E6; --raised:#FCFAF4; --indigo:#2B2A6E; --indigo-hover:#3A388F;
+    --gold:#E0A93B; --gold-deep:#B07C1A; --gold-tint:#F7ECD4;
+    --ink:#23202A; --muted:#6B6757; --border:#E4DDCB;
+    --disp:'Outfit',sans-serif; --body:'Work Sans',sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5}
+  a{text-decoration:none;color:inherit}
+  .container{max-width:1280px;margin:0 auto;padding:0 20px}
+  .display{font-family:var(--disp);font-weight:900;line-height:.95}
+  .h2{font-family:var(--disp);font-weight:800;font-size:24px;line-height:1.1}
+  .sub{color:var(--muted);font-size:14.5px}
+  .pill{display:inline-flex;align-items:center;justify-content:center;height:44px;padding:0 22px;border-radius:999px;font-weight:700;font-size:14px;cursor:pointer;border:none}
+  .pill-primary{background:var(--indigo);color:#fff}
+  .chip{display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 16px;border-radius:999px;font-size:13px;font-weight:600;border:1.5px solid var(--border);background:var(--raised);white-space:nowrap;cursor:pointer}
+  .chip.on{background:var(--indigo);color:#fff;border-color:var(--indigo)}
+  .chip .n{font-size:10.5px;font-weight:800;background:var(--gold-tint);color:var(--gold-deep);border-radius:999px;padding:1px 7px}
+  .chip.on .n{background:rgba(255,255,255,.18);color:var(--gold)}
+
+  header.main{position:sticky;top:0;z-index:50;background:var(--bg);border-bottom:1px solid var(--border)}
+  .nav{display:flex;align-items:center;gap:14px;height:64px}
+  .logo{display:flex;align-items:center;gap:9px}
+  .logo-mark{width:32px;height:32px;border-radius:9px;background:var(--indigo);display:flex;align-items:center;justify-content:center;color:var(--gold);font-family:var(--disp);font-weight:900;font-size:17px}
+  .logo-word{font-family:var(--disp);font-weight:800;font-size:20px}
+  .nav-spacer{flex:1}
+
+  .page-head{padding:30px 0 4px}
+  .page-head .display{font-size:36px}
+  .page-head .sub{margin-top:8px;max-width:44ch}
+
+  .filter-block{position:sticky;top:64px;z-index:40;background:var(--bg);padding:14px 0 4px;border-bottom:1px solid var(--border)}
+  .chiprow{display:flex;gap:8px;overflow-x:auto;padding:4px 20px 12px;margin:0 -20px;scrollbar-width:none}
+  .chiprow::-webkit-scrollbar{display:none}
+  .chiprow .lab{flex-shrink:0;align-self:center;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--gold-deep);margin-right:2px}
+
+  .plogo{width:28px;height:28px;border-radius:8px;background:#fff;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0}
+  .plogo img{width:62%;height:62%;object-fit:contain}
+
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:20px 0 8px}
+  .card{background:var(--raised);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(43,42,40,.06)}
+  .card-img{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:44px;position:relative}
+  .card-img .plogo{position:absolute;top:10px;right:10px}
+  .card-body{padding:12px 14px 14px;border-top:1px solid var(--border)}
+  .card-title{font-family:var(--disp);font-weight:600;font-size:15px;line-height:1.25}
+  .card-meta{font-size:12px;color:var(--muted);margin-top:3px}
+  .card-tags{display:flex;gap:5px;margin-top:9px;flex-wrap:wrap}
+  .tag{font-size:10px;font-weight:700;padding:3px 8px;border-radius:999px;border:1px solid var(--border);color:var(--muted)}
+  .tag.gold{background:var(--gold-tint);border-color:var(--gold);color:var(--gold-deep)}
+  .tag.cheaper{background:var(--indigo);border-color:var(--indigo);color:#fff}
+
+  /* Tier ladder: the improved membership display logic */
+  .ladder-wrap{margin:34px 0 14px;background:var(--raised);border:1px solid var(--border);border-radius:16px;padding:22px 20px}
+  .eyebrow{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-deep);margin-bottom:6px}
+  .ladder{display:flex;gap:10px;overflow-x:auto;margin-top:16px;padding-bottom:6px;scrollbar-width:none}
+  .ladder::-webkit-scrollbar{display:none}
+  .rung{flex:0 0 190px;border:1.5px solid var(--border);border-radius:14px;padding:14px;background:#fff}
+  .rung.held{border-color:var(--indigo);background:var(--indigo);color:#fff}
+  .rung .t{font-family:var(--disp);font-weight:800;font-size:16px}
+  .rung .p{font-family:var(--disp);font-weight:900;font-size:24px;margin:4px 0 8px}
+  .rung .p small{font-size:12px;font-weight:500;opacity:.7}
+  .rung ul{list-style:none;font-size:12px;line-height:1.9}
+  .rung li::before{content:"✓ ";color:var(--gold-deep);font-weight:800}
+  .rung.held li::before{color:var(--gold)}
+  .rung .verdict{margin-top:10px;font-size:11px;font-weight:700;border-radius:999px;padding:4px 10px;display:inline-block}
+  .rung.held .verdict{background:rgba(255,255,255,.14);color:var(--gold)}
+  .rung .verdict.save{background:var(--gold-tint);color:var(--gold-deep)}
+
+  footer{border-top:1px solid var(--border);padding:30px 0 44px;color:var(--muted);font-size:13.5px;margin-top:36px}
+
+  @media (min-width:768px){
+    .grid{grid-template-columns:repeat(4,1fr);gap:16px}
+    .page-head .display{font-size:52px}
+  }
+</style>
+</head>
+<body>
+
+<header class="main"><div class="container nav">
+  <a class="logo" href="prototype-home.html"><span class="logo-mark">P</span><span class="logo-word">Perki</span></a>
+  <div class="nav-spacer"></div>
+  <a class="pill pill-primary" href="prototype-profile.html" style="height:40px;font-size:13.5px">Your profile</a>
+</div></header>
+
+<main class="container">
+
+  <div class="page-head">
+    <h1 class="display">Every perk, one shelf.</h1>
+    <p class="sub">442 verified perks across 24 UK providers. Filter by moment, type or what you already hold.</p>
+  </div>
+
+  <!-- Two stacked chip rows: bundles (moments) then type. Selected state = solid indigo. -->
+  <div class="filter-block">
+    <div class="chiprow">
+      <span class="lab">Moment</span>
+      <button class="chip on">All</button>
+      <button class="chip">✈️ Holiday <span class="n">38</span></button>
+      <button class="chip">🎬 Cinema <span class="n">27</span></button>
+      <button class="chip">⚽ Sports <span class="n">9</span></button>
+      <button class="chip">💼 Workday <span class="n">41</span></button>
+      <button class="chip">🛒 Big shop <span class="n">33</span></button>
+      <button class="chip">👨‍👩‍👧 Family day out <span class="n">18</span></button>
+    </div>
+    <div class="chiprow">
+      <span class="lab">Type</span>
+      <button class="chip on">Everything</button>
+      <button class="chip">Features</button>
+      <button class="chip">Perks</button>
+      <button class="chip">Discounts</button>
+      <button class="chip">Competitions</button>
+      <button class="chip">Held by you</button>
+    </div>
+  </div>
+
+  <!-- Card grid: 1:1 tile, category glyph, provider logo overlay, type + cadence tags,
+       and the display-logic upgrade: "cheaper tier" flag straight on the card -->
+  <section class="grid">
+    <article class="card"><div class="card-img" style="background:var(--gold-tint)">✈️<span class="plogo"><img src="https://logo.clearbit.com/americanexpress.com" alt=""></span></div>
+      <div class="card-body"><div class="card-title">Airport lounge passes</div><div class="card-meta">Amex · from Gold</div>
+      <div class="card-tags"><span class="tag">Perk</span><span class="tag">4/yr</span></div></div></article>
+    <article class="card"><div class="card-img" style="background:#EEF2FF">🍔<span class="plogo"><img src="https://logo.clearbit.com/deliveroo.co.uk" alt=""></span></div>
+      <div class="card-body"><div class="card-title">Free delivery over £10</div><div class="card-meta">Deliveroo · from Plus Gold</div>
+      <div class="card-tags"><span class="tag gold">Feature</span><span class="tag cheaper">Also in Silver</span></div></div></article>
+    <article class="card"><div class="card-img" style="background:#ECFDF5">☕<span class="plogo"><img src="https://logo.clearbit.com/pret.co.uk" alt=""></span></div>
+      <div class="card-body"><div class="card-title">50% off barista-made drinks</div><div class="card-meta">Pret · Club Pret</div>
+      <div class="card-tags"><span class="tag">Discount</span><span class="tag">5/day</span></div></div></article>
+    <article class="card"><div class="card-img" style="background:#FFF1F2">🎬<span class="plogo"><img src="https://logo.clearbit.com/cineworld.co.uk" alt=""></span></div>
+      <div class="card-body"><div class="card-title">Unlimited standard films</div><div class="card-meta">Cineworld · from Group 1</div>
+      <div class="card-tags"><span class="tag gold">Feature</span><span class="tag">One-off</span></div></div></article>
+    <article class="card"><div class="card-img" style="background:#F7ECD4">🛒<span class="plogo"><img src="https://logo.clearbit.com/tesco.com" alt=""></span></div>
+      <div class="card-body"><div class="card-title">Clubcard Prices</div><div class="card-meta">Tesco · Clubcard, free</div>
+      <div class="card-tags"><span class="tag">Discount</span><span class="tag">One-off</span></div></div></article>
+    <article class="card"><div class="card-img" style="background:#EEF2FF">📚<span class="plogo"><img src="https://logo.clearbit.com/amazon.co.uk" alt=""></span></div>
+      <div class="card-body"><div class="card-title">First Reads early book access</div><div class="card-meta">Amazon · Prime</div>
+      <div class="card-tags"><span class="tag">Perk</span><span class="tag">Monthly</span></div></div></article>
+    <article class="card"><div class="card-img" style="background:#ECFDF5">🎧<span class="plogo"><img src="https://logo.clearbit.com/spotify.com" alt=""></span></div>
+      <div class="card-body"><div class="card-title">15 hours of audiobooks a month</div><div class="card-meta">Spotify · Individual</div>
+      <div class="card-tags"><span class="tag gold">Feature</span><span class="tag">Monthly</span></div></div></article>
+    <article class="card"><div class="card-img" style="background:#FFF1F2">🚂<span class="plogo"><img src="https://logo.clearbit.com/railcard.co.uk" alt=""></span></div>
+      <div class="card-body"><div class="card-title">60% off kids' fares</div><div class="card-meta">Railcard · Family &amp; Friends</div>
+      <div class="card-tags"><span class="tag">Discount</span><span class="tag">One-off</span></div></div></article>
+  </section>
+
+  <!-- TIER LADDER: improved membership display logic. One membership expanded,
+       your tier highlighted, cheapest-covering-tier verdict inline. -->
+  <section class="ladder-wrap">
+    <div class="eyebrow">Compare tiers</div>
+    <h2 class="h2">Deliveroo Plus, laid flat</h2>
+    <p class="sub" style="margin-top:6px">Your tier is highlighted. The verdict chip shows the cheapest tier that still covers everything you actually use.</p>
+    <div class="ladder">
+      <div class="rung"><div class="t">Free</div><div class="p">£0<small>/mo</small></div>
+        <ul><li>Pay-per-order delivery</li></ul></div>
+      <div class="rung held"><div class="t">Plus Silver</div><div class="p">£3.49<small>/mo</small></div>
+        <ul><li>Free delivery over £15</li><li>Plus member offers</li></ul>
+        <span class="verdict">You hold this</span></div>
+      <div class="rung"><div class="t">Plus Gold</div><div class="p">£7.99<small>/mo</small></div>
+        <ul><li>Free delivery over £10</li><li>Plus member offers</li></ul>
+        <span class="verdict save">Not worth it for you</span></div>
+    </div>
+  </section>
+
+</main>
+
+<footer><div class="container">Perki · London, UK · We never move your money.</div></footer>
+
+</body>
+</html>

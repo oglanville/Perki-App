@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Perki — Your profile</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;800;900&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F4F0E6; --raised:#FCFAF4; --indigo:#2B2A6E; --indigo-hover:#3A388F;
+    --gold:#E0A93B; --gold-deep:#B07C1A; --gold-tint:#F7ECD4;
+    --ink:#23202A; --muted:#6B6757; --border:#E4DDCB;
+    --disp:'Outfit',sans-serif; --body:'Work Sans',sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5}
+  a{text-decoration:none;color:inherit}
+  .container{max-width:920px;margin:0 auto;padding:0 20px}
+  .display{font-family:var(--disp);font-weight:900;line-height:.95}
+  .h2{font-family:var(--disp);font-weight:800;font-size:22px}
+  .sub{color:var(--muted);font-size:14.5px}
+  .eyebrow{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-deep)}
+  .pill{display:inline-flex;align-items:center;justify-content:center;height:44px;padding:0 22px;border-radius:999px;font-weight:700;font-size:14px;cursor:pointer;border:none}
+  .pill-primary{background:var(--indigo);color:#fff}
+  .pill-ghost{background:transparent;border:1.5px solid var(--border);color:var(--ink)}
+
+  header.main{position:sticky;top:0;z-index:50;background:var(--bg);border-bottom:1px solid var(--border)}
+  .nav{display:flex;align-items:center;gap:14px;height:64px}
+  .logo{display:flex;align-items:center;gap:9px}
+  .logo-mark{width:32px;height:32px;border-radius:9px;background:var(--indigo);display:flex;align-items:center;justify-content:center;color:var(--gold);font-family:var(--disp);font-weight:900;font-size:17px}
+  .logo-word{font-family:var(--disp);font-weight:800;font-size:20px}
+  .nav-spacer{flex:1}
+
+  .hero{padding:32px 0 8px}
+  .hero .display{font-size:36px}
+  .hero .sub{margin-top:6px}
+
+  /* Verdict card: dark, WHOOP-style "here's how it stands" -->  */
+  .verdict{background:var(--indigo);color:#fff;border-radius:16px;padding:24px 22px;margin:20px 0}
+  .verdict .eyebrow{color:var(--gold)}
+  .verdict .headline{font-family:var(--disp);font-weight:800;font-size:24px;line-height:1.15;margin:8px 0 18px}
+  .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .tile{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:12px;text-align:center;padding:14px 4px}
+  .tile .n{font-family:var(--disp);font-weight:900;font-size:26px;color:var(--gold)}
+  .tile .l{font-size:10.5px;font-weight:600;opacity:.75;margin-top:2px}
+
+  .shelf{padding:18px 0 6px}
+  .shelf-head{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+  .shelf-head .h2{flex:1}
+
+  .plogo{width:34px;height:34px;border-radius:10px;background:#fff;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0}
+  .plogo img{width:62%;height:62%;object-fit:contain}
+
+  .mrow{display:flex;align-items:center;gap:12px;background:var(--raised);border:1px solid var(--border);border-radius:16px;padding:14px 16px;margin-bottom:10px}
+  .mrow .info{flex:1;min-width:0}
+  .mrow .name{font-family:var(--disp);font-weight:700;font-size:15px}
+  .mrow .meta{font-size:12.5px;color:var(--muted)}
+  .badge{font-size:11px;font-weight:700;border-radius:999px;padding:4px 12px;white-space:nowrap}
+  .badge.active{background:var(--gold-tint);color:var(--gold-deep)}
+  .badge.save{background:var(--indigo);color:#fff}
+  .mrow .chev{color:var(--muted);font-size:18px}
+
+  /* status segmented control demo */
+  .item{background:var(--raised);border:1px solid var(--border);border-radius:16px;padding:14px 16px;margin-bottom:10px}
+  .item .top{display:flex;align-items:center;gap:10px}
+  .item .t{flex:1;font-weight:600;font-size:14.5px}
+  .cadence{font-size:10.5px;font-weight:700;border:1px solid var(--border);border-radius:999px;padding:3px 9px;color:var(--muted)}
+  .seg{display:flex;margin-top:12px;border:1.5px solid var(--border);border-radius:999px;overflow:hidden}
+  .seg button{flex:1;height:38px;border:none;background:transparent;font-family:var(--body);font-weight:600;font-size:12px;color:var(--muted);cursor:pointer}
+  .seg button.on{background:var(--indigo);color:#fff}
+
+  .settings{background:var(--raised);border:1px solid var(--border);border-radius:16px;margin:24px 0 40px}
+  .srow{display:flex;align-items:center;gap:12px;padding:16px;border-bottom:1px solid var(--border);font-weight:600;font-size:14.5px}
+  .srow:last-child{border-bottom:none}
+  .srow .d{flex:1}
+  .srow .sub{font-weight:400}
+  .toggle{width:46px;height:26px;border-radius:999px;background:var(--indigo);position:relative;flex-shrink:0}
+  .toggle::after{content:"";position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:#fff}
+
+  footer{border-top:1px solid var(--border);padding:28px 0 42px;color:var(--muted);font-size:13.5px}
+  @media (min-width:768px){ .hero .display{font-size:48px} .tiles{gap:10px} }
+</style>
+</head>
+<body>
+
+<header class="main"><div class="container nav">
+  <a class="logo" href="prototype-home.html"><span class="logo-mark">P</span><span class="logo-word">Perki</span></a>
+  <div class="nav-spacer"></div>
+  <a class="pill pill-ghost" href="prototype-perks.html" style="height:40px;font-size:13.5px">Browse perks</a>
+</div></header>
+
+<main class="container">
+
+  <div class="hero">
+    <h1 class="display">Morning, Ollie.</h1>
+    <p class="sub">Ten memberships, one clear picture.</p>
+  </div>
+
+  <!-- Verdict card: dashboard as a statement, not a table -->
+  <section class="verdict">
+    <div class="eyebrow">Your dashboard · Thursday 9 July</div>
+    <div class="headline">7 perks ready to use, and £31 a month on the table.</div>
+    <div class="tiles">
+      <div class="tile"><div class="n">7</div><div class="l">Available</div></div>
+      <div class="tile"><div class="n">12</div><div class="l">Have used</div></div>
+      <div class="tile"><div class="n">3</div><div class="l">Will not use</div></div>
+      <div class="tile"><div class="n">10</div><div class="l">Memberships</div></div>
+    </div>
+  </section>
+
+  <!-- Memberships: rows with an inline engine verdict -->
+  <section class="shelf">
+    <div class="shelf-head"><h2 class="h2">Your memberships</h2><a class="pill pill-primary" href="#" style="height:40px;font-size:13.5px">Add membership</a></div>
+
+    <div class="mrow"><span class="plogo"><img src="https://logo.clearbit.com/monzo.com" alt=""></span>
+      <div class="info"><div class="name">Monzo · Max</div><div class="meta">22 perks · £17/mo</div></div>
+      <span class="badge save">Save £10/mo</span><span class="chev">›</span></div>
+
+    <div class="mrow"><span class="plogo"><img src="https://logo.clearbit.com/revolut.com" alt=""></span>
+      <div class="info"><div class="name">Revolut · Standard</div><div class="meta">12 perks · free</div></div>
+      <span class="badge active">Right-sized</span><span class="chev">›</span></div>
+
+    <div class="mrow"><span class="plogo"><img src="https://logo.clearbit.com/sky.com" alt=""></span>
+      <div class="info"><div class="name">Sky TV · Silver</div><div class="meta">87 perks · £140/mo</div></div>
+      <span class="badge active">Right-sized</span><span class="chev">›</span></div>
+
+    <div class="mrow"><span class="plogo"><img src="https://logo.clearbit.com/amazon.co.uk" alt=""></span>
+      <div class="info"><div class="name">Amazon · Prime</div><div class="meta">17 perks · £8.99/mo</div></div>
+      <span class="badge active">Right-sized</span><span class="chev">›</span></div>
+
+    <div class="mrow"><span class="plogo"><img src="https://logo.clearbit.com/deliveroo.co.uk" alt=""></span>
+      <div class="info"><div class="name">Deliveroo · Plus Silver</div><div class="meta">2 perks · via Amazon Prime, free</div></div>
+      <span class="badge active">Partner perk</span><span class="chev">›</span></div>
+  </section>
+
+  <!-- Items with the three-way status control + cadence chip -->
+  <section class="shelf">
+    <div class="shelf-head"><h2 class="h2">Worth a tap today</h2></div>
+
+    <div class="item"><div class="top"><span class="plogo"><img src="https://logo.clearbit.com/pret.co.uk" alt=""></span>
+      <span class="t">50% off barista-made drinks</span><span class="cadence">Weekly</span></div>
+      <div class="seg"><button class="on">Have used</button><button>Have not used</button><button>Will not use</button></div></div>
+
+    <div class="item"><div class="top"><span class="plogo"><img src="https://logo.clearbit.com/greggs.co.uk" alt=""></span>
+      <span class="t">Free welcome drink</span><span class="cadence">One-off</span></div>
+      <div class="seg"><button>Have used</button><button class="on">Have not used</button><button>Will not use</button></div></div>
+
+    <div class="item"><div class="top"><span class="plogo"><img src="https://logo.clearbit.com/vodafone.co.uk" alt=""></span>
+      <span class="t">Weekly rewards</span><span class="cadence">Weekly</span></div>
+      <div class="seg"><button>Have used</button><button class="on">Have not used</button><button>Will not use</button></div></div>
+  </section>
+
+  <!-- Account -->
+  <section class="settings">
+    <div class="srow"><div class="d">Daily email at 7am<div class="sub sub">ollie_glanville@hotmail.co.uk</div></div><span class="toggle"></span></div>
+    <div class="srow"><div class="d">Savings engine suggestions</div><span class="toggle"></span></div>
+    <div class="srow"><div class="d">Consolidation alerts</div><span class="toggle"></span></div>
+    <div class="srow"><div class="d" style="color:var(--muted)">Log out</div></div>
+  </section>
+
+</main>
+
+<footer><div class="container">Perki · London, UK · Read-only, always. We never move your money.</div></footer>
+
+</body>
+</html>

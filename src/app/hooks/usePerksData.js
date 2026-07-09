@@ -9,7 +9,7 @@ export function usePerksData(){
   const[activeMemberships,setActiveMemberships]=useState([]);
   const[usedMap,setUsedMap]=useState({});
   const[dismissedMap,setDismissedMap]=useState({});
-  const tierPrices=useMemo(()=>{const m={};allPerks.forEach(p=>{if(p.price!=null){const k=`${p.provider}|${p.tier}`;if(!(k in m))m[k]={price:p.price,price_label:p.price===0?"Free":`£${p.price}`,sort_order:TIER_RANK[p.provider]?.[p.tier]??p.price};}});return m;},[allPerks]);
+  const tierPrices=useMemo(()=>{const m={};allPerks.forEach(p=>{if(p.price!=null){const k=`${p.provider}|${p.tier}`;if(!(k in m))m[k]={price:p.price,price_label:p.price===0?"Free":`£${p.price}`,sort_order:p.tier_rank??TIER_RANK[p.provider]?.[p.tier]??p.price,kind:p.tier_kind||"hierarchical"};}});return m;},[allPerks]);
 
   /* Auth listener */
   useEffect(()=>{
