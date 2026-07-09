@@ -5,6 +5,7 @@ import { BrandLogo } from "../ui/brand";
 import { usePerkDrawer } from "../ui/PerkDrawer";
 import { Eyebrow, Display, SectionHead, Pill, Shelf, PerkTile, InkBand, StatBig, QuoteCard } from "../ui/kit";
 import { fetchAllPerks, buildTierMap, BUNDLES } from "../data/catalog";
+import { perkImage } from "../data/stockImages";
 import { SAMPLE_PERKS } from "../data/perks";
 
 const HERO_LOGOS = ["Monzo", "Revolut", "Amazon", "Spotify", "Deliveroo", "Tesco"];
@@ -64,6 +65,18 @@ export default function Home() {
 
   const tierMap = React.useMemo(() => buildTierMap(perks), [perks]);
   const providerCount = React.useMemo(() => new Set(perks.map((p) => p.provider)).size, [perks]);
+  const gridProviders = React.useMemo(() => {
+    const all = [...new Set(perks.map((p) => p.provider))];
+    const preferred = HERO_LOGOS.filter((p) => all.includes(p));
+    const rest = all.filter((p) => !preferred.includes(p)).sort();
+    return [...preferred, ...rest];
+  }, [perks]);
+  const todaysPick = React.useMemo(() => {
+    const pool = perks.filter((p) => (p.feature === "perk" || p.feature === "discount") && perkImage(p));
+    if (!pool.length) return null;
+    const day = Math.floor(Date.now() / 864e5);
+    return pool[day % pool.length];
+  }, [perks]);
   const cinema = React.useMemo(() => shelfPicks(perks, tierMap, BUNDLES.find((b) => b.key === "cinema").categories), [perks, tierMap]);
   const holiday = React.useMemo(() => shelfPicks(perks, tierMap, BUNDLES.find((b) => b.key === "holiday").categories), [perks, tierMap]);
   const openPerk = (p) => open(p, { mode: "marketplace", scope: perks, tierMap });
@@ -90,10 +103,25 @@ export default function Home() {
         <div className="grid grid-cols-2 gap-3">
           <HeroTile tone="ink" cap="Found for members" big="£31/mo" sub="in savings, on average, across ten memberships" />
           <HeroTile cap="Your providers">
-            <div className="flex flex-wrap gap-1.5">{HERO_LOGOS.map((p) => <BrandLogo key={p} provider={p} className="w-8 h-8 !rounded-lg border border-snow/10" />)}</div>
-            <span className="text-xs text-muted font-medium">+ {Math.max((providerCount || 24) - HERO_LOGOS.length, 0)} more UK providers</span>
+            <div className="grid grid-cols-4 gap-1.5 content-center flex-1 py-1">
+              {(gridProviders.length ? gridProviders : HERO_LOGOS).slice(0, 15).map((p) => <BrandLogo key={p} provider={p} className="w-full aspect-square !rounded-lg border border-snow/10" />)}
+              <span className="grid place-items-center w-full aspect-square rounded-lg bg-purple text-gold font-display font-extrabold text-[11px]">+{Math.max((providerCount || 24) - 15, 0)}</span>
+            </div>
           </HeroTile>
-          <HeroTile tone="gold" cap="Ready today" big="7" sub="perks worth a tap before they reset" />
+          {todaysPick ? (
+            <button onClick={() => openPerk(todaysPick)} className="relative aspect-square rounded-modal border border-gold overflow-hidden text-left cursor-pointer group focus:outline-none focus:ring-[3px] focus:ring-purple/40">
+              <img src={perkImage(todaysPick)} alt="" loading="lazy" className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 ease-fluid group-hover:scale-105" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-black/25" />
+              <span className="absolute top-3 left-3 text-[10px] font-extrabold uppercase tracking-[0.12em] text-snow bg-gold rounded-full px-2.5 py-1">Today's pick</span>
+              <BrandLogo provider={todaysPick.provider} className="w-8 h-8 absolute top-3 right-3 !rounded-lg" />
+              <span className="absolute inset-x-3 bottom-3 text-white">
+                <span className="block font-display font-extrabold text-[15px] leading-tight line-clamp-2">{todaysPick.title}</span>
+                <span className="block text-[11px] font-medium opacity-85 mt-0.5">{todaysPick.provider} · free with your membership</span>
+              </span>
+            </button>
+          ) : (
+            <HeroTile tone="gold" cap="Ready today" big="7" sub="perks worth a tap before they reset" />
+          )}
           <HeroTile cap="Doubling up?" big="Travel cover from 2 providers" sub="We flag it. You decide." />
         </div>
       </section>
