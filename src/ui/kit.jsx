@@ -4,6 +4,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { BrandLogo } from "./brand";
 import { categoryEmoji, cadenceLabel, categoryLabel } from "../data/catalog";
+import { perkImage } from "../data/stockImages";
 
 /* ── Type ────────────────────────────────────────────────────────────── */
 export function Eyebrow({ children, className = "" }) {
@@ -73,14 +74,18 @@ export function Tag2({ tone = "plain", children }) {
 }
 
 export function PerkTile({ perk, seed = 0, flag, onClick, className = "" }) {
+  const [broken, setBroken] = React.useState(false);
+  const img = perkImage(perk);
   return (
     <article
       role="button" tabIndex={0} onClick={onClick}
       onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onClick?.(e)}
       className={`shrink-0 snap-start w-[236px] sm:w-auto bg-ink2 border border-snow/10 rounded-modal overflow-hidden shadow-sm cursor-pointer transition-transform duration-200 ease-fluid hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-[3px] focus:ring-purple/40 ${className}`}>
       <div className={`relative aspect-square grid place-items-center text-6xl ${tileBg(seed)}`}>
-        <span aria-hidden="true">{categoryEmoji(perk.category)}</span>
-        <BrandLogo provider={perk.provider} className="w-9 h-9 absolute top-3 right-3 !rounded-xl border border-snow/10" />
+        {img && !broken
+          ? <img src={img} alt="" loading="lazy" onError={() => setBroken(true)} className="absolute inset-0 w-full h-full object-cover" />
+          : <span aria-hidden="true">{categoryEmoji(perk.category)}</span>}
+        <BrandLogo provider={perk.provider} className="w-9 h-9 absolute top-3 right-3 !rounded-xl border border-snow/10 shadow-sm" />
       </div>
       <div className="p-4 border-t border-snow/10">
         <h3 className="font-display font-semibold text-[15px] leading-snug line-clamp-2">{perk.title}</h3>
