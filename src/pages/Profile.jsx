@@ -67,6 +67,13 @@ export default function Profile() {
   }, []);
   React.useEffect(() => { load(); }, [load]);
 
+  // Deep link from the daily email: /app/account#perks scrolls to the tracker
+  React.useEffect(() => {
+    if (status === "ready" && window.location.hash === "#perks") {
+      setTimeout(() => document.getElementById("perks")?.scrollIntoView({ behavior: "smooth" }), 300);
+    }
+  }, [status]);
+
   // Refresh when the drawer writes a perk-state change
   React.useEffect(() => {
     const onChange = () => load();
@@ -203,6 +210,28 @@ export default function Profile() {
               </section>
             )}
 
+            {/* Every perk you hold — Active / Inactive per type */}
+            <section id="perks" className="mt-10 scroll-mt-28">
+              <SectionHead title="Every perk you hold" sub="Gold means you're using it. Grey means it's waiting." />
+              <div className="mb-4"><SearchBar value={query} onChange={setQuery} placeholder="Search perks, features, memberships, tiers…" /></div>
+              <div className="grid md:grid-cols-2 gap-x-8 gap-y-2">
+                <div>
+                  <h2 className="font-display font-extrabold text-xl mb-4 text-golddeep">Active</h2>
+                  <TypeBank title="Active Features" list={ofType("feature", true)} active scope={unlockedPerks} tierMap={tierMap} forceOpen={!!q} />
+                  <TypeBank title="Active Perks" list={ofType("perk", true)} active scope={unlockedPerks} tierMap={tierMap} forceOpen={!!q} />
+                  <TypeBank title="Used Discounts" list={ofType("discount", true)} active scope={unlockedPerks} tierMap={tierMap} forceOpen={!!q} />
+                  <TypeBank title="Entered Competitions" list={ofType("competition", true)} active scope={unlockedPerks} tierMap={tierMap} forceOpen={!!q} />
+                </div>
+                <div>
+                  <h2 className="font-display font-extrabold text-xl mb-4 text-muted">Inactive</h2>
+                  <TypeBank title="Inactive Features" list={ofType("feature", false)} scope={unlockedPerks} tierMap={tierMap} forceOpen={!!q} />
+                  <TypeBank title="Inactive Perks" list={ofType("perk", false)} scope={unlockedPerks} tierMap={tierMap} forceOpen={!!q} />
+                  <TypeBank title="Unused Discounts" list={ofType("discount", false)} scope={unlockedPerks} tierMap={tierMap} forceOpen={!!q} />
+                  <TypeBank title="Unentered Competitions" list={ofType("competition", false)} scope={unlockedPerks} tierMap={tierMap} forceOpen={!!q} />
+                </div>
+              </div>
+            </section>
+
             {/* Memberships */}
             <section className="mt-10">
               <SectionHead title="Your memberships" count={activeList.length} sub="The engine badge shows whether each one is right-sized for how you actually use it."
@@ -235,27 +264,6 @@ export default function Profile() {
               </section>
             )}
 
-            {/* Every perk you hold — Active / Inactive per type */}
-            <section className="mt-10">
-              <SectionHead title="Every perk you hold" sub="Gold means you're using it. Grey means it's waiting." />
-              <div className="mb-4"><SearchBar value={query} onChange={setQuery} placeholder="Search perks, features, memberships, tiers…" /></div>
-              <div className="grid md:grid-cols-2 gap-x-8 gap-y-2">
-                <div>
-                  <h2 className="font-display font-extrabold text-xl mb-4 text-golddeep">Active</h2>
-                  <TypeBank title="Active Features" list={ofType("feature", true)} active scope={unlockedPerks} tierMap={tierMap} forceOpen={!!q} />
-                  <TypeBank title="Active Perks" list={ofType("perk", true)} active scope={unlockedPerks} tierMap={tierMap} forceOpen={!!q} />
-                  <TypeBank title="Used Discounts" list={ofType("discount", true)} active scope={unlockedPerks} tierMap={tierMap} forceOpen={!!q} />
-                  <TypeBank title="Entered Competitions" list={ofType("competition", true)} active scope={unlockedPerks} tierMap={tierMap} forceOpen={!!q} />
-                </div>
-                <div>
-                  <h2 className="font-display font-extrabold text-xl mb-4 text-muted">Inactive</h2>
-                  <TypeBank title="Inactive Features" list={ofType("feature", false)} scope={unlockedPerks} tierMap={tierMap} forceOpen={!!q} />
-                  <TypeBank title="Inactive Perks" list={ofType("perk", false)} scope={unlockedPerks} tierMap={tierMap} forceOpen={!!q} />
-                  <TypeBank title="Unused Discounts" list={ofType("discount", false)} scope={unlockedPerks} tierMap={tierMap} forceOpen={!!q} />
-                  <TypeBank title="Unentered Competitions" list={ofType("competition", false)} scope={unlockedPerks} tierMap={tierMap} forceOpen={!!q} />
-                </div>
-              </div>
-            </section>
           </>
         )}
       </main>

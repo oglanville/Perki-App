@@ -643,6 +643,17 @@ function ebMemberships(d: EmailDataV2): string {
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#FCFAF4;border:1px solid #E4DDCB;border-radius:16px;">${rows}</table></td></tr>`;
 }
 
+function ebTrackerCta(): string {
+  /* Gold, deliberately different from the indigo closing CTA. Lands on the perk tracker. */
+  return `<tr><td align="center" style="padding:18px 24px 2px;">
+    <table role="presentation" align="center" cellpadding="0" cellspacing="0" border="0"><tr>
+      <td align="center" bgcolor="#E0A93B" style="border-radius:999px;">
+        <a href="https://perki.app/app/account#perks" style="${F_BODY}font-size:14px;font-weight:800;color:#23202A;text-decoration:none;display:inline-block;padding:13px 28px;">Update your perk tracker</a>
+      </td>
+    </tr></table>
+  </td></tr>`;
+}
+
 function buildVerdict(d: EmailDataV2): { headline: string; intro: string } {
   const first = escHtml(d.name);
   switch (d.variant) {
@@ -671,7 +682,7 @@ function buildEmailHtmlV2(d: EmailDataV2): string {
     { icon: "✅", html: `You have used ${gold(`${d.used} ${d.used === 1 ? "perk" : "perks"}`)} so far, and set aside ${gold(String(d.willNotUse))} you will not use.` },
     { icon: "💷", html: d.savingsTotal > 0 ? `The savings engine sees ${gold(`£${d.savingsTotal} a month`)} you could keep without losing a perk you use.` : `The savings engine finds your tiers ${gold("right-sized")} today.` },
   ]);
-  const blocks: string[] = [ebHero(`${d.dateStr} · Your daily Perki`, verdict.headline, verdict.intro)];
+  const blocks: string[] = [ebHero(`${d.dateStr} · Your daily Perki`, verdict.headline, verdict.intro), ebTrackerCta()];
   switch (d.variant) {
     case 1: blocks.push(ebEngines(d), ebUseToday(d), summary, ebMemberships(d)); break;
     case 2: blocks.push(ebBundle(d), summary, ebEngines(d), ebMemberships(d)); break;
