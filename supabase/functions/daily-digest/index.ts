@@ -541,7 +541,7 @@ function ebSummaryCard(rows: { icon: string; html: string }[]): string {
       <div style="${F_BODY}font-size:14.5px;line-height:22px;color:#E8E6F4;">${r.html}</div>
     </td></tr>`).join("");
   return `<tr><td class="px" style="padding:22px 24px 6px;">
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#2B2A6E;border-radius:16px;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="#2B2A6E" style="background:#2B2A6E;border-radius:16px;">
       <tr><td align="center" style="padding:24px 22px 6px;"><span style="${F_DISP}font-size:20px;font-weight:800;color:#FCFAF4;">Here's how it stands</span></td></tr>
       ${items}
     </table></td></tr>`;
@@ -590,14 +590,14 @@ function ebEngines(d: EmailDataV2): string {
   return `<tr><td class="px" style="padding:22px 24px 6px;font-size:0;text-align:center;">
     <!--[if mso]><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td width="50%" valign="top" style="padding-right:5px;"><![endif]-->
     <div style="display:inline-block;width:100%;max-width:270px;vertical-align:top;text-align:left;margin:0 3px 10px;">
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#FCFAF4;border:1px solid #E4DDCB;border-radius:16px;"><tr><td style="padding:16px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="#FCFAF4" style="background:#FCFAF4;border:1px solid #E4DDCB;border-radius:16px;"><tr><td style="padding:16px;">
           <div style="${F_DISP}font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#B07C1A;">Savings engine</div>
           <div style="${F_DISP}font-size:30px;font-weight:900;color:#23202A;padding:6px 0 2px;">£${d.savingsTotal}<span style="font-size:14px;font-weight:600;color:#6B6757;">/mo</span></div>
           <div style="${F_BODY}font-size:13px;line-height:19px;color:#6B6757;padding-bottom:10px;">${d.savingsTotal > 0 ? "still on the table" : "nothing left on the table"}</div>
           ${movesHtml}
         </td></tr></table>
     </div><!--[if mso]></td><td width="50%" valign="top" style="padding-left:5px;"><![endif]--><div style="display:inline-block;width:100%;max-width:270px;vertical-align:top;text-align:left;margin:0 3px 10px;">
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#F7ECD4;border:1px solid #E0A93B;border-radius:16px;"><tr><td style="padding:16px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="#F7ECD4" style="background:#F7ECD4;border:1px solid #E0A93B;border-radius:16px;"><tr><td style="padding:16px;">
           <div style="${F_DISP}font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#B07C1A;">Consolidation engine</div>
           <div style="${F_DISP}font-size:30px;font-weight:900;color:#23202A;padding:6px 0 2px;">${d.consolidation.dup ? 1 : 0}<span style="font-size:14px;font-weight:600;color:#6B6757;"> overlap${d.consolidation.dup ? "" : "s"}</span></div>
           <div style="${F_BODY}font-size:13px;line-height:19px;color:#6B6757;padding-bottom:10px;">${d.consolidation.dup ? "worth a look" : "all clear"}</div>
@@ -622,7 +622,7 @@ function ebWeekChart(d: EmailDataV2): string {
     </tr>`;
   }).join("");
   return ebSectionPill("Your week so far", "indigo") + `<tr><td class="px" style="padding:0 24px;">
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#FCFAF4;border:1px solid #E4DDCB;border-radius:16px;"><tr><td style="padding:20px 18px 14px;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="#FCFAF4" style="background:#FCFAF4;border:1px solid #E4DDCB;border-radius:16px;"><tr><td style="padding:20px 18px 14px;">
       <div style="${F_BODY}font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#B07C1A;padding-bottom:12px;">Perks ticked off, by day</div>
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">${bars}</table>
       <div style="${F_BODY}font-size:12px;line-height:18px;color:#6B6757;padding-top:12px;">${d.weekTotal > 0 ? `${d.weekTotal} ticked off in the last week. Weekly perks reset on Mondays, so early week is the time to grab them.` : "Nothing ticked off yet this week. Today's a good day to start."}</div>
@@ -640,7 +640,7 @@ function ebMemberships(d: EmailDataV2): string {
       </tr></table>
     </td></tr>`).join("");
   return ebSectionPill("Your memberships", "indigo") + `<tr><td class="px" style="padding:0 24px;">
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#FCFAF4;border:1px solid #E4DDCB;border-radius:16px;">${rows}</table></td></tr>`;
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="#FCFAF4" style="background:#FCFAF4;border:1px solid #E4DDCB;border-radius:16px;">${rows}</table></td></tr>`;
 }
 
 function ebTrackerCta(): string {
@@ -727,10 +727,10 @@ function buildEmailHtmlV2(d: EmailDataV2): string {
   }
 </style>
 </head>
-<body style="margin:0;padding:0;background:#F4F0E6;">
+<body bgcolor="#F4F0E6" style="margin:0;padding:0;background:#F4F0E6;">
 <span style="display:none!important;visibility:hidden;opacity:0;color:transparent;height:0;width:0;overflow:hidden;">${escHtml(preheader)}</span>
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#F4F0E6;"><tr><td align="center" style="padding:0 0 28px;">
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#2B2A6E;"><tr>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="#F4F0E6" style="background:#F4F0E6;"><tr><td align="center" style="padding:0 0 28px;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="#2B2A6E" style="background:#2B2A6E;"><tr>
   <td align="center" style="padding:14px;"><span style="${F_DISP}font-size:20px;font-weight:900;color:#FCFAF4;">Perki<span style="color:#E0A93B;">.</span></span></td>
 </tr></table>
 <!--[if mso]><table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" align="center"><tr><td><![endif]-->
