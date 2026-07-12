@@ -70,47 +70,51 @@
 
     <section class="col today" data-horizon="Today">
       <h2>☀️ Today <span class="count"></span></h2>
-      <div class="sub">Everything shipped and live. Two tiny follow-ups.</div>
+      <div class="sub">Ship the queued fixes, then test the loop.</div>
+      <div class="card" data-id="deploy"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">🚀 Deploy the digest</div>
+        <span class="tag prio">Needs you — 10 seconds</span>
+        <div class="syn">supabase functions deploy daily-digest --no-verify-jwt — ships tracker button, fluid phone layout, dark-mode armour and working links. Then tell Fable for an instant test send.</div>
+      </div></div>
+      <div class="card" data-id="push"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">🚀 git push</div>
+        
+        <div class="syn">Onboarding catalogue wiring, profile reorder, email + iPhone fixes queued.</div>
+      </div></div>
+      <div class="card" data-id="domain"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">🌐 Attach perki.app in Vercel</div>
+        
+        <div class="syn">Settings → Domains → add perki.app + DNS. Email links flip back to the brand domain once live.</div>
+      </div></div>
+      <div class="card" data-id="xlsx"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">📊 Regenerate Perks_Rows.xlsx</div>
+        
+        <div class="syn">npm i -D xlsx once, then node scripts/export-perks-xlsx.mjs — sheet is 231 rows behind the DB.</div>
+      </div></div>
       <div class="card" data-id="toggle"><input type="checkbox" class="chk"><div class="body">
-        <div class="t">📧 Turn off "Confirm email" in Supabase</div>
-        <span class="tag prio">30 seconds — needs you</span>
-        <div class="syn">Dashboard → Auth → Sign In / Up. Without it, new signups see a confirm notice instead of going straight into onboarding.</div>
+        <div class="t">📧 Confirm-email OFF in Supabase</div>
         
-      </div></div>
-      <div class="card" data-id="feel"><input type="checkbox" class="chk"><div class="body">
-        <div class="t">📱 Feel out the live redesign</div>
-        
-        <div class="syn">perki-app.vercel.app on your phone: homepage hero (4×4 logo grid, Today's pick), onboarding with a fresh account, profile worth-a-tap loop.</div>
-        
-      </div></div>
-      <div class="card" data-id="variants"><input type="checkbox" class="chk"><div class="body">
-        <div class="t">⏰ Watch the email variants land</div>
-        
-        <div class="syn">Fri Momentum · Sat Verdict · Sun Savings · Mon Bundle.</div>
-        
-      </div></div>
-      <div class="card" data-id="boots"><input type="checkbox" class="chk"><div class="body">
-        <div class="t">👀 Eyeball boots.com Price Advantage</div>
-        
-        <div class="syn">Still awaiting your 30-second glance.</div>
-        
+        <div class="syn">Still pending; blocks instant onboarding.</div>
       </div></div>
     </section>
 
     <section class="col week" data-horizon="This Week">
       <h2>📅 This Week <span class="count"></span></h2>
-      <div class="sub">QA and polish the new surfaces.</div>
-      <div class="card" data-id="qa"><input type="checkbox" class="chk"><div class="body">
-        <div class="t">🧪 QA at 390px</div>
+      <div class="sub">QA the loop on the phone.</div>
+      <div class="card" data-id="qa2"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">🧪 iPhone QA round two</div>
         
-        <div class="syn">Perks moment chips ↔ tier ladder; app 4-col grid density on the 13; onboarding end to end; Still-to-use → Already-used loop.</div>
+        <div class="syn">Membership rows, tracker button end to end (stay signed in in Safari), the four email variants Fri–Mon.</div>
+      </div></div>
+      <div class="card" data-id="boots"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">👀 boots.com Price Advantage</div>
         
+        <div class="syn">Still awaiting the 30-second glance.</div>
       </div></div>
       <div class="card" data-id="photos"><input type="checkbox" class="chk"><div class="body">
-        <div class="t">📸 Photo curation pass</div>
+        <div class="t">📸 Photo keyword pass</div>
         
-        <div class="syn">All category images verified; two are compromises (broadband = cabling, mobile = flat-lay). Swap in stockImages.js.</div>
-        
+        <div class="syn">Flag any perk whose photo feels wrong — one-line rule fix.</div>
       </div></div>
     </section>
 
@@ -120,32 +124,22 @@
       <div class="card" data-id="beehiiv"><input type="checkbox" class="chk"><div class="body">
         <div class="t">🟣 Beehiiv setup</div>
         
-        <div class="syn">Block library ready — the weekly is a re-ordering of daily blocks. Pick the personalisation route, publication toward 10k.</div>
-        
+        <div class="syn">Block library ready — the weekly is a re-ordering of daily blocks.</div>
       </div></div>
       <div class="card" data-id="provtypes"><input type="checkbox" class="chk"><div class="body">
         <div class="t">🏷️ Provider types</div>
         
         <div class="syn">Spec ready, not built.</div>
-        
       </div></div>
-      <div class="card" data-id="ingest"><input type="checkbox" class="chk"><div class="body">
-        <div class="t">🛒 Ingest O2 + Lidl</div>
+      <div class="card" data-id="lidl"><input type="checkbox" class="chk"><div class="body">
+        <div class="t">🛒 Lidl ingest</div>
         
-        <div class="syn">Awaiting source data.</div>
-        
+        <div class="syn">O2 done via Priority; Lidl awaiting data.</div>
       </div></div>
       <div class="card" data-id="friends"><input type="checkbox" class="chk"><div class="body">
         <div class="t">🧪 Test with friends</div>
         
-        <div class="syn">Onboarding is finally show-able — get real users through it and start the referral loop.</div>
-        
-      </div></div>
-      <div class="card" data-id="deliver"><input type="checkbox" class="chk"><div class="body">
-        <div class="t">📬 Deliverability watch</div>
-        
-        <div class="syn">Variants + request-notify mean more send patterns; check Junk occasionally.</div>
-        
+        <div class="syn">Onboarding now unlocks real perks for every pick — finally show-able.</div>
       </div></div>
     </section>
 
@@ -155,26 +149,22 @@
       <div class="card" data-id="portal"><input type="checkbox" class="chk"><div class="body">
         <div class="t">🔌 Partner portal + API</div>
         
-        <div class="syn">Let providers manage their own perk data.</div>
-        
+        <div class="syn">Providers manage their own perk data.</div>
       </div></div>
       <div class="card" data-id="revenue"><input type="checkbox" class="chk"><div class="body">
         <div class="t">💸 Placement revenue</div>
         
-        <div class="syn">Paid placement in Worth adding once traffic justifies it.</div>
-        
+        <div class="syn">Paid placement in Worth adding.</div>
       </div></div>
       <div class="card" data-id="demo"><input type="checkbox" class="chk"><div class="body">
         <div class="t">🎬 Product demo flow</div>
         
-        <div class="syn">A crisp walkthrough for prospects and investors.</div>
-        
+        <div class="syn">Crisp walkthrough for prospects and investors.</div>
       </div></div>
       <div class="card" data-id="arch"><input type="checkbox" class="chk"><div class="body">
         <div class="t">🧹 Architecture debt</div>
         
-        <div class="syn">Shared module for triple-copied logic; shared verdict generator; commissioned photography over stock.</div>
-        
+        <div class="syn">Shared logic module; real auth gating for the app; commissioned photography.</div>
       </div></div>
     </section>
 
@@ -182,16 +172,16 @@
 
   <!-- DONE TODAY — daily highlight -->
   <section class="donebox">
-    <h2>✅ Done recently — 9 Jul 2026 · redesign LIVE: site, app, onboarding, photos</h2>
+    <h2>✅ Built with Fable — 9 Jul 2026 · catalogue 767, redesign live, onboarding, email loop</h2>
     <ul>
-      <li>Website rebuilt in the mob language and LIVE — shared UI kit, new Home (display hero, live data tiles, bundle shelves, indigo proof band, engines, email capture), Perks (moment chips, photo grid, tier ladder), global pills + announcement strip</li>
-      <li>Home hero polished — 4×4 provider logo grid with a self-counting +N cell, and a photo-backed Today's pick tile rotating a real perk daily, opening the drawer</li>
-      <li>Profile rebuilt — Worth-a-tap photo shelf, engine badges on memberships, variant-aware Upgrades on the shelf, one perk browser replacing eight collapsibles</li>
-      <li>App redesigned to match — indigo pill nav, display greetings, pill chips, Moment filter, verdict card</li>
-      <li>Onboarding shipped — signup lands on /onboarding: six category tabs, curated dropdowns, tier picker, multiple adds; Request another → trigger → request-notify edge function → email to Ollie (tested live)</li>
-      <li>Stock photography — 39 categories mapped to verified Unsplash images with per-perk override and emoji fallback</li>
-      <li>Digest at v50, deployed from the repo — cosmetic nits gone; four daily variants cycling</li>
-      <li>Earlier same day: catalogue 536 rows, tier_kind/tier_rank model, WHOOP digest v48 (see timeline)</li>
+      <li>Catalogue 433 → 767 rows across 63 providers, all verified on official pages — NEEDS-VERIFY cleared, +96 perks, then every onboarding provider ingested (Octoplus, O2 Priority, Three+, Sky VIP, Netflix/Disney+/Apple TV+ plans, music services, credit cards). Amex free black card findable as Rewards (Black)</li>
+      <li>Tier data model fixed — tier_kind + tier_rank; variants (Spotify, Railcard, NT, Amazon, Cineworld) no longer fake-inherit; savings engine variant-aware</li>
+      <li>WHOOP-style daily email with four variants cycling daily; fluid-hybrid layout, bulletproof buttons, Apple Mail dark-mode armour; gold Update-your-tracker button deep-linking to the profile tracker</li>
+      <li>Website + app rebuilt in the mob.co.uk language and shipped — UI kit, new Home/Perks/Profile, pill nav, verdict cards, tier ladder, moment filters, app password lock</li>
+      <li>Onboarding shipped — six category tabs, curated dropdowns, tier picker; Request-another → trigger → request-notify email (tested live); every pick unlocks real perks</li>
+      <li>Perk-aware photography — 85 verified images, keyword rules + category pools + emoji fallback</li>
+      <li>Profile: Every perk you hold moved under Worth a tap with #perks anchor, Active/Inactive type banks restored; iPhone rows wrap instead of truncate</li>
+      <li>Architecture: xlsx now regenerates from the DB via scripts/export-perks-xlsx.mjs</li>
     </ul>
   </section>
 
@@ -199,6 +189,7 @@
   <section class="timeline">
     <h2>🧭 Progress timeline</h2>
     <ul class="tl">
+      <li><span class="date">9 Jul 2026 · EVE</span><div class="ttl">Catalogue 767 · onboarding unlocks everything · email-to-tracker loop</div><div class="desc">33 onboarding providers ingested and verified, Amex Rewards (Black), gold tracker button deep-linking to #perks, fluid + dark-mode-proof email, iPhone row fixes, xlsx regeneration script.</div></li>
       <li><span class="date">9 Jul 2026 · PM</span><div class="ttl">Redesign shipped live · onboarding · photography</div><div class="desc">mob-style site + app rebuilt and pushed to Vercel, six-category onboarding with request-email pipeline, verified stock photos on every perk tile, digest v50 from repo.</div></li>
       <li><span class="date">9 Jul 2026</span><div class="ttl">Digest live with 4 daily variants · catalogue 536 · tier model fixed</div><div class="desc">Production cron via Vault auth (DST solved), WHOOP-style email cycling four layouts, +96 verified perks, tier_kind/tier_rank across DB, xlsx, front-end and digest, redesign spec + prototypes delivered.</div></li>
       <li>
@@ -327,7 +318,7 @@
   <footer>
     <p>🤝 <b>Need from you:</b> O2 + Lidl source data · install Outfit + Work Sans fonts · verify the perki.app sending domain in Resend · friends to test the app + email.</p>
     <p style="margin-top:6px">🧭 Guardrails: manual ingestion only, no scraping · accuracy over speed · brand gates deck work · auto-send is OFF (manual pulls only).</p>
-    <p style="margin-top:6px;opacity:.6">Last updated 2026-07-09 (rev 14) · mirrors daily-todo.md · tick cards to dim them (saved in your browser)</p>
+    <p style="margin-top:6px;opacity:.6">Last updated 2026-07-09 (rev 15) · mirrors daily-todo.md · tick cards to dim them (saved in your browser)</p>
   </footer>
 
 <script>
