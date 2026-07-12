@@ -512,6 +512,7 @@ interface EmailDataV2 {
   featuredBundle: MomentBox | null;
   weekUsage: WeekDayUsage[];
   weekTotal: number;
+  categoryGrouped: { category: string; icon: string; items: EnrichedPerk[] }[];
 }
 
 function cadenceWord(p: EnrichedPerk): string {
@@ -654,6 +655,34 @@ function ebTrackerCta(): string {
   </td></tr>`;
 }
 
+function ebPerkLine(p: EnrichedPerk): string {
+  const dim = p.used ? "0.55" : "1";
+  const typeLabel = ({ feature: "Feature", perk: "Perk", competition: "Comp", discount: "Discount" } as Record<string, string>)[p.feature] ?? "Perk";
+  const isFeature = p.feature === "feature";
+  return `<tr><td style="padding:5px 16px;opacity:${dim};">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
+      <td style="${F_BODY}font-size:13px;color:#23202A;">${p.used ? "✓ " : ""}${escHtml(trunc(p.title, 36))}</td>
+      <td align="right" style="white-space:nowrap;">
+        <span style="${F_BODY}font-size:9.5px;font-weight:600;color:${isFeature ? "#2B2A6E" : "#6B6757"};border:1px solid ${isFeature ? "#E0A93B" : "#E4DDCB"};background:${isFeature ? "#F7ECD4" : "transparent"};border-radius:20px;padding:2px 8px;">${typeLabel}</span>
+        <span style="${F_BODY}font-size:9.5px;font-weight:600;color:#6B6757;border:1px solid #E4DDCB;border-radius:20px;padding:2px 8px;">${cadenceWord(p)}</span>
+      </td>
+    </tr></table>
+  </td></tr>`;
+}
+
+function ebAllPerks(d: EmailDataV2): string {
+  if (!d.categoryGrouped.length) return "";
+  const cards = d.categoryGrouped.map((g) => `
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="#FCFAF4" style="background:#FCFAF4;border:1px solid #E4DDCB;border-radius:16px;margin-bottom:10px;">
+      <tr><td style="padding:12px 16px;border-bottom:1px solid #EFE9DA;">
+        <span style="font-size:15px;">${g.icon}</span><span style="${F_DISP}font-size:14px;font-weight:800;color:#23202A;padding-left:8px;">${escHtml(g.category)}</span><span style="${F_BODY}font-size:11px;font-weight:700;color:#B07C1A;background:#F7ECD4;border-radius:20px;padding:2px 9px;margin-left:8px;">${g.items.length}</span>
+      </td></tr>
+      ${g.items.map((p) => ebPerkLine(p)).join("")}
+      <tr><td style="height:6px;"></td></tr>
+    </table>`).join("");
+  return ebSectionPill("Everything you hold", "indigo") + `<tr><td class="px" style="padding:0 24px;">${cards}</td></tr>`;
+}
+
 function buildVerdict(d: EmailDataV2): { headline: string; intro: string } {
   const first = escHtml(d.name);
   switch (d.variant) {
@@ -689,6 +718,7 @@ function buildEmailHtmlV2(d: EmailDataV2): string {
     case 3: blocks.push(ebWeekChart(d), summary, ebUseToday(d), ebEngines(d)); break;
     default: blocks.push(summary, ebUseToday(d), ebEngines(d), ebWeekChart(d), ebMemberships(d));
   }
+  blocks.push(ebAllPerks(d));
   const cta = `<tr><td align="center" style="padding:32px 24px 10px;">
     <table role="presentation" align="center" cellpadding="0" cellspacing="0" border="0"><tr>
       <td align="center" bgcolor="#2B2A6E" style="border-radius:999px;">
@@ -802,6 +832,12 @@ function buildDigestForUser(
   const whatToUseToday = buildWhatToUseToday(perks);
   const momentBoxes = buildMomentBoxes(perks, today);
 
+  const byCat: Record<string, EnrichedPerk[]> = {};
+  for (const p of perks) { if (p.dismissed) continue; const cat = p.category ?? "Other"; (byCat[cat] ??= []).push(p); }
+  const categoryGrouped = Object.entries(byCat)
+    .map(([category, items]) => ({ category, icon: categoryIcon(category), items: items.sort(featureRankSort) }))
+    .sort((a, b) => a.category.localeCompare(b.category));
+
   /* V2 assembly */
   const savingsTotal = Math.round(savingsMoves.reduce((s, m) => s + m.saving, 0) * 100) / 100;
   const saveByProvider: Record<string, number> = {};
@@ -834,6 +870,7 @@ function buildDigestForUser(
     membershipRows,
     useToday: whatToUseToday,
     featuredBundle: momentBoxes[0] ?? null,
+    categoryGrouped,
     weekUsage,
     weekTotal,
   });
