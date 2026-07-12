@@ -648,7 +648,7 @@ function ebTrackerCta(): string {
   return `<tr><td align="center" style="padding:18px 24px 2px;">
     <table role="presentation" align="center" cellpadding="0" cellspacing="0" border="0"><tr>
       <td align="center" bgcolor="#E0A93B" style="border-radius:999px;">
-        <a href="https://perki.app/app/account#perks" style="${F_BODY}font-size:14px;font-weight:800;color:#23202A;text-decoration:none;display:inline-block;padding:13px 28px;">Update your perk tracker</a>
+        <a href="https://perki-app.vercel.app/app/account#perks" style="${F_BODY}font-size:14px;font-weight:800;color:#23202A;text-decoration:none;display:inline-block;padding:13px 28px;">Update your perk tracker</a>
       </td>
     </tr></table>
   </td></tr>`;
@@ -692,13 +692,13 @@ function buildEmailHtmlV2(d: EmailDataV2): string {
   const cta = `<tr><td align="center" style="padding:32px 24px 10px;">
     <table role="presentation" align="center" cellpadding="0" cellspacing="0" border="0"><tr>
       <td align="center" bgcolor="#2B2A6E" style="border-radius:999px;">
-        <a href="https://perki.app" style="${F_BODY}font-size:15px;font-weight:700;color:#FCFAF4;text-decoration:none;display:inline-block;padding:15px 34px;">See today's perks</a>
+        <a href="https://perki-app.vercel.app" style="${F_BODY}font-size:15px;font-weight:700;color:#FCFAF4;text-decoration:none;display:inline-block;padding:15px 34px;">See today's perks</a>
       </td>
     </tr></table>
   </td></tr>`;
   const footer = `<tr><td align="center" style="padding:20px 24px 8px;">
     <div style="${F_BODY}font-size:12px;color:#6B6757;line-height:18px;">Read-only, always. Perki recommends and links, never moves your money.</div>
-    <div style="${F_BODY}font-size:12px;color:#6B6757;line-height:20px;padding-top:8px;"><a href="https://perki.app" style="color:#B07C1A;font-weight:600;text-decoration:none;">Manage preferences</a> &nbsp;·&nbsp; <a href="https://perki.app" style="color:#B07C1A;font-weight:600;text-decoration:none;">Unsubscribe</a></div>
+    <div style="${F_BODY}font-size:12px;color:#6B6757;line-height:20px;padding-top:8px;"><a href="https://perki-app.vercel.app" style="color:#B07C1A;font-weight:600;text-decoration:none;">Manage preferences</a> &nbsp;·&nbsp; <a href="https://perki-app.vercel.app" style="color:#B07C1A;font-weight:600;text-decoration:none;">Unsubscribe</a></div>
     <div style="${F_BODY}font-size:11px;color:#9A9482;padding-top:10px;">Perki · London, UK</div>
   </td></tr>`;
   blocks.push(cta, footer);
