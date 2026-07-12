@@ -8,6 +8,7 @@ import Pricing from "./pages/Pricing";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import Onboarding from "./pages/Onboarding";
+import PhotoReview from "./pages/PhotoReview";
 import AppShell from "./app/AppShell";
 import { PerkDrawerProvider } from "./ui/PerkDrawer";
 
@@ -41,6 +42,9 @@ export default function App() {
 
         {/* Post-signup onboarding — captures memberships, no email detour */}
         <Route path="/onboarding" element={<Onboarding />} />
+
+        {/* Internal: photo audit (unlisted) */}
+        <Route path="/photo-review" element={<PhotoReview />} />
 
         {/* New design-system Profile page (live Supabase data) */}
         <Route path="/app/account" element={<Profile />} />

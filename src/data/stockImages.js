@@ -208,5 +208,18 @@ export const perkImage = (perk) => {
   return categoryImage(perk.category, perk.perk_id || perk.title);
 };
 
+/* Review helper: same logic, but says WHICH layer chose the image. */
+export const perkImageDebug = (perk) => {
+  if (!perk) return { url: null, source: "none" };
+  if (perk.image_url) return { url: perk.image_url, source: "override" };
+  const text = `${perk.provider || ""} ${perk.title || ""} ${perk.description || ""}`;
+  for (let i = 0; i < KEYWORD_RULES.length; i++) {
+    const [re, imgs] = KEYWORD_RULES[i];
+    if (re.test(text)) return { url: pick(imgs, perk.perk_id || perk.title), source: `keyword ${re.source.slice(0, 28)}` };
+  }
+  const url = categoryImage(perk.category, perk.perk_id || perk.title);
+  return { url, source: url ? `category ${perk.category}` : "none" };
+};
+
 /* Back-compat single-image map (first of each pool). */
 export const CATEGORY_IMAGE = Object.fromEntries(Object.entries(CATEGORY_POOLS).map(([k, v]) => [k, v[0]]));
